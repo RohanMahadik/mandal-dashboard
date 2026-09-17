@@ -55,7 +55,7 @@
           },
           "configurations": {
             "production": {
-              "baseHref": "/mandal-dashboard/",
+              "baseHref": "/",
               "budgets": [
                 {
                   "type": "initial",
