@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Modern Design System for Shree Ashtavinayak Mitra Mandal */
+:root {
+  --primary-navy: #0f172a;
+  --primary-navy-dark: #090d16;
+  --primary-navy-card: #1e293b;
+  --active-blue: #2563eb;
+  --active-blue-hover: #1d4ed8;
+  
+  --saffron-primary: #f97316;
+  --saffron-deep: #ea580c;
+  --saffron-gold: #eab308;
+  --saffron-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  
+  --maroon-title: #991b1b;
+  --crimson-accent: #b91c1c;
+  
+  --header-bg: linear-gradient(180deg, #fcf8ee 0%, #f7eed8 100%);
+  --bg-main: #f1f5f9;
+  --card-bg: #ffffff;
+  
+  --border-light: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  
+  --success-green: #16a34a;
+  --danger-red: #ef4444;
+  --info-blue: #3b82f6;
+  --purple-accent: #8b5cf6;
+  --cyan-accent: #06b6d4;
+  
+  --font-marathi: 'Mukta', 'Noto Sans Devanagari', sans-serif;
+  --font-sanskrit: 'Yatra One', 'Mukta', cursive;
+  --font-english: 'Poppins', 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-marathi);
+  background-color: var(--bg-main);
+  color: #1e293b;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+app-dashboard-charts {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Devanagari Typography Helpers */
+.font-devanagari {
+  font-family: 'Noto Sans Devanagari', 'Mukta', sans-serif;
+}
+
+.font-slogan {
+  font-family: 'Mukta', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.font-calligraphy {
+  font-family: 'Rozha One', 'Yatra One', 'Mukta', cursive;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.6); }
+}
+
+.pulse-glow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+/* Attractive Loader Custom Animations */
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 16s linear infinite;
+}
+
+@keyframes spinReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-spin-reverse {
+  animation: spinReverse 12s linear infinite;
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-5px) scale(1.02); }
+}
+
+.animate-float-slow {
+  animation: floatSlow 3.5s ease-in-out infinite;
+}
+
+@keyframes shimmerText {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-shimmer-text {
+  background-size: 200% auto;
+  animation: shimmerText 4s ease infinite;
+}
+
+@keyframes shimmerProgress {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(20%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer-progress {
+  animation: shimmerProgress 1.8s ease-in-out infinite;
+  width: 50%;
+}
+
+@keyframes topShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-top-shimmer {
+  animation: topShimmer 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+
+/* Pill Badges */
+.badge-green {
+  background-color: #dcfce7;
+  color: #15803d;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap !important;
+}
+
+.badge-red {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap !important;
+}
+
+/* Universal Table No-Wrap Rules (Always No-Wrap) */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td, tr {
+  white-space: nowrap !important;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Print Styles for Official Receipt & Balance Sheet */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  .no-print,
+  .sidebar,
+  .header-actions,
+  .filter-bar,
+  footer {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .printable-area {
+    margin: 0 !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+    border: 2px solid #000 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
