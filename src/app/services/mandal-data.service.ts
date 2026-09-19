@@ -14,13 +14,30 @@ import {
   SabhasadMember,
   AdvertisementBanner,
   YearlyFestivalFinancials,
-  YearlyFestivalRecord
+  YearlyFestivalRecord,
+  BankDetails
 } from '../models/mandal.models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MandalDataService {
+  // Official Banking Details for Festival Donations & Online Transfers
+  readonly bankDetails: BankDetails = {
+    bankNameMr: 'समता सहकारी बँक लि.',
+    bankNameEn: 'Samta Sahakari Bank Ltd.',
+    accountNo: '004200100004151',
+    ifscCode: 'SRCB0SAM001',
+    accountTypeMr: 'चालू खाते',
+    accountTypeEn: 'Current Account',
+    branchMr: 'जोगेश्वरी (पश्चिम) शाखा',
+    branchEn: 'Jogeshwari (West) Branch',
+    upiId: 'ashtavinayak.jogeshwari@upi'
+  };
+
+  // Official Google Maps Location Link
+  readonly mapLocationUrl = 'https://maps.app.goo.gl/R58aTLacJRwQYyj38';
+
   // Global Filters
   readonly selectedYear = signal<number>(2026);
   readonly selectedFestival = signal<string>('सार्वजनिक गणेशोत्सव');
@@ -37,7 +54,27 @@ export class MandalDataService {
     'छत्रपती शिवाजी महाराज जयंती'
   ];
 
-  readonly buildingsList = ['सर्व', 'शिव स्फूर्ती 1', 'शिव स्फूर्ती 2', 'आदर्श नगर', 'इतर'];
+  // Dynamic Sources / Buildings List computed directly from current Vargani records
+  readonly availableSources = computed<string[]>(() => {
+    const list = this._varganiRecords();
+    const set = new Set<string>();
+    list.forEach(item => {
+      const val = (item.source || item.building || '').trim();
+      if (val && val !== 'undefined' && val !== 'null') {
+        set.add(val);
+      }
+    });
+    if (set.size === 0) {
+      ['शिव स्फूर्ती 1', 'शिव स्फूर्ती 2', 'आदर्श नगर', 'इतर'].forEach(s => set.add(s));
+    }
+    const sorted = Array.from(set).sort((a, b) => a.localeCompare(b, 'mr'));
+    return ['सर्व', ...sorted];
+  });
+
+  // Backwards compatibility getter
+  get buildingsList(): string[] {
+    return this.availableSources();
+  }
   readonly receiptStatusList = ['सर्व', 'दिलेली', 'बाकी'];
 
   // Marathi Digit Conversion State (Default enabled as requested)
@@ -60,7 +97,7 @@ export class MandalDataService {
   }
 
   // Official President Details (अध्यक्ष तपशील)
-  readonly presidentNameMr = signal<string>('श्री. मंगेश वसंत कदम');
+  readonly presidentNameMr = signal<string>('श्री.बाळासाहेब यादव');
   readonly presidentNameEn = signal<string>('Shri Mangesh Vasant Kadam');
   readonly presidentDesignationMr = signal<string>('अध्यक्ष, श्री अष्टविनायक मित्र मंडळ');
   readonly presidentDesignationEn = signal<string>('President, Shree Ashtavinayak Mitra Mandal');
@@ -111,9 +148,13 @@ export class MandalDataService {
       'शिव स्फूर्ती 2': 'Shiv Sphurti 2',
       'आदर्श नगर': 'Adarsh Nagar',
       'इतर': 'Other',
-      'सर्व': 'All Buildings'
+      'सर्व': 'All Sources'
     };
     return map[building] || building;
+  }
+
+  translateSource(source: string): string {
+    return this.translateBuilding(source);
   }
 
   translateStatus(status: string): string {
@@ -197,14 +238,26 @@ export class MandalDataService {
     const year = this.selectedYear();
     const fest = this.selectedFestival();
     return this._varganiRecords()
-      .filter(item => item.year === year && item.festival === fest)
+      .filter(item => {
+        const yearMatch = !item.year || item.year === year;
+        const festMatch = !item.festival || item.festival === fest ||
+          (fest.includes('गणेश') && item.festival.includes('गणेश')) ||
+          (fest.includes('नवरात्र') && item.festival.includes('नवरात्र'));
+        return yearMatch && festMatch;
+      })
       .sort((a, b) => b.amount - a.amount || (a.srNo || 0) - (b.srNo || 0));
   });
 
   readonly currentKharch = computed(() => {
     const year = this.selectedYear();
     const fest = this.selectedFestival();
-    return this._kharchRecords().filter(item => item.year === year && item.festival === fest);
+    return this._kharchRecords().filter(item => {
+      const yearMatch = !item.year || item.year === year;
+      const festMatch = !item.festival || item.festival === fest ||
+        (fest.includes('गणेश') && item.festival.includes('गणेश')) ||
+        (fest.includes('नवरात्र') && item.festival.includes('नवरात्र'));
+      return yearMatch && festMatch;
+    });
   });
 
   // KPI Metrics computed from current filtered data
@@ -233,70 +286,122 @@ export class MandalDataService {
     };
   });
 
-  // Building Distribution computed for Bar Chart
+  // Source / Building Distribution computed for Bar Chart - dynamically computed per Excel data
   readonly buildingDistribution = computed<BuildingDistribution[]>(() => {
     const vList = this.currentVargani();
-    
-    // Group amounts by 4 standard categories
-    let s1 = 0;
-    let s2 = 0;
-    let an = 0;
-    let other = 0;
+    const colorPalette = [
+      '#2563eb', '#f97316', '#10b981', '#8b5cf6', '#ec4899', '#06b6d4', '#eab308', '#64748b'
+    ];
+
+    const map = new Map<string, { amount: number; count: number }>();
 
     vList.forEach(item => {
-      if (item.building.includes('शिव स्फूर्ती 1')) s1 += item.amount;
-      else if (item.building.includes('शिव स्फूर्ती 2')) s2 += item.amount;
-      else if (item.building.includes('आदर्श नगर')) an += item.amount;
-      else other += item.amount;
+      const src = (item.source || item.building || 'इतर').trim();
+      const existing = map.get(src) || { amount: 0, count: 0 };
+      existing.amount += item.amount;
+      existing.count += 1;
+      map.set(src, existing);
     });
 
-    return [
-      { building: 'शिव स्फूर्ती 1', amount: s1, color: '#2563eb' },
-      { building: 'शिव स्फूर्ती 2', amount: s2, color: '#f97316' },
-      { building: 'आदर्श नगर', amount: an, color: '#10b981' },
-      { building: 'इतर', amount: other, color: '#8b5cf6' }
-    ];
+    if (map.size === 0) {
+      return [
+        { building: 'शिव स्फूर्ती 1', source: 'शिव स्फूर्ती 1', amount: 0, color: '#2563eb', count: 0 },
+        { building: 'शिव स्फूर्ती 2', source: 'शिव स्फूर्ती 2', amount: 0, color: '#f97316', count: 0 },
+        { building: 'आदर्श नगर', source: 'आदर्श नगर', amount: 0, color: '#10b981', count: 0 },
+        { building: 'इतर', source: 'इतर', amount: 0, color: '#8b5cf6', count: 0 }
+      ];
+    }
+
+    // Sort by amount descending
+    const entries = Array.from(map.entries()).sort((a, b) => b[1].amount - a[1].amount);
+
+    return entries.map(([src, val], idx) => ({
+      building: src,
+      source: src,
+      amount: val.amount,
+      color: colorPalette[idx % colorPalette.length],
+      count: val.count
+    }));
   });
 
-  // Expense Categories computed for Horizontal Bar Chart
+  // Dynamic Expense Distribution computed directly from current filtered Kharch records
   readonly expenseDistribution = computed<ExpenseDistribution[]>(() => {
     const kList = this.currentKharch();
+    if (!kList || kList.length === 0) return [];
 
-    let murti = 0;
-    let mandap = 0;
-    let spyro = 0;
-    let gifts = 0;
-    let other = 0;
+    const map = new Map<string, number>();
 
     kList.forEach(item => {
-      const name = item.nameMr;
-      const cat = item.category;
-      if (name.includes('मूर्ती') || cat.includes('मूर्ती')) murti += item.amount;
-      else if (name.includes('मंडप') || cat.includes('मंडप')) mandap += item.amount;
-      else if (name.includes('स्पायरो') || cat.includes('स्पायरो')) spyro += item.amount;
-      else if (name.includes('गिफ्ट्स') || cat.includes('गिफ्ट्स')) gifts += item.amount;
-      else other += item.amount;
+      if (!item.amount || item.amount <= 0) return;
+
+      // Extract meaningful label: prefer category if meaningful, otherwise nameMr
+      let label = (item.category && item.category !== 'इतर खर्च' && item.category !== 'इतर' && item.category.trim() !== '')
+        ? item.category.trim()
+        : (item.nameMr || item.nameEn || 'इतर खर्च').trim();
+
+      // Clean up legacy formatting e.g. "इतर खर्च (विद्युत रोषणाई व जनरेटर)" -> "विद्युत रोषणाई व जनरेटर"
+      const match = label.match(/^[^(]*\(([^)]+)\)/);
+      if (match && label.startsWith('इतर खर्च')) {
+        label = match[1].trim();
+      }
+
+      if (!label) label = 'इतर खर्च';
+
+      const current = map.get(label) || 0;
+      map.set(label, current + item.amount);
     });
 
-    return [
-      { category: 'गणपती मूर्ती', amount: murti, color: '#8b5cf6' },
-      { category: 'मंडप', amount: mandap, color: '#f97316' },
-      { category: 'स्पायरो', amount: spyro, color: '#06b6d4' },
-      { category: 'गिफ्ट्स', amount: gifts, color: '#10b981' },
-      { category: 'इतर खर्च', amount: other, color: '#ef4444' }
+    if (map.size === 0) return [];
+
+    const colorPalette = [
+      '#8b5cf6', // purple
+      '#f97316', // orange
+      '#06b6d4', // cyan
+      '#10b981', // emerald
+      '#ef4444', // red
+      '#3b82f6', // blue
+      '#eab308', // yellow
+      '#ec4899', // pink
+      '#14b8a6', // teal
+      '#6366f1', // indigo
+      '#64748b'  // slate
     ];
+
+    // Sort by amount descending
+    const sorted = Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+
+    // If there are more than 7 categories/items, show top 6 and bundle remainder into 'इतर खर्च'
+    let finalEntries: { category: string; amount: number }[] = [];
+    if (sorted.length <= 7) {
+      finalEntries = sorted.map(([cat, amt]) => ({ category: cat, amount: amt }));
+    } else {
+      const top = sorted.slice(0, 6).map(([cat, amt]) => ({ category: cat, amount: amt }));
+      const othersSum = sorted.slice(6).reduce((acc, curr) => acc + curr[1], 0);
+      if (othersSum > 0) {
+        top.push({ category: 'इतर खर्च', amount: othersSum });
+      }
+      finalEntries = top;
+    }
+
+    return finalEntries.map((entry, idx) => ({
+      category: entry.category,
+      amount: entry.amount,
+      color: colorPalette[idx % colorPalette.length]
+    }));
   });
 
-  // Static Data Collections
+  // Official Executive Committee (कार्यकारिणी मंडळ - २०२५) & Advisors (सल्लागार)
   readonly committeeMembers: CommitteeMember[] = [
-    { id: 1, designationMr: 'अध्यक्ष', designationEn: 'President', nameMr: 'श्री. मंगेश वसंत कदम', nameEn: 'Mangesh Vasant Kadam', phone: '+91 98201 44552', roleType: 'पदाधिकारी', experienceYears: 16, avatarBg: '#1e3a8a' },
-    { id: 2, designationMr: 'उपाध्यक्ष', designationEn: 'Vice President', nameMr: 'श्री. विलास अनंत सावंत', nameEn: 'Vilas Anant Sawant', phone: '+91 98192 33412', roleType: 'पदाधिकारी', experienceYears: 14, avatarBg: '#0f766e' },
-    { id: 3, designationMr: 'कार्यवाह (चिटणीस)', designationEn: 'General Secretary', nameMr: 'श्री. सचिन चंद्रकांत तांबडे', nameEn: 'Sachin Chandrakant Tambde', phone: '+91 99203 88124', roleType: 'पदाधिकारी', experienceYears: 12, avatarBg: '#c2410c' },
-    { id: 4, designationMr: 'खजिनदार', designationEn: 'Treasurer', nameMr: 'श्री. राजेश भास्कर परब', nameEn: 'Rajesh Bhaskar Parab', phone: '+91 98690 77150', roleType: 'पदाधिकारी', experienceYears: 15, avatarBg: '#6b21a8' },
-    { id: 5, designationMr: 'सह-खजिनदार', designationEn: 'Joint Treasurer', nameMr: 'श्री. सुधीर दत्तात्रय सावंत', nameEn: 'Sudhir Dattatray Sawant', phone: '+91 98211 99341', roleType: 'पदाधिकारी', experienceYears: 9, avatarBg: '#b45309' },
-    { id: 6, designationMr: 'वरिष्ठ सल्लागार', designationEn: 'Chief Advisor', nameMr: 'श्री. चंद्रकांत बाबुराव महाडिक', nameEn: 'Chandrakant Baburao Mahadik', phone: '+91 98200 11223', roleType: 'सल्लागार', experienceYears: 28, avatarBg: '#374151' },
-    { id: 7, designationMr: 'प्रमुख व्यवस्थापक', designationEn: 'Event Manager', nameMr: 'श्री. अमोल दिनकर पाटील', nameEn: 'Amol Dinkar Patil', phone: '+91 98334 55667', roleType: 'प्रमुख सदस्य', experienceYears: 8, avatarBg: '#15803d' },
-    { id: 8, designationMr: 'युवा विभाग प्रमुख', designationEn: 'Youth Wing Head', nameMr: 'श्री. रोहन मंगेश महाडिक', nameEn: 'Rohan Mangesh Mahadik', phone: '+91 98700 88990', roleType: 'प्रमुख सदस्य', experienceYears: 7, avatarBg: '#1d4ed8' }
+    // प्रमुख ३ पदाधिकारी (Office Bearers)
+    { id: 1, designationMr: 'अध्यक्ष', designationEn: 'President', nameMr: 'श्री. बाळासाहेब यादव', nameEn: 'Balasaheb Yadav', phone: '+91 98201 44552', roleType: 'पदाधिकारी', experienceYears: 20, avatarBg: '#991b1b', photoUrl: '/Sabhasad/Balasaheb%20Yadav.jpg' },
+    { id: 2, designationMr: 'सेक्रेटरी', designationEn: 'Secretary', nameMr: 'श्री. शैलेश पैनला', nameEn: 'Shailesh Painla', phone: '+91 98192 33412', roleType: 'पदाधिकारी', experienceYears: 18, avatarBg: '#047857', photoUrl: '/Sabhasad/Shailesh%20Painla.jpeg' },
+    { id: 3, designationMr: 'खजिनदार', designationEn: 'Treasurer', nameMr: 'श्री. जगदीश शिंदे', nameEn: 'Jagdish Shinde', phone: '+91 99203 88124', roleType: 'पदाधिकारी', experienceYears: 16, avatarBg: '#1d4ed8', photoUrl: '/Sabhasad/Jagdish%20Shinde.jpeg' },
+    // सल्लागार मंडळ (Advisory Board)
+    { id: 4, designationMr: 'सल्लागार', designationEn: 'Advisor', nameMr: 'श्री. अनिल कांबळे', nameEn: 'Anil Kamble', phone: '+91 98690 77150', roleType: 'सल्लागार', experienceYears: 25, avatarBg: '#d97706', photoUrl: '/Sabhasad/Anil%20Kamble.jpeg' },
+    { id: 5, designationMr: 'सल्लागार', designationEn: 'Advisor', nameMr: 'श्री. भगवान तांडेल', nameEn: 'Bhagwan Tandel', phone: '+91 98211 99341', roleType: 'सल्लागार', experienceYears: 26, avatarBg: '#7c2d12', photoUrl: '/Sabhasad/Bhagwan%20Tandel.jpeg' },
+    { id: 6, designationMr: 'सल्लागार', designationEn: 'Advisor', nameMr: 'श्री. तुकाराम शिंदे', nameEn: 'Tukaram Shinde', phone: '+91 98200 11223', roleType: 'सल्लागार', experienceYears: 28, avatarBg: '#475569', photoUrl: '/Sabhasad/Tukram%20Shinde.jpeg' },
+    { id: 7, designationMr: 'सल्लागार', designationEn: 'Advisor', nameMr: 'श्री. संजय कांबळे', nameEn: 'Sanjay Kamble', phone: '+91 98334 55667', roleType: 'सल्लागार', experienceYears: 22, avatarBg: '#0f766e', photoUrl: '/Sabhasad/Sanjay%20Kamble.jpeg' },
+    { id: 8, designationMr: 'सल्लागार', designationEn: 'Advisor', nameMr: 'श्री. नरेंद्र पंडित', nameEn: 'Narendra Pandit', phone: '+91 98700 88990', roleType: 'सल्लागार', experienceYears: 24, avatarBg: '#6b21a8', photoUrl: '/Sabhasad/Narendra%20Pandit.jpeg' }
   ];
 
   // Base yearly festival records (loaded from Excel Yearly_Archive sheet or initial defaults)
@@ -717,25 +822,152 @@ export class MandalDataService {
     }
   ]);
 
-  // Sabhasad (Registered Members) List
-  readonly sabhasadMembers = signal<SabhasadMember[]>([
-    { id: 1, srNo: 1, nameMr: 'श्री. मंगेश वसंत कदम', nameEn: 'Mangesh Vasant Kadam', building: 'शिव स्फूर्ती 1', flatNo: 'A-102', membershipTypeMr: 'आजीवन सभासद', membershipTypeEn: 'Life Member', phone: '+91 98201 44552', joinYear: 1997, status: 'सक्रिय' },
-    { id: 2, srNo: 2, nameMr: 'श्री. विलास अनंत सावंत', nameEn: 'Vilas Anant Sawant', building: 'शिव स्फूर्ती 1', flatNo: 'A-204', membershipTypeMr: 'आजीवन सभासद', membershipTypeEn: 'Life Member', phone: '+91 98192 33412', joinYear: 1997, status: 'सक्रिय' },
-    { id: 3, srNo: 3, nameMr: 'श्री. सचिन चंद्रकांत तांबडे', nameEn: 'Sachin Chandrakant Tambde', building: 'शिव स्फूर्ती 2', flatNo: 'B-101', membershipTypeMr: 'आजीवन सभासद', membershipTypeEn: 'Life Member', phone: '+91 99203 88124', joinYear: 2002, status: 'सक्रिय' },
-    { id: 4, srNo: 4, nameMr: 'श्री. राजेश भास्कर परब', nameEn: 'Rajesh Bhaskar Parab', building: 'शिव स्फूर्ती 2', flatNo: 'B-303', membershipTypeMr: 'आजीवन सभासद', membershipTypeEn: 'Life Member', phone: '+91 98690 77150', joinYear: 1999, status: 'सक्रिय' },
-    { id: 5, srNo: 5, nameMr: 'श्री. सुधीर दत्तात्रय सावंत', nameEn: 'Sudhir Dattatray Sawant', building: 'शिव स्फूर्ती 1', flatNo: 'A-302', membershipTypeMr: 'आजीवन सभासद', membershipTypeEn: 'Life Member', phone: '+91 98211 99341', joinYear: 2005, status: 'सक्रिय' },
-    { id: 6, srNo: 6, nameMr: 'श्री. चंद्रकांत बाबुराव महाडिक', nameEn: 'Chandrakant Baburao Mahadik', building: 'शिव स्फूर्ती 1', flatNo: 'A-001', membershipTypeMr: 'संस्थापक सल्लागार', membershipTypeEn: 'Founding Advisor', phone: '+91 98200 11223', joinYear: 1997, status: 'सक्रिय' },
-    { id: 7, srNo: 7, nameMr: 'श्री. अमोल दिनकर पाटील', nameEn: 'Amol Dinkar Patil', building: 'आदर्श नगर', flatNo: 'C-201', membershipTypeMr: 'वार्षिक सभासद', membershipTypeEn: 'Annual Member', phone: '+91 98334 55667', joinYear: 2012, status: 'सक्रिय' },
-    { id: 8, srNo: 8, nameMr: 'श्री. रोहन मंगेश महाडिक', nameEn: 'Rohan Mangesh Mahadik', building: 'शिव स्फूर्ती 1', flatNo: 'A-402', membershipTypeMr: 'युवा सभासद', membershipTypeEn: 'Youth Member', phone: '+91 98700 88990', joinYear: 2018, status: 'सक्रिय' },
-    { id: 9, srNo: 9, nameMr: 'श्री. प्रकाश भिकाजी कदम', nameEn: 'Prakash Bhikaji Kadam', building: 'शिव स्फूर्ती 2', flatNo: 'B-202', membershipTypeMr: 'आजीवन सभासद', membershipTypeEn: 'Life Member', phone: '+91 98205 66778', joinYear: 2000, status: 'सक्रिय' },
-    { id: 10, srNo: 10, nameMr: 'श्री. विठ्ठल तुकाराम महाडिक', nameEn: 'Vitthal Tukaram Mahadik', building: 'शिव स्फूर्ती 1', flatNo: 'A-104', membershipTypeMr: 'आजीवन सभासद', membershipTypeEn: 'Life Member', phone: '+91 98198 77665', joinYear: 1998, status: 'सक्रिय' },
-    { id: 11, srNo: 11, nameMr: 'श्री. सदानंद बाळकृष्ण राणे', nameEn: 'Sadanand Balkrishna Rane', building: 'आदर्श नगर', flatNo: 'D-102', membershipTypeMr: 'वार्षिक सभासद', membershipTypeEn: 'Annual Member', phone: '+91 98330 22119', joinYear: 2014, status: 'सक्रिय' },
-    { id: 12, srNo: 12, nameMr: 'श्री. दीपक विनायक जोशी', nameEn: 'Deepak Vinayak Joshi', building: 'आदर्श नगर', flatNo: 'C-304', membershipTypeMr: 'वार्षिक सभासद', membershipTypeEn: 'Annual Member', phone: '+91 98214 33221', joinYear: 2016, status: 'सक्रिय' },
-    { id: 13, srNo: 13, nameMr: 'श्री. गणेश बाळाराम शिंदे', nameEn: 'Ganesh Balaram Shinde', building: 'शिव स्फूर्ती 2', flatNo: 'B-401', membershipTypeMr: 'आजीवन सभासद', membershipTypeEn: 'Life Member', phone: '+91 98920 11443', joinYear: 2008, status: 'सक्रिय' },
-    { id: 14, srNo: 14, nameMr: 'श्री. संजय शांताराम सुर्वे', nameEn: 'Sanjay Shantaram Surve', building: 'आदर्श नगर', flatNo: 'D-203', membershipTypeMr: 'वार्षिक सभासद', membershipTypeEn: 'Annual Member', phone: '+91 98209 88771', joinYear: 2015, status: 'सक्रिय' },
-    { id: 15, srNo: 15, nameMr: 'सौ. सुवर्णा मंगेश कदम', nameEn: 'Suvarna Mangesh Kadam', building: 'शिव स्फूर्ती 1', flatNo: 'A-102', membershipTypeMr: 'महिला प्रतिनिधी', membershipTypeEn: 'Women Wing Rep', phone: '+91 98201 44553', joinYear: 2004, status: 'सक्रिय' },
-    { id: 16, srNo: 16, nameMr: 'सौ. अनुराधा विलास सावंत', nameEn: 'Anuradha Vilas Sawant', building: 'शिव स्फूर्ती 1', flatNo: 'A-204', membershipTypeMr: 'महिला प्रतिनिधी', membershipTypeEn: 'Women Wing Rep', phone: '+91 98192 33413', joinYear: 2006, status: 'सक्रिय' }
-  ]);
+  // Official 2025 Notice Registered Members (सभासद - १२९ अधिकृत सभासद ५ स्तंभांमध्ये)
+  private readonly _official2025Sabhasad: SabhasadMember[] = [
+    // Column 1 (२६ सभासद)
+    { id: 1, srNo: 1, nameMr: 'आकाश भालेराव', nameEn: 'Aakash Bhalerao', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00101', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Akash%20Bhalerao.jpeg' },
+    { id: 2, srNo: 2, nameMr: 'वैभव साखरे', nameEn: 'Vaibhav Sakhare', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00102', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Vaibhav%20Sakhre.jpeg' },
+    { id: 3, srNo: 3, nameMr: 'सुचित कांबळे', nameEn: 'Suchit Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00103', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Suchit%20Kamble.jpeg' },
+    { id: 4, srNo: 4, nameMr: 'रोहन महाडीक', nameEn: 'Rohan Mahadik', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00104', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Rohan%20Mahadik.jpeg' },
+    { id: 5, srNo: 5, nameMr: 'सुभाष चौहान', nameEn: 'Subhash Chauhan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00105', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Subhash%20Chauhan.jpeg' },
+    { id: 6, srNo: 6, nameMr: 'अरविंद शेडगे', nameEn: 'Arvind Shedge', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00106', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Arvind%20Shedge.jpeg' },
+    { id: 7, srNo: 7, nameMr: 'अश्विन भालेराव', nameEn: 'Ashwin Bhalerao', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00107', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Ashwin%20Bhalerao.jpeg' },
+    { id: 8, srNo: 8, nameMr: 'सिध्दार्थ रागल्ला', nameEn: 'Siddharth Ragalla', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00108', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Siddharth%20Ragalla.jpeg' },
+    { id: 9, srNo: 9, nameMr: 'रमेश कांबळे', nameEn: 'Ramesh Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00109', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Ramesh%20Kamble.jpeg' },
+    { id: 10, srNo: 10, nameMr: 'अमोल कांबळे', nameEn: 'Amol Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00110', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Amol%20Kamble.jpeg' },
+    { id: 11, srNo: 11, nameMr: 'अक्षय उजवणे', nameEn: 'Akshay Ujavane', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00111', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Akshay%20Ujawne.jpeg' },
+    { id: 12, srNo: 12, nameMr: 'करुणाकर कोडारी', nameEn: 'Karunakar Kodari', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00112', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Karnakar%20Kodari.jpeg' },
+    { id: 13, srNo: 13, nameMr: 'तिरूपती लिंगमपेल्ली', nameEn: 'Tirupati Lingampelli', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00113', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Tirupati%20Lingampelli.jpeg' },
+    { id: 14, srNo: 14, nameMr: 'अजित साखरे', nameEn: 'Ajit Sakhare', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00114', joinYear: 2025, status: 'सक्रिय', columnIndex: 1 },
+    { id: 15, srNo: 15, nameMr: 'दिपेश कांबळे', nameEn: 'Dipesh Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00115', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Dipesh%20Kamble.jpeg' },
+    { id: 16, srNo: 16, nameMr: 'संतोष चौहान', nameEn: 'Santosh Chauhan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00116', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Santosh.jpeg' },
+    { id: 17, srNo: 17, nameMr: 'मंगेश पवार', nameEn: 'Mangesh Pawar', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00117', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Mangesh%20Pawar.jpeg' },
+    { id: 18, srNo: 18, nameMr: 'चंद्रकीर्ती पंडित', nameEn: 'Chandrakirti Pandit', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00118', joinYear: 2025, status: 'सक्रिय', columnIndex: 1 },
+    { id: 19, srNo: 19, nameMr: 'दिपेश कोकरे', nameEn: 'Dipesh Kokare', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00119', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Dipesh%20Kokre.jpeg' },
+    { id: 20, srNo: 20, nameMr: 'संदिप पटेल', nameEn: 'Sandip Patel', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00120', joinYear: 2025, status: 'सक्रिय', columnIndex: 1, photoUrl: '/Sabhasad/Saneep%20Patel.jpeg' },
+    { id: 21, srNo: 21, nameMr: 'संजू चौहान', nameEn: 'Sanju Chauhan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00121', joinYear: 2025, status: 'सक्रिय', columnIndex: 1 },
+    { id: 22, srNo: 22, nameMr: 'बालाजी मांडळे', nameEn: 'Balaji Mandale', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00122', joinYear: 2025, status: 'सक्रिय', columnIndex: 1 },
+    { id: 23, srNo: 23, nameMr: 'तिरूपती सट्टा', nameEn: 'Tirupati Satta', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00123', joinYear: 2025, status: 'सक्रिय', columnIndex: 1 },
+    { id: 24, srNo: 24, nameMr: 'राजू गवंडी', nameEn: 'Raju Gavandi', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00124', joinYear: 2025, status: 'सक्रिय', columnIndex: 1 },
+    { id: 25, srNo: 25, nameMr: 'संजय घरटकर', nameEn: 'Sanjay Gharatkar', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00125', joinYear: 2025, status: 'सक्रिय', columnIndex: 1 },
+    { id: 26, srNo: 26, nameMr: 'दिपक पाटील', nameEn: 'Dipak Patil', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98201 00126', joinYear: 2025, status: 'सक्रिय', columnIndex: 1 },
+
+    // Column 2 (२६ सभासद)
+    { id: 27, srNo: 27, nameMr: 'महेश पाटील', nameEn: 'Mahesh Patil', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00101', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Mahesh%20Patil.jpeg' },
+    { id: 28, srNo: 28, nameMr: 'मेहुल पाटील', nameEn: 'Mehul Patil', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00102', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Mehul%20Patil.jpeg' },
+    { id: 29, srNo: 29, nameMr: 'सुरज कांबळे', nameEn: 'Suraj Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00103', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 30, srNo: 30, nameMr: 'आकाश कांबळे', nameEn: 'Aakash Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00104', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Akash%20Kamble.jpeg' },
+    { id: 31, srNo: 31, nameMr: 'प्रकाश कांबळे', nameEn: 'Prakash Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00105', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 32, srNo: 32, nameMr: 'रवी दुबळी', nameEn: 'Ravi Dubali', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00106', joinYear: 2025, status: 'सक्रिय', columnIndex: 2,  },
+    { id: 33, srNo: 33, nameMr: 'महेंद्र दुबळी', nameEn: 'Mahendra Dubali', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00107', joinYear: 2025, status: 'सक्रिय', columnIndex: 2,photoUrl: '/Sabhasad/Mahendra%20Dubli.jpeg'},
+    { id: 34, srNo: 34, nameMr: 'कैलाश दुबळी', nameEn: 'Kailash Dubali', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00108', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Kailash%20Dubli.jpeg' },
+    { id: 35, srNo: 35, nameMr: 'निखिल इंगोले', nameEn: 'Nikhil Ingole', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00109', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 36, srNo: 36, nameMr: 'सचिन रावराणे', nameEn: 'Sachin Ravrane', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00110', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 37, srNo: 37, nameMr: 'मिलिंद परब', nameEn: 'Milind Parab', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00111', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Milind%20Parab.jpeg' },
+    { id: 38, srNo: 38, nameMr: 'नितिन परब', nameEn: 'Nitin Parab', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00112', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 39, srNo: 39, nameMr: 'सुमित नेमन', nameEn: 'Sumit Neman', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00113', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 40, srNo: 40, nameMr: 'संघपाल मोरे', nameEn: 'Sanghpal More', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00114', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Sangpal%20More.jpeg' },
+    { id: 41, srNo: 41, nameMr: 'संकेत पळसमकर', nameEn: 'Sanket Palsamkar', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00115', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 42, srNo: 42, nameMr: 'अनिकेत शिवगण', nameEn: 'Aniket Shivgan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00116', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Aniket%20Shivgan.jpeg' },
+    { id: 43, srNo: 43, nameMr: 'सुहास शिवगण', nameEn: 'Suhas Shivgan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00117', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Suhas%20Shivgan.jpeg' },
+    { id: 44, srNo: 44, nameMr: 'सुमित गावडे', nameEn: 'Sumit Gawade', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00118', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 45, srNo: 45, nameMr: 'समिर गावडे', nameEn: 'Samir Gawade', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00119', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 46, srNo: 46, nameMr: 'कार्तिक गवडा', nameEn: 'Kartik Gawda', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00120', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Karthik%20Gawda.jpeg' },
+    { id: 47, srNo: 47, nameMr: 'राजेंद्र शिवगण', nameEn: 'Rajendra Shivgan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00121', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 48, srNo: 48, nameMr: 'शर्बिल शिवगण', nameEn: 'Sharbil Shivgan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00122', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 49, srNo: 49, nameMr: 'सिध्देश पाचकळे', nameEn: 'Siddhesh Pachkale', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00123', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 50, srNo: 50, nameMr: 'पांडुरंग मांडवकर', nameEn: 'Pandurang Mandavkar', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00124', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Pandurang%20Mandavkar.jpeg' },
+    { id: 51, srNo: 51, nameMr: 'हरेश फाटक', nameEn: 'Haresh Phatak', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00125', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 52, srNo: 52, nameMr: 'तन्मय शिंदे', nameEn: 'Tanmay Shinde', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00126', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Tanmay%20Shinde.jpeg' },
+
+    // Column 3 (२६ सभासद)
+    { id: 53, srNo: 53, nameMr: 'गौरव महाडीक', nameEn: 'Gaurav Mahadik', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00101', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 54, srNo: 54, nameMr: 'मनोज खाके', nameEn: 'Manoj Khake', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00102', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Manoj%20Khake.jpeg' },
+    { id: 55, srNo: 55, nameMr: 'गणेश तांडेल', nameEn: 'Ganesh Tandel', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00103', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 56, srNo: 56, nameMr: 'सुजय कर्पे', nameEn: 'Sujay Karpe', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00104', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Sujay%20Karpe.jpeg' },
+    { id: 57, srNo: 57, nameMr: 'पप्पू माने', nameEn: 'Pappu Mane', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00105', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 58, srNo: 58, nameMr: 'प्रणय जगताप', nameEn: 'Pranay Jagtap', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00106', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Pranay%20Jagtap.jpeg' },
+    { id: 59, srNo: 59, nameMr: 'संदेश मेस्त्री', nameEn: 'Sandesh Mestry', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00107', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 60, srNo: 60, nameMr: 'अमित मढवी', nameEn: 'Amit Madhavi', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00108', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 61, srNo: 61, nameMr: 'अमर मढवी', nameEn: 'Amar Madhavi', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00109', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 62, srNo: 62, nameMr: 'नरेश कांदुरपाका', nameEn: 'Naresh Kandurpaka', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00110', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Naresh%20Kodrupaka.jpeg' },
+    { id: 63, srNo: 63, nameMr: 'विवेक बावदाणे', nameEn: 'Vivek Bavdane', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00111', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 64, srNo: 64, nameMr: 'शुभम शिवगण', nameEn: 'Shubham Shivgan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00112', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Shubham%20Shivgan.jpeg' },
+    { id: 65, srNo: 65, nameMr: 'सागर पवार', nameEn: 'Sagar Pawar', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00113', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 66, srNo: 66, nameMr: 'सचिन मुस्कवाड', nameEn: 'Sachin Muskwad', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00114', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 67, srNo: 67, nameMr: 'संदिप शिर्के', nameEn: 'Sandip Shirke', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00115', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 68, srNo: 68, nameMr: 'युवराज कोकरे', nameEn: 'Yuvraj Kokare', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00116', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 69, srNo: 69, nameMr: 'सतिश कोताकोंडा', nameEn: 'Satish Kotakonda', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00117', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 70, srNo: 70, nameMr: 'सिध्दीनाथ चुरमुले', nameEn: 'Siddhinath Churmule', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00118', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Siddhinath%20CHirmule.jpeg' },
+    { id: 71, srNo: 71, nameMr: 'सागर चुरमुले', nameEn: 'Sagar Churmule', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00119', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 72, srNo: 72, nameMr: 'लक्ष्मण चव्हाण', nameEn: 'Laxman Chavan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00120', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Laxman%20Chavan.jpeg' },
+    { id: 73, srNo: 73, nameMr: 'तुषार कांबळे', nameEn: 'Tushar Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00121', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 74, srNo: 74, nameMr: 'नितेश निर्मल', nameEn: 'Nitesh Nirmal', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00122', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 75, srNo: 75, nameMr: 'प्रशांत वरकोला', nameEn: 'Prashant Varkola', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00123', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Prashant%20Varkola.jpeg' },
+    { id: 76, srNo: 76, nameMr: 'यशवंत कणसे', nameEn: 'Yashwant Kanse', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00124', joinYear: 2025, status: 'सक्रिय', columnIndex: 3 },
+    { id: 77, srNo: 77, nameMr: 'निरज यादव', nameEn: 'Niraj Yadav', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00125', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Niraj%20Yadav.jpeg' },
+    { id: 78, srNo: 78, nameMr: 'गौरव पाटील', nameEn: 'Gaurav Patil', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98203 00126', joinYear: 2025, status: 'सक्रिय', columnIndex: 3, photoUrl: '/Sabhasad/Gaurav%20Patil.jpeg' },
+
+    // Column 4 (२६ सभासद)
+    { id: 79, srNo: 79, nameMr: 'शुभम साळुंखे', nameEn: 'Shubham Salunkhe', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00101', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Shubham%20Salunke.jpeg' },
+    { id: 80, srNo: 80, nameMr: 'शशि माथ्यो', nameEn: 'Shashi Mathyo', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00102', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+    { id: 81, srNo: 81, nameMr: 'विन्मय शिंदे', nameEn: 'Vinmay Shinde', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00103', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Vinmay%20Shinde.jpeg' },
+    { id: 82, srNo: 82, nameMr: 'मंदिप चौहान', nameEn: 'Mandip Chauhan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00104', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Mandeep%20Chuhan.jpeg' },
+    { id: 83, srNo: 83, nameMr: 'सागर वेमुला', nameEn: 'Sagar Vemula', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00105', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Sagar%20Vemula.jpeg' },
+    { id: 84, srNo: 84, nameMr: 'संदेश गावडे', nameEn: 'Sandesh Gawade', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00106', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+    { id: 85, srNo: 85, nameMr: 'साईराज शिंदे', nameEn: 'Sairaj Shinde', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00107', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Sairaj%20Shinde.jpeg' },
+    { id: 86, srNo: 86, nameMr: 'आदित्य शिंदे', nameEn: 'Aaditya Shinde', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00108', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Aditya%20Shinde.jpeg' },
+    { id: 87, srNo: 87, nameMr: 'आशुतोष मांडळे', nameEn: 'Ashutosh Mandale', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00109', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+    { id: 88, srNo: 88, nameMr: 'संकेत भोमाले', nameEn: 'Sanket Bhomale', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00110', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+    { id: 89, srNo: 89, nameMr: 'प्रथमेश बाणे', nameEn: 'Prathamesh Bane', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00111', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+    { id: 90, srNo: 90, nameMr: 'महादेव घोडके', nameEn: 'Mahadev Ghodke', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00112', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+    { id: 91, srNo: 91, nameMr: 'कृष्णा घोडके', nameEn: 'Krishna Ghodke', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00113', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Krishna%20Ghodke.jpeg' },
+    { id: 92, srNo: 92, nameMr: 'विनोद तेली', nameEn: 'Vinod Teli', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00114', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Vindo%20Teli.jpeg' },
+    { id: 93, srNo: 93, nameMr: 'नारायण एनागंदूला', nameEn: 'Narayan Enagandula', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00115', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+    { id: 94, srNo: 94, nameMr: 'संकेत कांबळे', nameEn: 'Sanket Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00116', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Sanket%20Kamble.jpeg' },
+    { id: 95, srNo: 95, nameMr: 'सचिन बधाले', nameEn: 'Sachin Badhale', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00117', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Sachin%20Badhale.jpeg' },
+    { id: 96, srNo: 96, nameMr: 'अमित बधाले', nameEn: 'Amit Badhale', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00118', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Amit%20Badhale.jpeg' },
+    { id: 97, srNo: 97, nameMr: 'प्रदिप पवार', nameEn: 'Pradip Pawar', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00119', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+    { id: 98, srNo: 98, nameMr: 'विनोद केळकर', nameEn: 'Vinod Kelkar', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00120', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Vinod%20Kelkar.jpeg' },
+    { id: 99, srNo: 99, nameMr: 'राजू खंडारे', nameEn: 'Raju Khandare', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00121', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+    { id: 100, srNo: 100, nameMr: 'अर्जुन जोगी', nameEn: 'Arjun Jogi', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00122', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Arjun%20Jogi.jpeg' },
+    { id: 101, srNo: 101, nameMr: 'साई अनंततुला', nameEn: 'Sai Ananttula', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00123', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Sai%20Anntulla.jpeg' },
+    { id: 102, srNo: 102, nameMr: 'जिगर मनका', nameEn: 'Jigar Manka', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00124', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Jigar%20Manka.jpeg' },
+    { id: 103, srNo: 103, nameMr: 'नरेंद्र इंदुनुरी', nameEn: 'Narendra Indunuri', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00125', joinYear: 2025, status: 'सक्रिय', columnIndex: 4, photoUrl: '/Sabhasad/Narendra%20Idurnuri.png' },
+    { id: 104, srNo: 104, nameMr: 'महेंद्र इंदुनुरी', nameEn: 'Mahendra Indunuri', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98204 00126', joinYear: 2025, status: 'सक्रिय', columnIndex: 4 },
+
+    // Column 5 (२७ सभासद)
+    { id: 105, srNo: 105, nameMr: 'अजय मगरे', nameEn: 'Ajay Magare', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00101', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 106, srNo: 106, nameMr: 'अंकुश ओव्हाळ', nameEn: 'Ankush Ovhal', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00102', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 107, srNo: 107, nameMr: 'नितेश शिंदे', nameEn: 'Nitesh Shinde', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00103', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 108, srNo: 108, nameMr: 'नवीन चौहान', nameEn: 'Navin Chauhan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00104', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 109, srNo: 109, nameMr: 'धिरज साव', nameEn: 'Dhiraj Saw', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00105', joinYear: 2025, status: 'सक्रिय', columnIndex: 5, photoUrl: '/Sabhasad/Dhiraj%20Saav.jpeg' },
+    { id: 110, srNo: 110, nameMr: 'निलेश पाटील', nameEn: 'Nilesh Patil', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00106', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 111, srNo: 111, nameMr: 'उमेश पाटील', nameEn: 'Umesh Patil', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00107', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 112, srNo: 112, nameMr: 'संजय विचारे', nameEn: 'Sanjay Vichare', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00108', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 113, srNo: 113, nameMr: 'राहुल शेडगे', nameEn: 'Rahul Shedge', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00109', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 114, srNo: 114, nameMr: 'बुध्दभूषण राऊत', nameEn: 'Buddhabhushan Raut', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00110', joinYear: 2025, status: 'सक्रिय', columnIndex: 5, photoUrl: '/Sabhasad/Buddhabhushan%20Raut.jpeg' },
+    { id: 115, srNo: 115, nameMr: 'पंडित कांबळे', nameEn: 'Pandit Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00111', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 116, srNo: 116, nameMr: 'शंकर जाधव', nameEn: 'Shankar Jadhav', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00112', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 117, srNo: 117, nameMr: 'राहुल कांबळे', nameEn: 'Rahul Kamble', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00113', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 118, srNo: 118, nameMr: 'लक्की खिल्लारे', nameEn: 'Lucky Khillare', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00114', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 119, srNo: 119, nameMr: 'विलास इंगोले', nameEn: 'Vilas Ingole', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00115', joinYear: 2025, status: 'सक्रिय', columnIndex: 5, photoUrl: '/Sabhasad/Vilas%20Ingole.jpeg' },
+    { id: 120, srNo: 120, nameMr: 'गौरव इंगोले', nameEn: 'Gaurav Ingole', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00116', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 121, srNo: 121, nameMr: 'रूपेश इंगोले', nameEn: 'Rupesh Ingole', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00117', joinYear: 2025, status: 'सक्रिय', columnIndex: 5, photoUrl: '/Sabhasad/Balu%20Ingole.jpeg' },
+    { id: 122, srNo: 122, nameMr: 'आशितोष इंगोले', nameEn: 'Ashitosh Ingole', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00118', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 123, srNo: 123, nameMr: 'अजय दिपके', nameEn: 'Ajay Dipke', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00119', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 124, srNo: 124, nameMr: 'अमोल पाटील', nameEn: 'Amol Patil', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00120', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 125, srNo: 125, nameMr: 'सुनिल कलाल', nameEn: 'Sunil Kalal', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00121', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 126, srNo: 126, nameMr: 'गणेश जाधव', nameEn: 'Ganesh Jadhav', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00122', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 127, srNo: 127, nameMr: 'उमेश इंगळे', nameEn: 'Umesh Ingale', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00123', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 128, srNo: 128, nameMr: 'रवि चौहान (तूल)', nameEn: 'Ravi Chauhan (Tool)', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00124', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 129, srNo: 129, nameMr: 'प्रविण इंगोले', nameEn: 'Pravin Ingole', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00125', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 },
+    { id: 130, srNo: 130, nameMr: 'प्रकाश सोनार', nameEn: 'Prakash Sonar', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00126', joinYear: 2025, status: 'सक्रिय', columnIndex: 5, photoUrl: '/Sabhasad/Prakash%20Sonar.jpeg' },
+    { id: 131, srNo: 131, nameMr: 'सुमित पटेल', nameEn: 'Sumit Patel', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98205 00127', joinYear: 2025, status: 'सक्रिय', columnIndex: 5 }
+  ];
+
+  // Sabhasad (Registered Members) List - Initialized with all 131 members from the 2025 notice
+  readonly sabhasadMembers = signal<SabhasadMember[]>(this._official2025Sabhasad);
 
   // Advertisement Slider Banners
   readonly advertisementBanners: AdvertisementBanner[] = [
@@ -859,26 +1091,120 @@ export class MandalDataService {
       id: 'ganeshotsav',
       nameMr: 'सार्वजनिक गणेशोत्सव २०२६',
       nameEn: 'Sarvajanik Ganeshotsav 2026',
-      taglineMr: '॥ जोगेश्वरीचा विघ्नहर्ता ॥ ५६ वे वर्ष',
-      datesMr: '२७ ऑगस्ट २०२६ ते ०६ सप्टेंबर २०२६ (१० दिवस)',
+      taglineMr: '॥ जोगेश्वरीचा विघ्नहर्ता ॥ २९ वे वर्ष (३० वा वर्धापन दिन)',
+      datesMr: '१४ सप्टेंबर २०२६ ते २५ सप्टेंबर २०२६ (१२ दिवस / अनंत चतुर्दशी)',
       year: 2026,
-      descriptionMr: 'जोगेश्वरी (पश्चिम) येथील शिव स्फूर्ती व आदर्श नगर परिसरातील सर्वात मोठा आणि भक्तिमय गणेशोत्सव. यंदाचे ५६ वे वर्ष असून भव्य मंदिरामधील आरास आणि धार्मिक-सांस्कृतिक कार्यक्रमांचे आयोजन करण्यात आले आहे.',
+      descriptionMr: 'श्री अष्टविनायक मित्र मंडळ (रजि. नं. १९१२३ जी.बी.बी.एस.डी) आयोजित ३० व्या वर्धापन दिनानिमित्त यंदाचे २९ वे वर्ष! जोगेश्वरी (पश्चिम) येथील शिव स्फूर्ती व आदर्श नगर परिसरातील सर्वात मोठा आणि भक्तिमय गणेशोत्सव सोहळा. १४ सप्टेंबर २०२६ रोजी मंगलमूर्ती प्रतिष्ठापनेपासून २५ सप्टेंबर २०२६ अनंत चतुर्दशी विसर्जन मिरवणुकीपर्यंत विविध धार्मिक, आरोग्यविषयक व सांस्कृतिक कार्यक्रमांचे भव्य आयोजन करण्यात आले आहे.',
       schedule: [
-        { time: 'सकाळी ०८:०० वा.', titleMr: 'प्रातःकालीन महाआरती व अभिषेक', descMr: 'सर्व भाविकांच्या उपस्थितीत गणरायाची षोडशोपचारे नित्य पूजा आणि महाआरती.', icon: 'bell' },
-        { time: 'दुपारी १२:०० वा.', titleMr: 'दुपारची आरती व महानैवेद्य', descMr: 'उकडीच्या मोदकांचा विशेष महाभोग आणि मोदक वाटप.', icon: 'utensils' },
-        { time: 'दुपारी ०४:०० वा.', titleMr: 'सांस्कृतिक स्पर्धा व मुलांचे कार्यक्रम', descMr: 'चित्रकला, वक्तृत्व, पाठांतर व फॅन्सी ड्रेस स्पर्धा (पारितोषिक वितरण).', icon: 'award' },
-        { time: 'संध्याकाळी ०८:०० वा.', titleMr: 'संध्या महाआरती व कीर्तन/भजन', descMr: 'स्थानिक महिला भजनी मंडळ व प्रसिद्ध कीर्तनकारांचे उद्बोधक कीर्तन.', icon: 'flame' },
-        { time: 'रात्री १०:०० वा.', titleMr: 'हरिपाठ व शेजारती', descMr: 'शांत आणि भक्तिमय वातावरणात रात्रीची शेजारती.', icon: 'moon' }
+        {
+          date: '१४ सप्टेंबर २०२६',
+          time: 'सकाळी ०९:०० वा.',
+          titleMr: 'श्री गणेश मूर्ती प्राणप्रतिष्ठापना व महाआरती',
+          descMr: 'वैदिक मंत्रोच्चारात श्री गणरायाची मंगल प्रतिष्ठापना व प्रथम प्रातःकालीन महाआरती सोहळा.',
+          icon: '🪔',
+          category: 'धार्मिक प्रतिष्ठापना',
+          details: 'मंडळ पदाधिकारी व परिसरातील भाविकांच्या उपस्थितीत बाप्पाची स्थापना व आरती.'
+        },
+        {
+          date: '२२ सप्टेंबर २०२६',
+          time: 'सायं. ५:०० वा.',
+          titleMr: 'चित्रकला स्पर्धा (Drawing Competition)',
+          descMr: 'विषय : गणपती बाप्पा | वयोगट: १) १० वर्षांखालील, २) ११ ते १५ वर्षे.',
+          icon: '🎨',
+          category: 'सांस्कृतिक स्पर्धा',
+          details: 'विषय: गणपती बाप्पा | वयोगट: १) १० वर्षांखालील, २) ११ ते १५ वर्षे'
+        },
+        {
+          date: '२३ सप्टेंबर २०२६',
+          time: 'सायं. ५:०० वा.',
+          titleMr: 'वक्तृत्व स्पर्धा (Elocution Competition)',
+          descMr: 'विषय : १) माझी आई, २) माझा आवडता सण, ३) माझी शाळा | वयोगट: १) १० वर्षांखालील, २) ११ ते १५ वर्षे.',
+          icon: '🎙️',
+          category: 'सांस्कृतिक स्पर्धा',
+          details: 'विषय: १) माझी आई, २) माझा आवडता सण, ३) माझी शाळा | वयोगट: १) १० वर्षांखालील, २) ११ ते १५ वर्षे'
+        },
+        {
+          date: '२४ सप्टेंबर २०२६',
+          time: 'सकाळी १०:०० ते दुपारी ३:०० वा.',
+          titleMr: 'मोफत नेत्र तपासणी शिबिर व चष्मे वाटप',
+          descMr: 'सर्वांसाठी मोफत नेत्र तपासणी व चष्म्यांचे वाटप. तज्ज्ञ डॉक्टरांच्या उपस्थितीत विशेष आरोग्य शिबिर.',
+          icon: '👁️',
+          category: 'आरोग्य शिबिर',
+          details: 'सर्वांसाठी मोफत नेत्र तपासणी व चष्म्यांचे वाटप'
+        },
+        {
+          date: '२४ सप्टेंबर २०२६',
+          time: 'दुपारी ३:०० वा.',
+          titleMr: 'श्री सत्यनारायण महापूजा',
+          descMr: 'श्री सत्यनारायणाची भव्य महापूजा व कथा वाचन. सर्व भाविकांनी सहकुटुंब सहभागी व्हावे, ही नम्र विनंती.',
+          icon: '🪔',
+          category: 'धार्मिक विधी',
+          details: 'सहकुटुंब सहभागी व्हावे, ही नम्र विनंती.'
+        },
+        {
+          date: '२४ सप्टेंबर २०२६',
+          time: 'सायं. ६:०० वा. नंतर',
+          titleMr: 'विशेष पाहुण्यांचा सत्कार समारंभ',
+          descMr: 'परिसरातील प्रतिष्ठित मान्यवर, समाजसेवक व विशेष अतिथींचा मंडळाच्या वतीने यथोचित सत्कार व सन्मान.',
+          icon: '💐',
+          category: 'सत्कार समारंभ',
+          details: 'विशेष पाहुण्यांचा सत्कार समारंभ'
+        },
+        {
+          date: '२४ सप्टेंबर २०२६',
+          time: 'सायं. ७:३० वा.',
+          titleMr: 'सांस्कृतिक कार्यक्रमातील पारितोषिक वितरण',
+          descMr: 'चित्रकला व वक्तृत्व स्पर्धेतील विजेत्या आणि सहभागी चिमुकल्या बालकलाकारांना बक्षिसे व गौरव प्रमाणपत्र वितरण.',
+          icon: '🏆',
+          category: 'पारितोषिक वितरण',
+          details: 'सांस्कृतिक कार्यक्रमातील पारितोषिक वितरण'
+        },
+        {
+          date: '२४ सप्टेंबर २०२६',
+          time: 'रात्री ८:०० वा.',
+          titleMr: 'स्थानिक सांस्कृतिक सुरवर भजन',
+          descMr: 'स्थानिक कलाकारांचे भक्तिमय व सुश्राव्य भजन सादरीकरण. बाप्पाच्या भक्तीत तल्लीन होणारा सुरेल सोहळा.',
+          icon: '🪕',
+          category: 'भक्तिसंगीत',
+          details: 'स्थानिक सांस्कृतिक सुरवर भजन'
+        },
+        {
+          date: '२४ सप्टेंबर २०२६',
+          time: 'रात्री ८:०० वा. नंतर',
+          titleMr: 'भव्य भंडारा महाप्रसाद',
+          descMr: 'सर्व भाविकांसाठी अन्नदान व महाप्रसाद वाटप. महाप्रसादासाठी ज्या भाविकांना आपले योगदान द्यायचे असल्यास संपर्क साधावा: जगदीश शिंदे - ९८२०६ ६८७३९.',
+          icon: '🍲',
+          category: 'महाप्रसाद (अन्नदान)',
+          details: 'महाप्रसादासाठी ज्या भाविकांना आपले योगदान द्यायचे असल्यास संपर्क साधावा: जगदीश शिंदे - ९८२०६ ६८७३९',
+          contact: 'जगदीश शिंदे - ९८२०६ ६८७३९'
+        },
+        {
+          date: '२५ सप्टेंबर २०२६',
+          time: 'सायं. ६:०० वा.',
+          titleMr: 'बाप्पाचे विसर्जन मिरवणूक (अनंत चतुर्दशी)',
+          descMr: 'ढोल-ताशांच्या गजरात, बाप्पाच्या जयघोषात भव्य विसर्जन मिरवणूक. सर्व गणेश भक्तांचे हार्दिक स्वागत! ॥ गणपती बाप्पा मोरया ... मंगलमूर्ती मोरया ॥',
+          icon: '🥁',
+          category: 'विसर्जन सोहळा',
+          details: 'ढोल-ताशांच्या गजरात, बाप्पाच्या जयघोषात, सर्वांनी मोठ्या संख्येने सहभागी व्हावे.'
+        }
       ],
       highlights: [
-        'सत्यनारायण महापूजा: ०३ सप्टेंबर २०२६ (दुपारी ०२:०० वा.)',
-        'भव्य महाप्रसाद वाटप: ०३ सप्टेंबर २०२६ (दुपारी १२ ते ४, सुमारे २००० भाविक)',
-        'भव्य विसर्जन मिरवणूक: ०६ सप्टेंबर २०२६ (अनंत चतुर्दशी - दुपारी ०३:०० वा. निघणार)'
+        '१४ सप्टेंबर २०२६: श्री गणेश मूर्ती प्राणप्रतिष्ठापना व महाआरती (सकाळी ०९:०० वा.)',
+        '२२ सप्टेंबर २०२६: चित्रकला स्पर्धा (सायं. ५:०० वा. | गणपती बाप्पा विषय)',
+        '२३ सप्टेंबर २०२६: वक्तृत्व स्पर्धा (सायं. ५:०० वा. | माझी आई, आवडता सण, शाळा)',
+        '२४ सप्टेंबर २०२६: मोफत नेत्र तपासणी शिबिर व चष्म्यांचे वाटप (सकाळी १०:०० ते दुपारी ३:००)',
+        '२४ सप्टेंबर २०२६: श्री सत्यनारायण महापूजा (दुपारी ३:०० वा. - सहकुटुंब उपस्थिती)',
+        '२४ सप्टेंबर २०२६: विशेष सत्कार व सांस्कृतिक पारितोषिक वितरण (सायं. ६:०० ते ७:३०)',
+        '२४ सप्टेंबर २०२६: स्थानिक सांस्कृतिक सुरवर भजन (रात्री ८:०० वा.)',
+        '२४ सप्टेंबर २०२६: भव्य भंडारा महाप्रसाद (रात्री ८:०० वा. नंतर | योगदान संपर्क: जगदीश शिंदे - ९८२०६ ६८७३९)',
+        '२५ सप्टेंबर २०२६: अनंत चतुर्दशी - बाप्पाचे विसर्जन मिरवणूक (सायं. ६:०० वा. - ढोल-ताशांच्या गजरात)'
       ],
       notices: [
-        'मंडपात पादत्राणे योग्य ठिकाणी ठेवावीत. शांतता राखावी.',
-        'आरती वेळी रांगेत उभे राहून दर्शन घ्यावे. स्वयंसेवकांना सहकार्य करावे.',
-        'सर्व देणगीदारांना कम्प्युटराइज्ड अधिकृत पावती तत्काळ दिली जाईल.'
+        'मंडपात पादत्राणे योग्य ठिकाणी ठेवावीत. शांतता व शिस्त राखावी.',
+        'आरती व महाप्रसाद वेळी रांगेत उभे राहून दर्शन घ्यावे. स्वयंसेवकांना सहकार्य करावे.',
+        'चित्रकला व वक्तृत्व स्पर्धेसाठी पूर्वनोंदणी व वेळेवर उपस्थिती आवश्यक आहे.',
+        'महाप्रसाद (भंडारा) योगदानासाठी संपर्क: खजिनदार श्री जगदीश शिंदे (९८२०६ ६८७३९).',
+        'सर्व देणगीदारांना अधिकृत डिजिटल पावती त्वरित दिली जाईल.'
       ]
     },
     {
@@ -943,6 +1269,48 @@ export class MandalDataService {
       notices: [
         'मिरवणुकीत पारंपरिक पोशाखात (कुर्ता/फेटा) सहभागी व्हावे.'
       ]
+    },
+    {
+      id: 'bathukamma',
+      nameMr: 'बथुकम्मा उत्सव २०२६',
+      nameEn: 'Bathukamma Floral Festival 2026',
+      taglineMr: '॥ निसर्गाची व फुलांची चैतन्यमयी पूजा ॥',
+      datesMr: '२१ सप्टेंबर २०२६ ते २९ सप्टेंबर २०२६ (९ दिवस)',
+      year: 2026,
+      descriptionMr: 'नवरात्रोत्सवादरम्यान महिला भगिनींतर्फे साजरा होणारा निसर्ग व फुलांचा अद्वितीय बथुकम्मा उत्सव. विविध औषधी व सुगंधी फुलांची मनोरेवजा रचना करून महिलांचा पारंपरिक फेर व लोकनृत्य सोहळा.',
+      schedule: [
+        { time: 'दुपारी ०४:०० वा.', titleMr: 'फुलांची बथुकम्मा रचना व सजावट', descMr: 'झेंडू, कमळ, गुलाब व विविध रानफुलांची कलात्मक मनोरेवजा रचना.', icon: 'flower' },
+        { time: 'संध्याकाळी ०६:३० वा.', titleMr: 'पारंपरिक फेर व बथुकम्मा लोकगीते', descMr: 'पारंपरिक पोशाखात महिलांचे बथुकम्माभोवती फेर धरून पारंपरिक गीत गायन.', icon: 'sparkles' },
+        { time: 'रात्री ०८:३० वा.', titleMr: 'सद्दुल बथुकम्मा विसर्जन व नैवेद्य वाटप', descMr: 'तलावामध्ये बथुकम्माचे भावपूर्ण विसर्जन व मलिदा महाप्रसाद वाटप.', icon: 'water' }
+      ],
+      highlights: [
+        'परिसरातील शेकडो महिलांचा पारंपरिक साडी व वेशभूषेत उत्स्फूर्त सहभाग',
+        'उत्कृष्ट व आकर्षक बथुकम्मा रचनेसाठी विशेष पारितोषिके'
+      ],
+      notices: [
+        'सर्व महिला भगिनींनी वेळेवर पारंपरिक पोशाखात उपस्थित राहावे.'
+      ]
+    },
+    {
+      id: 'swachhata-mohim',
+      nameMr: 'स्वच्छता मोहीम व पर्यावरण रक्षण',
+      nameEn: 'Swachhata Mohim & Cleanliness Drive',
+      taglineMr: '॥ स्वच्छ व हरित जोगेश्वरी - आमचा संकल्प ॥',
+      datesMr: 'वर्षभर अखंड उपक्रम (विशेष: गांधी जयंती व विसर्जनानंतर)',
+      year: 2026,
+      descriptionMr: 'आदर्श नगर व शिव स्फूर्ती परिसरात मंडळाच्या वतीने राबविली जाणारी व्यापक स्वच्छता मोहीम, वृक्षारोपण, प्लास्टिक मुक्ती जनजागृती आणि चौपाटी स्वच्छता श्रमदान.',
+      schedule: [
+        { time: 'सकाळी ०७:०० वा.', titleMr: 'प्रभात श्रमदान व रस्ते स्वच्छता', descMr: 'मंडळ कार्यकर्ते, स्थानिक तरुण व रहिवाशांचे सामूहिक झाडू श्रमदान.', icon: 'brush' },
+        { time: 'सकाळी ०९:३० वा.', titleMr: 'प्लास्टिक कचरा संकलन व जनजागृती', descMr: 'एकल वापराच्या प्लास्टिकवर बंदी व कापडी पिशव्यांचे मोफत वाटप.', icon: 'recycle' },
+        { time: 'सकाळी ११:०० वा.', titleMr: 'परिसर वृक्षारोपण व औषधी झाडे वाटप', descMr: 'परिसरात हिरवळ वाढवण्यासाठी देशी वृक्षारोपण व संगोपन प्रतिज्ञा.', icon: 'tree' }
+      ],
+      highlights: [
+        'गणेश विसर्जनानंतर चौपाटीवर विशेष स्वच्छता श्रमदान पथक',
+        'परिसरातील गटारे व रस्त्यांचे निर्जंतुकीकरण व औषध फवारणी'
+      ],
+      notices: [
+        'परिसर स्वच्छ ठेवणे हे प्रत्येकाचे कर्तव्य आहे. कचरा कुंडीतच टाकावा.'
+      ]
     }
   ];
 
@@ -992,7 +1360,7 @@ export class MandalDataService {
         'अ. क्र.': item.srNo,
         'नाव (मराठी)': item.nameMr,
         'नाव (English)': item.nameEn,
-        'बिल्डिंग / पत्ता': item.building,
+        'स्त्रोत / बिल्डिंग': item.source || item.building,
         'रक्कम (₹)': item.amount,
         'पावती क्रमांक': item.receiptNo || 'लागू नाही',
         'पावती स्थिती': item.status,
@@ -1029,25 +1397,52 @@ export class MandalDataService {
   async loadMasterExcelFromPublic(): Promise<boolean> {
     this.excelLoadStatus.set('loading');
     try {
-      // Add cache buster timestamp to ensure fresh load
-      const response = await fetch(`/data/mandal_data.xlsx?t=${Date.now()}`);
-      if (!response.ok) {
-        console.info('[MandalDataService] mandal_data.xlsx not found at /data/, using default initial data.');
+      // Prioritize mandal_data_format.xlsx (the root file users edit directly in the project),
+      // then fall back to /data/mandal_data.xlsx
+      const candidateUrls = [
+        `/data/mandal_data_format.xlsx?t=${Date.now()}`,
+        `/mandal_data_format.xlsx?t=${Date.now()}`,
+        `/data/mandal_data.xlsx?t=${Date.now()}`
+      ];
+
+      let buffer: ArrayBuffer | null = null;
+      let matchedFile = 'mandal_data.xlsx';
+
+      for (const url of candidateUrls) {
+        try {
+          const resp = await fetch(url);
+          if (resp.ok) {
+            const buf = await resp.arrayBuffer();
+            if (buf && buf.byteLength > 2000) {
+              buffer = buf;
+              matchedFile = url.split('?')[0].split('/').pop() || 'mandal_data.xlsx';
+              console.log(`[MandalDataService] Found candidate Excel file at ${url} (${buf.byteLength} bytes)`);
+              break;
+            }
+          }
+        } catch {
+          // ignore and try next candidate
+        }
+      }
+
+      if (!buffer) {
+        console.info('[MandalDataService] No Excel candidate found in public/assets, keeping fallback initial data.');
         this.excelLoadStatus.set('idle');
         return false;
       }
-      const buffer = await response.arrayBuffer();
-      const success = this.parseAndApplyWorkbook(buffer, 'mandal_data.xlsx');
+
+      const success = this.parseAndApplyWorkbook(buffer, matchedFile);
       if (success) {
         this.excelLoadStatus.set('success');
-        this.excelLoadMessage.set('Excel डेटा थेट कनेक्ट झाला (mandal_data.xlsx)');
-        console.log(`[MandalDataService] Loaded mandal_data.xlsx: ${this.sabhasadMembers().length} Sabhasad, ${this._varganiRecords().length} Vargani, ${this._kharchRecords().length} Kharch`);
+        this.excelFileName.set(matchedFile);
+        this.excelLoadMessage.set(`Excel डेटा थेट कनेक्ट झाला (${matchedFile})`);
+        console.log(`[MandalDataService] Successfully loaded ${matchedFile}: ${this.sabhasadMembers().length} Sabhasad, ${this._varganiRecords().length} Vargani, ${this._kharchRecords().length} Kharch`);
       } else {
         this.excelLoadStatus.set('error');
       }
       return success;
     } catch (err: any) {
-      console.warn('[MandalDataService] Failed to auto-load mandal_data.xlsx:', err);
+      console.warn('[MandalDataService] Failed to auto-load Excel:', err);
       this.excelLoadStatus.set('error');
       this.excelLoadMessage.set(err?.message || 'Excel फाईल लोड करताना त्रुटी आली');
       return false;
@@ -1061,7 +1456,8 @@ export class MandalDataService {
       const success = this.parseAndApplyWorkbook(buffer, file.name);
       if (success) {
         this.excelLoadStatus.set('success');
-        this.excelLoadMessage.set(`"${file.name}" फाईल यशस्वीरित्या सिंक झाली!`);
+        this.excelFileName.set(file.name);
+        this.excelLoadMessage.set(`"${file.name}" फाईल यशस्वीरित्या सिंक झाली! (${this._varganiRecords().length} वर्गणी नोंदी)`);
       } else {
         this.excelLoadStatus.set('error');
         this.excelLoadMessage.set('Excel पार्स करताना त्रुटी आली.');
@@ -1076,7 +1472,7 @@ export class MandalDataService {
 
   downloadExcelTemplate() {
     const link = document.createElement('a');
-    link.href = '/data/mandal_data.xlsx';
+    link.href = '/data/mandal_data_format.xlsx';
     link.download = 'mandal_data_format.xlsx';
     document.body.appendChild(link);
     link.click();
@@ -1113,7 +1509,7 @@ export class MandalDataService {
       const sabhasadSheet = findSheet('Sabhasad', 'सभासद');
       if (sabhasadSheet) {
         const rawRows = XLSX.utils.sheet_to_json<any>(sabhasadSheet);
-        if (rawRows.length > 0) {
+        if (rawRows.length >= 25) {
           const members: SabhasadMember[] = rawRows.map((row, idx) => {
             const srNo = Number(getVal(row, 'Sr_No', 'SrNo', 'अ. क्र.') || (idx + 1));
             const nameMr = String(getVal(row, 'Name_Mr', 'नाव - मराठी', 'नाव') || '').trim();
@@ -1126,6 +1522,13 @@ export class MandalDataService {
             const joinYear = Number(getVal(row, 'Join_Year', 'प्रवेश वर्ष') || 2026);
             const statusRaw = String(getVal(row, 'Status', 'स्थिती') || 'सक्रिय').trim();
 
+            const matchedOfficial = this._official2025Sabhasad.find(o =>
+              o.srNo === (srNo || idx + 1) ||
+              (o.nameEn && nameEn && o.nameEn.toLowerCase() === nameEn.toLowerCase()) ||
+              (o.nameMr && nameMr && o.nameMr === nameMr)
+            );
+            const photoUrl = getVal(row, 'Photo', 'photoUrl', 'फोटो') || matchedOfficial?.photoUrl;
+
             return {
               id: srNo || idx + 1,
               srNo: srNo || idx + 1,
@@ -1137,7 +1540,9 @@ export class MandalDataService {
               membershipTypeEn: memTypeEn,
               phone: phone || '-',
               joinYear: isNaN(joinYear) ? 2026 : joinYear,
-              status: (statusRaw.includes('Active') ? 'Active' : 'सक्रिय') as 'सक्रिय' | 'Active'
+              status: (statusRaw.includes('Active') ? 'Active' : 'सक्रिय') as 'सक्रिय' | 'Active',
+              columnIndex: Math.min(5, Math.floor(idx / 26) + 1),
+              photoUrl: photoUrl || undefined
             };
           });
           this.sabhasadMembers.set(members);
@@ -1153,14 +1558,55 @@ export class MandalDataService {
             const srNo = Number(getVal(row, 'Sr_No', 'SrNo', 'अ. क्र.') || (idx + 1));
             const nameMr = String(getVal(row, 'Name_Mr', 'नाव - मराठी', 'नाव') || '').trim();
             const nameEn = String(getVal(row, 'Name_En', 'नाव - English', 'Name') || '').trim();
-            const building = String(getVal(row, 'Building', 'इमारत') || 'इतर').trim();
-            const amount = Number(getVal(row, 'Amount', 'रक्कम ₹', 'रक्कम') || 0);
-            const receiptNo = getVal(row, 'Receipt_No', 'पावती क्र.', 'पावती');
-            const paymentMode = String(getVal(row, 'Payment_Mode', 'भरणा पद्धत') || 'कॅश').trim();
+
+            const rawBuilding = getVal(row, 'Source', 'स्त्रोत', 'माध्यम', 'Building', 'बिल्डिंग', 'इमारत', 'विंग');
+            const building = (rawBuilding && String(rawBuilding).trim() !== 'undefined' && String(rawBuilding).trim()) ? String(rawBuilding).trim() : 'इतर';
+
+            const rawAmount = getVal(row, 'Amount', 'रक्कम ₹', 'रक्कम') || 0;
+            const cleanAmount = typeof rawAmount === 'string' ? Number(rawAmount.replace(/[^0-9.]/g, '')) : Number(rawAmount);
+            const amount = isNaN(cleanAmount) ? 0 : cleanAmount;
+
+            const rawReceiptNo = getVal(row, 'Receipt_No', 'पावती क्र.', 'पावती');
+            const receiptNo = (rawReceiptNo !== undefined && rawReceiptNo !== null && String(rawReceiptNo).trim() !== '') ? String(rawReceiptNo).trim() : null;
+
+            // Payment Mode Normalization: maps Cash/GPay/Cheque/Bank
+            const rawPayment = String(getVal(row, 'Payment_Mode', 'भरणा पद्धत') || 'कॅश').trim();
+            let paymentMode: 'कॅश' | 'UPI / GPay' | 'चेक' | 'बँक ट्रान्सफर' = 'कॅश';
+            const lowerPay = rawPayment.toLowerCase();
+            if (lowerPay.includes('gpay') || lowerPay.includes('upi') || lowerPay.includes('phonepe') || lowerPay.includes('paytm') || lowerPay.includes('online')) {
+              paymentMode = 'UPI / GPay';
+            } else if (lowerPay.includes('cheque') || lowerPay.includes('चेक')) {
+              paymentMode = 'चेक';
+            } else if (lowerPay.includes('bank') || lowerPay.includes('बँक') || lowerPay.includes('neft') || lowerPay.includes('rtgs')) {
+              paymentMode = 'बँक ट्रान्सफर';
+            } else {
+              paymentMode = 'कॅश';
+            }
+
+            // Status Normalization: maps Given/Not Given/Pending
             const statusRaw = String(getVal(row, 'Status', 'पावती स्थिती', 'स्थिती') || 'दिलेली').trim();
+            const lowerStatus = statusRaw.toLowerCase();
+            let status: 'दिलेली' | 'बाकी' = 'दिलेली';
+            if (
+              lowerStatus.includes('not') ||
+              lowerStatus.includes('बाकी') ||
+              lowerStatus.includes('pending') ||
+              lowerStatus.includes('unpaid') ||
+              lowerStatus === 'no' ||
+              lowerStatus === 'false'
+            ) {
+              status = 'बाकी';
+            } else {
+              status = 'दिलेली';
+            }
+
             const date = String(getVal(row, 'Date', 'तारीख') || '01/09/2026').trim();
-            const festival = String(getVal(row, 'Festival', 'उत्सव') || 'सार्वजनिक गणेशोत्सव').trim();
-            const year = Number(getVal(row, 'Year', 'वर्ष') || 2026);
+            const rawFest = String(getVal(row, 'Festival', 'उत्सव') || 'सार्वजनिक गणेशोत्सव').trim();
+            const festival = (rawFest.includes('गणेश') || rawFest.toLowerCase().includes('ganesh')) ? 'सार्वजनिक गणेशोत्सव' : rawFest;
+
+            const rawYear = getVal(row, 'Year', 'वर्ष');
+            const numYear = Number(rawYear);
+            const year = (!isNaN(numYear) && numYear > 2000) ? numYear : 2026;
             const phone = String(getVal(row, 'Phone', 'संपर्क') || '').trim();
 
             return {
@@ -1169,17 +1615,20 @@ export class MandalDataService {
               nameMr: nameMr || nameEn || 'देणगीदार',
               nameEn: nameEn || nameMr || 'Donor',
               building: building,
-              amount: isNaN(amount) ? 0 : amount,
-              receiptNo: receiptNo ? String(receiptNo).trim() : null,
-              status: (statusRaw.includes('बाकी') || statusRaw.toLowerCase().includes('pending')) ? 'बाकी' : 'दिलेली',
+              source: building,
+              amount: amount,
+              receiptNo: receiptNo,
+              status: status,
               festival: festival,
-              year: isNaN(year) ? 2026 : year,
+              year: year,
               date: date,
-              paymentMode: (paymentMode as any) || 'कॅश',
+              paymentMode: paymentMode,
               phone: phone || undefined
             };
           });
           this._varganiRecords.set(varganiRecords);
+          this.lastExcelUpdate.set(new Date());
+          console.log(`[MandalDataService] Loaded ${varganiRecords.length} Vargani records from sheet`);
         }
       }
 
@@ -1189,17 +1638,23 @@ export class MandalDataService {
         const rawRows = XLSX.utils.sheet_to_json<any>(kharchSheet);
         if (rawRows.length > 0) {
           const kharchRecords: KharchRecord[] = rawRows.map((row, idx) => {
-            const srNo = Number(getVal(row, 'Sr_No', 'SrNo', 'अ. क्र.') || (idx + 1));
-            const nameMr = String(getVal(row, 'Expense_Name_Mr', 'खर्चाचे नाव - मराठी', 'खर्चाचे नाव') || '').trim();
-            const nameEn = String(getVal(row, 'Expense_Name_En', 'खर्चाचे नाव - English', 'Expense Name') || '').trim();
-            const amount = Number(getVal(row, 'Amount', 'रक्कम ₹', 'रक्कम') || 0);
-            const category = String(getVal(row, 'Category', 'खर्च प्रकार') || 'इतर खर्च').trim();
-            const paidTo = String(getVal(row, 'Paid_To', 'देय व्यक्ती / संस्था', 'Paid To') || 'संबंधित विक्रेता').trim();
-            const voucherNo = String(getVal(row, 'Voucher_No', 'व्हाउचर क्र.') || `V-2026-${String(idx+1).padStart(3, '0')}`).trim();
-            const date = String(getVal(row, 'Date', 'तारीख') || '01/09/2026').trim();
+            const srNo = Number(getVal(row, 'Sr_No', 'SrNo', 'अ. क्र.', 'Sr') || (idx + 1));
+            const nameMr = String(getVal(row, 'Expense_Name_Mr', 'खर्चाचे नाव - मराठी', 'खर्चाचे नाव', 'खर्च तपशील', 'तपशील', 'नाव', 'Expense_Name', 'Name') || '').trim();
+            const nameEn = String(getVal(row, 'Expense_Name_En', 'खर्चाचे नाव - English', 'Expense Name', 'Details') || '').trim();
+
+            const rawAmount = getVal(row, 'Amount', 'रक्कम ₹', 'रक्कम', 'रक्कम (₹)', 'खर्च रक्कम') || 0;
+            const cleanAmount = typeof rawAmount === 'string' ? Number(rawAmount.replace(/[^0-9.]/g, '')) : Number(rawAmount);
+            const amount = isNaN(cleanAmount) ? 0 : cleanAmount;
+
+            const rawCat = getVal(row, 'Category', 'खर्च प्रकार', 'प्रकार', 'कॅटेगरी', 'Expense_Category', 'Head');
+            const category = (rawCat && String(rawCat).trim() !== 'undefined') ? String(rawCat).trim() : (nameMr || 'इतर खर्च');
+
+            const paidTo = String(getVal(row, 'Paid_To', 'देय व्यक्ती / संस्था', 'देय व्यक्ती', 'Paid To', 'दुकान / व्यक्ती') || '').trim();
+            const voucherNo = String(getVal(row, 'Voucher_No', 'व्हाउचर क्र.', 'व्हाउचर') || '').trim();
+            const date = String(getVal(row, 'Date', 'तारीख', 'दिनांक') || '01/09/2026').trim();
             const festival = String(getVal(row, 'Festival', 'उत्सव') || 'सार्वजनिक गणेशोत्सव').trim();
             const year = Number(getVal(row, 'Year', 'वर्ष') || 2026);
-            const desc = String(getVal(row, 'Description', 'विवरण') || '').trim();
+            const desc = String(getVal(row, 'Description', 'विवरण', 'शेरा') || '').trim();
 
             return {
               id: srNo || idx + 1,
@@ -1207,12 +1662,12 @@ export class MandalDataService {
               nameMr: nameMr || nameEn || 'खर्च',
               nameEn: nameEn || nameMr || 'Expense',
               category: category,
-              amount: isNaN(amount) ? 0 : amount,
+              amount: amount,
               date: date,
-              voucherNo: voucherNo,
+              voucherNo: voucherNo || undefined,
               festival: festival,
               year: isNaN(year) ? 2026 : year,
-              paidTo: paidTo,
+              paidTo: paidTo || undefined,
               description: desc || undefined
             };
           });
@@ -1468,7 +1923,7 @@ export class MandalDataService {
         const fn = marathiFirstNames[(records.length + i * 3) % marathiFirstNames.length];
         const ln = marathiLastNames[(records.length + i * 2) % marathiLastNames.length];
         const isLast = i === count - 1;
-        
+
         let amount = Math.floor(targetAmount / count / 500) * 500;
         if (isLast) {
           amount = targetAmount - currentSum;

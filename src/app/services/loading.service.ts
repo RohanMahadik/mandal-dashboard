@@ -19,11 +19,11 @@ export class LoadingService {
   private hideTimeout: any = null;
 
   constructor() {
-    // Initial application startup splash screen (shows for 850ms then smoothly fades out)
+    // Initial application startup splash screen (shows for ~1.6s then smoothly fades out)
     if (typeof window !== 'undefined') {
       setTimeout(() => {
         this.hideFullscreen();
-      }, 900);
+      }, 1600);
     }
   }
 

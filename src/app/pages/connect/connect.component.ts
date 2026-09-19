@@ -125,17 +125,34 @@ interface ContactPerson {
               </div>
 
               <!-- Bank Account Box -->
-              <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-1.5 text-xs text-slate-700">
-                <div class="flex items-center justify-between border-b border-slate-200 pb-1">
-                  <span class="font-bold text-slate-900">{{ mandalData.t('बँक ऑफ महाराष्ट्र', 'Bank of Maharashtra') }}</span>
-                  <span class="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded font-bold">{{ mandalData.t('चालू खाते', 'Current') }}</span>
+              <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2 text-xs text-slate-700">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                  <span class="font-bold text-slate-900">{{ mandalData.t(mandalData.bankDetails.bankNameMr, mandalData.bankDetails.bankNameEn) }}</span>
+                  <span class="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded font-bold">{{ mandalData.t(mandalData.bankDetails.accountTypeMr, mandalData.bankDetails.accountTypeEn) }}</span>
                 </div>
-                <div class="font-mono text-[11px] text-slate-800">
-                  A/C: <span class="font-bold">60234567890</span>
+                <div class="flex items-center justify-between bg-white px-2 py-1.5 rounded-lg border border-slate-200 font-mono text-[11px] text-slate-800">
+                  <span>A/C: <span class="font-bold">{{ mandalData.bankDetails.accountNo }}</span></span>
+                  <button
+                    (click)="copyText(mandalData.bankDetails.accountNo, 'ac')"
+                    class="p-1 rounded text-slate-600 hover:text-slate-900 text-xs font-bold transition cursor-pointer"
+                    title="Copy Account Number"
+                  >
+                    {{ copiedKey() === 'ac' ? '✓' : '📋' }}
+                  </button>
                 </div>
-                <div class="font-mono text-[11px] text-slate-600">
-                  IFSC: <span class="font-bold">MAHB0000123</span>
+                <div class="flex items-center justify-between bg-white px-2 py-1.5 rounded-lg border border-slate-200 font-mono text-[11px] text-slate-600">
+                  <span>IFSC: <span class="font-bold">{{ mandalData.bankDetails.ifscCode }}</span></span>
+                  <button
+                    (click)="copyText(mandalData.bankDetails.ifscCode, 'ifsc')"
+                    class="p-1 rounded text-slate-600 hover:text-slate-900 text-xs font-bold transition cursor-pointer"
+                    title="Copy IFSC Code"
+                  >
+                    {{ copiedKey() === 'ifsc' ? '✓' : '📋' }}
+                  </button>
                 </div>
+                @if (copiedKey() === 'ac' || copiedKey() === 'ifsc') {
+                  <span class="text-[10px] text-emerald-700 font-bold block animate-fade-in">✓ {{ mandalData.t('बँक तपशील कॉपी झाले!', 'Bank details copied!') }}</span>
+                }
               </div>
 
             </div>
@@ -150,7 +167,7 @@ interface ContactPerson {
                 <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0" [style.backgroundColor]="p.avatarBg">
-                      {{ mandalData.isEnglish() ? p.nameEn.charAt(0) : (p.nameMr.charAt(4) || p.nameMr.charAt(0)) }}
+                      {{ getInitial(p.nameMr, p.nameEn) }}
                     </div>
                     <div>
                       <div class="text-xs font-bold text-slate-900 leading-snug">
@@ -252,7 +269,7 @@ interface ContactPerson {
                 <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0" [style.backgroundColor]="p.avatarBg">
-                      {{ mandalData.isEnglish() ? p.nameEn.charAt(0) : (p.nameMr.charAt(4) || p.nameMr.charAt(0)) }}
+                      {{ getInitial(p.nameMr, p.nameEn) }}
                     </div>
                     <div>
                       <div class="text-xs font-bold text-slate-900 leading-snug">
@@ -359,7 +376,7 @@ interface ContactPerson {
                 <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0" [style.backgroundColor]="p.avatarBg">
-                      {{ mandalData.isEnglish() ? p.nameEn.charAt(0) : (p.nameMr.charAt(4) || p.nameMr.charAt(0)) }}
+                      {{ getInitial(p.nameMr, p.nameEn) }}
                     </div>
                     <div>
                       <div class="text-xs font-bold text-slate-900 leading-snug">
@@ -441,50 +458,50 @@ interface ContactPerson {
               
               <!-- Instagram -->
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/jogeshwaricha_vighnaharta?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=="
                 target="_blank"
                 rel="noopener noreferrer"
                 class="p-2.5 rounded-2xl bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white font-bold text-xs flex flex-col items-center gap-1 shadow-xs hover:scale-105 transition cursor-pointer"
               >
                 <span class="text-base">📸</span>
                 <span class="text-[11px] font-sans">Instagram</span>
-                <span class="text-[9px] opacity-80 truncate w-full">&#64;ashtavinayak</span>
+                <span class="text-[9px] opacity-90 truncate w-full">&#64;jogeshwaricha_vighnaharta</span>
               </a>
 
               <!-- WhatsApp Community -->
               <a
-                href="https://wa.me/919820144552?text=जय%20गणेश!%20मला%20मंडळाच्या%20ग्रुपमध्ये%20समाविष्ट%20करा"
+                href="https://wa.me/8850616686?text=जय%20श्री%20गणेश!%20🙏%20मी%20श्री%20अष्टविनायक%20मित्र%20मंडळाच्या%20WhatsApp%20ग्रुपमध्ये%20सहभागी%20होऊ%20इच्छितो.%20कृपया%20मला%20ग्रुपमध्ये%20Add%20करावे.%20गणपती%20बाप्पा%20मोरया!%20🚩"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="p-2.5 rounded-2xl bg-[#25D366] text-white font-bold text-xs flex flex-col items-center gap-1 shadow-xs hover:scale-105 transition cursor-pointer"
               >
                 <span class="text-base">💬</span>
                 <span class="text-[11px] font-sans">WhatsApp</span>
-                <span class="text-[9px] opacity-80">{{ mandalData.t('ग्रुप जॉईन', 'Join Group') }}</span>
+                <span class="text-[9px] opacity-90">{{ mandalData.t('अधिकृत ग्रुप', 'Official Group') }}</span>
               </a>
 
               <!-- YouTube Live -->
               <a
-                href="https://youtube.com"
+                href="https://www.youtube.com/@jogeshwarichavighnaharta"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="p-2.5 rounded-2xl bg-red-600 text-white font-bold text-xs flex flex-col items-center gap-1 shadow-xs hover:scale-105 transition cursor-pointer"
+                class="p-2.5 rounded-2xl bg-[#FF0000] text-white font-bold text-xs flex flex-col items-center gap-1 shadow-xs hover:scale-105 transition cursor-pointer"
               >
                 <span class="text-base">▶️</span>
                 <span class="text-[11px] font-sans">YouTube</span>
-                <span class="text-[9px] opacity-80">{{ mandalData.t('थेट आरती', 'Live Aarti') }}</span>
+                <span class="text-[9px] opacity-90">&#64;jogeshwaricha...</span>
               </a>
 
               <!-- Facebook -->
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/jogeshwarichavighnahartaa"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="p-2.5 rounded-2xl bg-[#1877F2] text-white font-bold text-xs flex flex-col items-center gap-1 shadow-xs hover:scale-105 transition cursor-pointer"
               >
                 <span class="text-base">👥</span>
                 <span class="text-[11px] font-sans">Facebook</span>
-                <span class="text-[9px] opacity-80">Ashtavinayak</span>
+                <span class="text-[9px] opacity-90">&#64;jogeshwaricha...</span>
               </a>
 
             </div>
@@ -499,7 +516,7 @@ interface ContactPerson {
                 <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0" [style.backgroundColor]="p.avatarBg">
-                      {{ mandalData.isEnglish() ? p.nameEn.charAt(0) : (p.nameMr.charAt(4) || p.nameMr.charAt(0)) }}
+                      {{ getInitial(p.nameMr, p.nameEn) }}
                     </div>
                     <div>
                       <div class="text-xs font-bold text-slate-900 leading-snug">
@@ -547,6 +564,34 @@ interface ContactPerson {
 
       </div>
 
+      <!-- ================= MANDAL OFFICE & GOOGLE MAPS LOCATION CARD ================= -->
+      <div class="bg-white rounded-3xl shadow-sm border-2 border-amber-200/80 p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-4 hover:border-amber-400 transition">
+        <div class="flex items-start sm:items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-2xl shadow-xs shrink-0">
+            📍
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-black text-slate-900 leading-tight">
+              {{ mandalData.t('मंडळ कार्यालय व उत्सव प्रांगण (Google Maps)', 'Mandal Office & Festival Location (Google Maps)') }}
+            </h3>
+            <p class="text-xs text-slate-600 font-sans mt-0.5">
+              {{ mandalData.t('शिव स्फूर्ती सोसायटी प्रांगण, आदर्श नगर, एस. व्ही. रोड, जोगेश्वरी (पश्चिम), मुंबई - ४०० १०२.', 'Shiv Sphurti Society Compound, Adarsh Nagar, S. V. Road, Jogeshwari (West), Mumbai - 400 102.') }}
+            </p>
+          </div>
+        </div>
+
+        <a
+          [href]="mandalData.mapLocationUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer active:scale-95 shrink-0"
+        >
+          <span>🧭</span>
+          <span>{{ mandalData.t('गुगल मॅप्सवर दिशा मिळवा', 'Open in Google Maps') }}</span>
+          <span class="text-xs">↗</span>
+        </a>
+      </div>
+
     </div>
   `
 })
@@ -569,23 +614,23 @@ export class ConnectComponent {
   // 1. Donation Desk Coordinators
   readonly donationCoordinators: ContactPerson[] = [
     {
-      nameMr: 'श्री. गजानन वि. कांबळे',
-      nameEn: 'Shri. Gajanan V. Kamble',
+      nameMr: 'श्री. जगदीश शिंदे',
+      nameEn: 'Shri. Jagdish Shinde',
       roleMr: 'खजिनदार (मुख्य देणगी व हिशोब)',
       roleEn: 'Treasurer (Head of Donations)',
-      phone: '+91 98201 44552',
-      rawPhone: '919820144552',
+      phone: '+91 98206 68739',
+      rawPhone: '919820668739',
       badgeMr: 'खजिनदार',
       badgeEn: 'Treasurer',
       avatarBg: '#059669'
     },
     {
-      nameMr: 'श्री. राजेश एस. कदम',
-      nameEn: 'Shri. Rajesh S. Kadam',
-      roleMr: 'हिशोब तपासणीस (पावती समन्वयक)',
-      roleEn: 'Accounts Auditor (Receipts)',
-      phone: '+91 98690 77150',
-      rawPhone: '919869077150',
+      nameMr: 'कुमार रोहन महाडिक',
+      nameEn: 'Kumar Rohan Mahadik',
+      roleMr: 'पावती समन्वय अधिकारी',
+      roleEn: 'Receipt Coordinator',
+      phone: '+91 95940 49374',
+      rawPhone: '919594049374',
       badgeMr: 'पावती कक्ष',
       badgeEn: 'Receipts',
       avatarBg: '#047857'
@@ -595,80 +640,111 @@ export class ConnectComponent {
   // 2. Bhandara / Mahaprasad Team Coordinators
   readonly bhandaraCoordinators: ContactPerson[] = [
     {
-      nameMr: 'श्री. सचिन डी. पवार',
-      nameEn: 'Shri. Sachin D. Pawar',
+      nameMr: 'श्री. शैलेश पैनला',
+      nameEn: 'Shri. Shailesh Painla',
       roleMr: 'महाप्रसाद भंडारा प्रमुख',
-      roleEn: 'Mahaprasad & Food Grain Head',
-      phone: '+91 98331 22910',
-      rawPhone: '919833122910',
-      badgeMr: 'महाप्रसाद प्रमुख',
+      roleEn: 'Mahaprasad & Bhandara Head',
+      phone: '+91 99678 97192',
+      rawPhone: '919967897192',
+      badgeMr: 'भंडारा प्रमुख',
       badgeEn: 'Bhandara Head',
       avatarBg: '#d97706'
     },
     {
-      nameMr: 'श्री. अमोल आर. सावंत',
-      nameEn: 'Shri. Amol R. Sawant',
-      roleMr: 'किराणा साहित्य संकलन प्रतिनिधी',
-      roleEn: 'Grocery & Grain Logistics',
-      phone: '+91 98192 33412',
-      rawPhone: '919819233412',
-      badgeMr: 'संकलन प्रतिनिधी',
-      badgeEn: 'Logistics',
+      nameMr: 'श्री. बाळासाहेब यादव',
+      nameEn: 'Shri. Balasaheb Yadav',
+      roleMr: 'अध्यक्ष व मुख्य मार्गदर्शक',
+      roleEn: 'President & Chief Advisor',
+      phone: '+91 88506 16686',
+      rawPhone: '918850616686',
+      badgeMr: 'अध्यक्ष',
+      badgeEn: 'President',
       avatarBg: '#b45309'
+    },
+    {
+      nameMr: 'श्री. वैभव साखरे',
+      nameEn: 'Shri. Vaibhav Sakhare',
+      roleMr: 'भंडारा व्यवस्थापन समन्वयक',
+      roleEn: 'Bhandara Coordinator',
+      phone: '+91 98678 48046',
+      rawPhone: '919867848046',
+      badgeMr: 'समन्वयक',
+      badgeEn: 'Coordinator',
+      avatarBg: '#ea580c'
     }
   ];
 
   // 3. Sponsorship & Advertising Coordinators
   readonly sponsorCoordinators: ContactPerson[] = [
     {
-      nameMr: 'श्री. विलास एम. पाटील',
-      nameEn: 'Shri. Vilas M. Patil',
+      nameMr: 'श्री. शैलेश पैनला',
+      nameEn: 'Shri. Shailesh Painla',
       roleMr: 'जाहिरात व प्रायोजकत्व प्रमुख',
       roleEn: 'Advertising & Sponsorship Head',
-      phone: '+91 98214 88392',
-      rawPhone: '919821488392',
+      phone: '+91 99678 97192',
+      rawPhone: '919967897192',
       badgeMr: 'जाहिरात प्रमुख',
       badgeEn: 'Ads Head',
       avatarBg: '#2563eb'
     },
     {
-      nameMr: 'श्री. सुधीर जी. देसाई',
-      nameEn: 'Shri. Sudhir G. Desai',
-      roleMr: 'व्यावसायिक संपर्क प्रतिनिधी',
-      roleEn: 'Commercial PR & Vendor Liaison',
-      phone: '+91 98205 66723',
-      rawPhone: '919820566723',
-      badgeMr: 'जनसंपर्क',
-      badgeEn: 'Liaison',
+      nameMr: 'श्री. बाळासाहेब यादव',
+      nameEn: 'Shri. Balasaheb Yadav',
+      roleMr: 'अध्यक्ष व मुख्य मार्गदर्शक',
+      roleEn: 'President & Chief Advisor',
+      phone: '+91 88506 16686',
+      rawPhone: '918850616686',
+      badgeMr: 'अध्यक्ष',
+      badgeEn: 'President',
       avatarBg: '#1d4ed8'
+    },
+    {
+      nameMr: 'श्री. जगदीश शिंदे',
+      nameEn: 'Shri. Jagdish Shinde',
+      roleMr: 'खजिनदार (प्रायोजकत्व व व्यावसायिक संपर्क)',
+      roleEn: 'Treasurer (Sponsorship & Commercial PR)',
+      phone: '+91 98206 68739',
+      rawPhone: '919820668739',
+      badgeMr: 'खजिनदार',
+      badgeEn: 'Treasurer',
+      avatarBg: '#1e40af'
     }
   ];
 
   // 4. Social Media & PR Team Coordinators
   readonly prCoordinators: ContactPerson[] = [
     {
-      nameMr: 'श्री. आदित्य व्ही. कदम',
-      nameEn: 'Shri. Aditya V. Kadam',
+      nameMr: 'श्री. तन्मय शिंदे',
+      nameEn: 'Shri. Tanmay Shinde',
       roleMr: 'सोशल मीडिया व डिजिटल प्रसिद्धी प्रमुख',
       roleEn: 'Social Media & Digital Media Lead',
-      phone: '+91 98700 11234',
-      rawPhone: '919870011234',
+      phone: '+91 85916 64248',
+      rawPhone: '918591664248',
       badgeMr: 'डिजिटल प्रमुख',
       badgeEn: 'Digital Lead',
       avatarBg: '#7c3aed'
     },
     {
-      nameMr: 'श्री. प्रथमेश एस. मोरे',
-      nameEn: 'Shri. Prathamesh S. More',
-      roleMr: 'लाईव्ह प्रक्षेपण व प्रसिद्धी प्रतिनिधी',
-      roleEn: 'Live Streaming & Media Coordinator',
-      phone: '+91 98675 44321',
-      rawPhone: '919867544321',
-      badgeMr: 'लाईव्ह प्रतिनिधी',
-      badgeEn: 'Live Stream',
+      nameMr: 'श्री. अक्षय उजवणे',
+      nameEn: 'Shri. Akshay Ujawane',
+      roleMr: 'प्रसिद्धी व मीडिया समन्वयक',
+      roleEn: 'Media & PR Coordinator',
+      phone: '+91 91720 86323',
+      rawPhone: '919172086323',
+      badgeMr: 'प्रसिद्धी',
+      badgeEn: 'PR',
       avatarBg: '#6d28d9'
     }
   ];
+
+  getInitial(nameMr: string, nameEn: string): string {
+    if (this.mandalData.isEnglish()) {
+      const cleanEn = nameEn.replace(/^(Shri\.|Shri|Mr\.|Kumar)\s*/i, '').trim();
+      return cleanEn.charAt(0) || 'A';
+    }
+    const cleanMr = nameMr.replace(/^(श्री\.|श्री|कुमार|सौ\.|श्रीमती)\s*/, '').trim();
+    return cleanMr.charAt(0) || 'अ';
+  }
 
   encodeMessage(msg: string): string {
     return encodeURIComponent(msg);

@@ -47,6 +47,26 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "public/Sabhasad",
+                "output": "sabhasad"
+              },
+              {
+                "glob": "**/*",
+                "input": "public/Sabhasad",
+                "output": "Sabhasad"
+              },
+              {
+                "glob": "mandal_data_format.xlsx",
+                "input": ".",
+                "output": "data"
+              },
+              {
+                "glob": "mandal_data_format.xlsx",
+                "input": ".",
+                "output": ""
               }
             ],
             "styles": [

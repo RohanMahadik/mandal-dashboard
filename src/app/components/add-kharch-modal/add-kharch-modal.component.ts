@@ -68,9 +68,9 @@ import { MandalDataService } from '../../services/mandal-data.service';
             <textarea [(ngModel)]="description" name="description" rows="2" [placeholder]="mandalData.t('खर्चाचे सविस्तर वर्णन...', 'Detailed description of the expense...')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"></textarea>
           </div>
 
-          <div class="bg-amber-50 p-3 rounded-lg border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
-            <span>📎</span>
-            <span>{{ mandalData.t('अधिकृत व्हाउचर क्रमांक सिस्टीमद्वारे स्वयंचलित जनरेट होईल (उदा. V-2026-013)', 'Official voucher number will be automatically generated (e.g. V-2026-013)') }}</span>
+          <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+            <span>✓</span>
+            <span>{{ mandalData.t('खर्चाची नोंद अधिकृत ताळेबंदात स्वयंचलित समाविष्ट होईल.', 'Expense will be automatically recorded in official ledger.') }}</span>
           </div>
 
           <!-- Footer Buttons -->

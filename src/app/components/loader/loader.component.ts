@@ -90,9 +90,12 @@ import { LoadingService } from '../../services/loading.service';
           श्री अष्टविनायक मित्र मंडळ, जोगेश्वरी (पश्चिम)
         </div>
 
-        <!-- Modern Indeterminate Shimmer Progress Bar -->
-        <div class="w-48 sm:w-56 h-1.5 bg-slate-800/80 rounded-full overflow-hidden p-0.5 border border-amber-500/30 my-4 shadow-inner">
-          <div class="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-300 to-orange-500 animate-shimmer-progress"></div>
+        <!-- Prominent Cultural Loading Bar with Active Glow -->
+        <div class="w-56 sm:w-64 h-2.5 bg-slate-950/90 rounded-full overflow-hidden border border-amber-500/50 my-4 shadow-inner relative">
+          <!-- Background track shimmer -->
+          <div class="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-yellow-400/20 to-amber-500/10 animate-pulse"></div>
+          <!-- Moving active golden loading beam -->
+          <div class="animate-cultural-loader h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-300 to-orange-500 shadow-[0_0_12px_rgba(245,158,11,0.9)]"></div>
         </div>
 
         <!-- Submessage / Dynamic Status Tracker -->

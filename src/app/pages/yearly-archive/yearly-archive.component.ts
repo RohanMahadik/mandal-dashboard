@@ -1,5 +1,6 @@
 import { Component, inject, ElementRef, ViewChild, AfterViewInit, OnDestroy, effect, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
 import { MandalDataService } from '../../services/mandal-data.service';
 
@@ -8,13 +9,25 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-yearly-archive',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="space-y-6 pb-8 animate-fade-in">
       
       <!-- Banner -->
       <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-md relative overflow-hidden">
         <div class="relative z-10">
+          <!-- Back to Dashboard Button -->
+          <a
+            routerLink="/"
+            class="inline-flex items-center gap-1.5 px-3 py-1 mb-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-blue-100 hover:text-white border border-white/20 text-xs font-bold font-devanagari transition shadow-xs active:scale-95 cursor-pointer group"
+            title="मुख्यपृष्ठावर परत जा / Back to Dashboard"
+          >
+            <svg class="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>{{ mandalData.t('मुख्यपृष्ठावर जा', 'Back to Dashboard') }}</span>
+          </a>
+
           <div class="flex items-center gap-2 text-blue-300 text-xs font-semibold uppercase tracking-wider">
             <span>●</span>
             <span>{{ mandalData.t('ऐतिहासिक ताळेबंद व उत्सव हिशोब', 'Historical Balance Sheet & Festival Accounts') }}</span>

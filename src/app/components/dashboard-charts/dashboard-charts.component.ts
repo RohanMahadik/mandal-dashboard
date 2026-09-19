@@ -15,11 +15,11 @@ Chart.register(...registerables);
   template: `
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5">
       
-      <!-- Chart 1: वर्गणी - बिल्डिंगनुसार वितरण (Vertical Bar Chart) -->
+      <!-- Chart 1: वर्गणी - स्त्रोतानुसार वितरण (Vertical Bar Chart) -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 sm:p-4.5 md:p-5 flex flex-col justify-between h-full">
         <div class="mb-3 flex items-center justify-between">
           <h3 class="text-sm sm:text-base font-bold text-slate-800 font-devanagari">
-            {{ mandalData.t('वर्गणी - बिल्डिंगनुसार वितरण', 'Vargani - Distribution by Building') }}
+            {{ mandalData.t('वर्गणी - स्त्रोतानुसार वितरण', 'Vargani - Distribution by Source') }}
           </h3>
         </div>
         <div class="relative w-full h-[220px]">
@@ -64,9 +64,17 @@ Chart.register(...registerables);
             {{ mandalData.t('खर्चाचे वितरण', 'Expense Distribution') }}
           </h3>
         </div>
-        <div class="relative w-full h-[220px]">
+        <div class="relative w-full h-[220px]" [class.hidden]="mandalData.expenseDistribution().length === 0">
           <canvas #horizontalBarCanvas></canvas>
         </div>
+        @if (mandalData.expenseDistribution().length === 0) {
+          <div class="flex flex-col items-center justify-center h-[220px] text-center text-slate-400 p-4">
+            <span class="text-3xl mb-1.5">📊</span>
+            <p class="text-xs font-devanagari font-semibold text-slate-600">
+              {{ mandalData.t('या निवडीसाठी खर्चाची नोंद उपलब्ध नाही.', 'No expense records available for this selection.') }}
+            </p>
+          </div>
+        }
       </div>
 
     </div>
@@ -93,9 +101,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
       this.mandalData.expenseDistribution();
       this.mandalData.useMarathiDigits();
 
-      if (this.barChart && this.pieChart && this.horizontalBarChart) {
-        this.updateCharts();
-      }
+      this.updateCharts();
     });
   }
 
@@ -167,9 +173,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
         scales: {
           y: {
             beginAtZero: true,
-            max: 200000,
             ticks: {
-              stepSize: 50000,
               font: { size: 10, family: 'Mukta, sans-serif' },
               color: '#64748b',
               callback: (val) => mandal.formatNum(Number(val))
@@ -256,8 +260,9 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
     const ctx = this.horizontalBarCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    const data = this.mandalData.expenseDistribution();
+    const data = this.mandalData.expenseDistribution().filter(d => d.amount > 0);
     const mandal = this.mandalData;
+    const maxVal = data.length > 0 ? Math.max(...data.map(d => d.amount)) : 10000;
 
     // Plugin for right aligned value labels: e.g. ₹ १,००,०००
     const horizontalValueLabelsPlugin = {
@@ -296,7 +301,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         layout: {
-          padding: { right: 62 }
+          padding: { right: 75 }
         },
         plugins: {
           legend: { display: false },
@@ -310,7 +315,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
           x: {
             display: false,
             beginAtZero: true,
-            max: 220000
+            max: Math.round(maxVal * 1.35)
           },
           y: {
             ticks: {
@@ -333,6 +338,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
     if (this.barChart) {
       this.barChart.data.labels = bData.map(d => mandal.translateBuilding(d.building));
       this.barChart.data.datasets[0].data = bData.map(d => d.amount);
+      this.barChart.data.datasets[0].backgroundColor = bData.map(d => d.color);
       this.barChart.update();
     }
 
@@ -342,12 +348,19 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
       this.pieChart.update();
     }
 
-    // 3. Update Horizontal Bar Chart
-    const expData = this.mandalData.expenseDistribution();
+    // 3. Update Horizontal Bar Chart (Hide 0 values)
+    const expData = this.mandalData.expenseDistribution().filter(d => d.amount > 0);
     if (this.horizontalBarChart) {
       this.horizontalBarChart.data.labels = expData.map(d => mandal.translateCategory(d.category));
       this.horizontalBarChart.data.datasets[0].data = expData.map(d => d.amount);
+      this.horizontalBarChart.data.datasets[0].backgroundColor = expData.map(d => d.color);
+      const maxVal = expData.length > 0 ? Math.max(...expData.map(d => d.amount)) : 10000;
+      if (this.horizontalBarChart.options.scales?.['x']) {
+        this.horizontalBarChart.options.scales['x'].max = Math.round(maxVal * 1.35);
+      }
       this.horizontalBarChart.update();
+    } else if (this.horizontalBarCanvas?.nativeElement && expData.length > 0) {
+      this.createHorizontalBarChart();
     }
   }
 }

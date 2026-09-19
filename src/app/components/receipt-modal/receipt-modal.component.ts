@@ -1,7 +1,8 @@
-import { Component, input, output, inject } from '@angular/core';
+import { Component, input, output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VarganiRecord } from '../../models/mandal.models';
 import { MandalDataService } from '../../services/mandal-data.service';
+import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-receipt-modal',
@@ -9,29 +10,72 @@ import { MandalDataService } from '../../services/mandal-data.service';
   imports: [CommonModule],
   template: `
     @if (record(); as item) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in" (click)="close.emit()">
-        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-amber-200" (click)="$event.stopPropagation()">
-          
+      <div class="receipt-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in" (click)="close.emit()">
+        <div class="receipt-modal-card bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-amber-200" (click)="$event.stopPropagation()">
+
           <!-- Modal Toolbar (Hidden in Print) -->
           <div class="no-print flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 bg-slate-900 text-white shrink-0">
             <div class="flex items-center space-x-1.5 sm:space-x-2">
               <span class="text-amber-400 font-bold text-sm sm:text-lg">{{ mandalData.t('॥ पावती दर्शन ॥', '॥ Official Receipt ॥') }}</span>
               <span class="text-[10px] sm:text-xs text-slate-400 hidden xs:inline">({{ mandalData.t('अधिकृत पावती', 'Official Receipt') }})</span>
             </div>
-            <div class="flex items-center space-x-2 sm:space-x-3">
-              <button (click)="printReceipt()" class="px-2.5 sm:px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-md shadow flex items-center gap-1.5 transition">
-                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                <span>{{ mandalData.t('प्रिंट करा', 'Print') }}</span>
+
+            <!-- Action Buttons: Print, Save as PDF, Download PNG -->
+            <div class="flex items-center flex-wrap gap-1.5 sm:gap-2">
+              <!-- Print Button -->
+              <button
+                (click)="printReceipt()"
+                class="px-2 sm:px-2.5 py-1 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 border border-slate-700 font-bold text-xs rounded-lg shadow-xs flex items-center gap-1 transition cursor-pointer active:scale-95"
+                title="प्रिंट करा / Print"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span class="hidden sm:inline">{{ mandalData.t('प्रिंट', 'Print') }}</span>
               </button>
-              <button (click)="close.emit()" class="text-slate-400 hover:text-white p-1 rounded-md transition" aria-label="Close modal">
+
+              <!-- Save as PDF Button -->
+              <button
+                (click)="downloadPdf()"
+                [disabled]="isGeneratingPdf() || isGeneratingPng()"
+                class="px-2 sm:px-2.5 py-1 sm:py-1.5 bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs rounded-lg shadow-xs flex items-center gap-1 transition cursor-pointer active:scale-95 disabled:opacity-50"
+                title="PDF डाउनलोड करा / Save as PDF"
+              >
+                @if (isGeneratingPdf()) {
+                  <span class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span class="hidden sm:inline">{{ mandalData.t('तयार होत आहे...', 'Saving...') }}</span>
+                } @else {
+                  <svg class="w-3.5 h-3.5 text-rose-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                  <span>{{ mandalData.t('PDF', 'PDF') }}</span>
+                }
+              </button>
+
+              <!-- Download PNG Button -->
+              <button
+                (click)="downloadPng()"
+                [disabled]="isGeneratingPng() || isGeneratingPdf()"
+                class="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow-xs flex items-center gap-1 transition cursor-pointer active:scale-95 disabled:opacity-50"
+                title="PNG इमेज डाउनलोड करा / Download PNG"
+              >
+                @if (isGeneratingPng()) {
+                  <span class="w-3 h-3 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+                  <span class="hidden sm:inline">{{ mandalData.t('तयार होत आहे...', 'Saving...') }}</span>
+                } @else {
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                  <span>{{ mandalData.t('PNG', 'PNG') }}</span>
+                }
+              </button>
+
+              <!-- Close Modal -->
+              <button (click)="close.emit()" class="text-slate-400 hover:text-white p-1 rounded-md transition ml-1 cursor-pointer" aria-label="Close modal">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
           </div>
 
-          <!-- Printable Receipt Body -->
-          <div class="p-3.5 sm:p-6 md:p-8 printable-area bg-[#fffef9] border-2 sm:border-4 border-amber-900/20 m-1 sm:m-2 rounded-lg relative overflow-y-auto">
-            
+          <!-- Printable Receipt Body (Complete Receipt Only) -->
+          <div
+            id="official-receipt-print-area"
+            class="p-3.5 sm:p-6 md:p-8 printable-area bg-[#fffef9] border-2 sm:border-4 border-amber-900/20 m-1 sm:m-2 rounded-lg relative overflow-y-auto"
+          >
             <!-- Watermark Silhouette -->
             <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none">
               <span class="text-8xl sm:text-9xl font-bold font-devanagari text-amber-900">श्री</span>
@@ -87,7 +131,7 @@ import { MandalDataService } from '../../services/mandal-data.service';
               </div>
 
               <div class="flex flex-col sm:flex-row sm:items-baseline border-b border-dotted border-slate-200 pb-1.5 sm:pb-2">
-                <span class="text-slate-500 w-28 sm:w-36 shrink-0 text-xs">{{ mandalData.t('बिल्डिंग / विंग:', 'Building / Wing:') }}</span>
+                <span class="text-slate-500 w-28 sm:w-36 shrink-0 text-xs">{{ mandalData.t('स्त्रोत / इमारत:', 'Source / Building:') }}</span>
                 <span class="font-semibold text-slate-900">{{ mandalData.translateBuilding(item.building) }}</span>
               </div>
 
@@ -119,16 +163,18 @@ import { MandalDataService } from '../../services/mandal-data.service';
               </div>
             </div>
 
-
             <!-- Signatures & Stamp -->
             <div class="pt-4 sm:pt-6 border-t-2 border-dashed border-amber-900/30 grid grid-cols-3 gap-1.5 sm:gap-4 items-end text-center">
               <div>
                 <div class="h-8 sm:h-10 flex items-center justify-center">
-                  <span class="font-script text-slate-600 italic text-xs sm:text-sm">R. Parab</span>
+                  <span class="font-script text-slate-600 italic text-xs sm:text-sm">J.Shinde</span>
                 </div>
-                <div class="text-[10px] sm:text-xs font-bold text-slate-700 border-t border-slate-400 pt-0.5 sm:pt-1">
-                  {{ mandalData.t('खजिनदार', 'Treasurer') }}
+                <div class="text-[10px] sm:text-xs font-bold text-slate-700 border-t border-slate-400 pt-0.5 sm:pt-1 leading-tight">
+                  <div>जगदीश शिंदे</div>
+                  <div class="text-[9px] sm:text-[10px] text-slate-500 font-normal">({{ mandalData.t('खजिनदार', 'Treasurer') }})</div>
                 </div>
+
+
               </div>
 
               <!-- Mandal Stamp -->
@@ -142,7 +188,7 @@ import { MandalDataService } from '../../services/mandal-data.service';
 
               <div>
                 <div class="h-8 sm:h-10 flex items-center justify-center">
-                  <span class="font-script text-slate-600 italic text-xs sm:text-sm">M. V. Kadam</span>
+                  <span class="font-script text-slate-600 italic text-xs sm:text-sm">B.Yadav</span>
                 </div>
                 <div class="text-[10px] sm:text-xs font-bold text-slate-700 border-t border-slate-400 pt-0.5 sm:pt-1 leading-tight">
                   <div>{{ mandalData.isEnglish() ? mandalData.presidentNameEn() : mandalData.presidentNameMr() }}</div>
@@ -152,20 +198,63 @@ import { MandalDataService } from '../../services/mandal-data.service';
             </div>
 
             <!-- Footer Note -->
-            <div class="mt-3 sm:mt-5 text-[9px] sm:text-[10px] text-slate-500 text-center leading-relaxed border-t border-slate-100 pt-2">
-              {{ mandalData.t('॥ सामूहिक श्रद्धा | सामूहिक सेवा | आपलेच मंडळ ॥', '॥ Collective Faith | Selfless Service | Our Community ॥') }}<br>
-              {{ mandalData.t('टीप: ही पावती संगणकीय प्रणालीद्वारे तयार करण्यात आली असून अधिकृत मानली जाईल.', 'Note: This receipt is computer generated and valid for all official purposes.') }}
+            <div class="mt-3 sm:mt-5 text-[9px] sm:text-[10px] text-slate-500 text-center leading-relaxed border-t border-slate-100 pt-2 space-y-0.5">
+              <div>{{ mandalData.t('॥ सामूहिक श्रद्धा | सामूहिक सेवा | आपलेच मंडळ ॥', '॥ Collective Faith | Selfless Service | Our Community ॥') }}</div>
+              <div class="font-medium text-slate-600">
+                {{ mandalData.t('अधिकृत बँक खाते: ' + mandalData.bankDetails.bankNameMr + ' • खाते क्र.: ' + mandalData.bankDetails.accountNo + ' • IFSC: ' + mandalData.bankDetails.ifscCode, 'Official Bank: ' + mandalData.bankDetails.bankNameEn + ' • A/C: ' + mandalData.bankDetails.accountNo + ' • IFSC: ' + mandalData.bankDetails.ifscCode) }}
+              </div>
+              <div>{{ mandalData.t('टीप: ही पावती संगणकीय प्रणालीद्वारे तयार करण्यात आली असून अधिकृत मानली जाईल.', 'Note: This receipt is computer generated and valid for all official purposes.') }}</div>
             </div>
-
           </div>
 
-          <!-- Bottom Actions -->
-          <div class="no-print bg-slate-50 px-3 sm:px-6 py-2.5 sm:py-3 border-t border-slate-200 flex justify-end gap-2 sm:gap-3 shrink-0">
-            <button (click)="close.emit()" class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-200 rounded-lg transition">
+          <!-- Bottom Actions (Hidden in Print) -->
+          <div class="no-print bg-slate-50 px-3 sm:px-6 py-2.5 sm:py-3 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2 sm:gap-3 shrink-0">
+            <button
+              (click)="close.emit()"
+              class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-200 rounded-lg transition cursor-pointer"
+            >
               {{ mandalData.t('बंद करा', 'Close') }}
             </button>
-            <button (click)="printReceipt()" class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg shadow transition flex items-center gap-1.5">
-              {{ mandalData.t('प्रिंट किंवा PDF सेव्ह करा', 'Print or Save as PDF') }}
+
+            <!-- Download PNG Button -->
+            <button
+              (click)="downloadPng()"
+              [disabled]="isGeneratingPng() || isGeneratingPdf()"
+              class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-lg shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="PNG स्वरूपात सेव्ह करा"
+            >
+              @if (isGeneratingPng()) {
+                <span class="w-3.5 h-3.5 border-2 border-amber-950 border-t-transparent rounded-full animate-spin"></span>
+                <span>{{ mandalData.t('तयार होत आहे...', 'Saving...') }}</span>
+              } @else {
+                <svg class="w-4 h-4 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>{{ mandalData.t('PNG डाउनलोड', 'Download PNG') }}</span>
+              }
+            </button>
+
+            <!-- Save as PDF Button -->
+            <button
+              (click)="downloadPdf()"
+              [disabled]="isGeneratingPdf() || isGeneratingPng()"
+              class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-rose-700 hover:bg-rose-800 text-white rounded-lg shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="PDF स्वरूपात सेव्ह करा"
+            >
+              @if (isGeneratingPdf()) {
+                <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>{{ mandalData.t('तयार होत आहे...', 'Saving...') }}</span>
+              } @else {
+                <svg class="w-4 h-4 text-rose-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <span>{{ mandalData.t('PDF सेव्ह करा', 'Save as PDF') }}</span>
+              }
+            </button>
+
+            <!-- Print Button -->
+            <button
+              (click)="printReceipt()"
+              class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg shadow transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+              <span>{{ mandalData.t('प्रिंट करा', 'Print') }}</span>
             </button>
           </div>
 
@@ -179,8 +268,257 @@ export class ReceiptModalComponent {
   readonly record = input<VarganiRecord | null>(null);
   readonly close = output<void>();
 
+  readonly isGeneratingPng = signal<boolean>(false);
+  readonly isGeneratingPdf = signal<boolean>(false);
+
+  /**
+   * Generates a clean automatic file name matching user format:
+   * e.g. Pavati_123_Rohan
+   */
+  getSafeBaseName(): string {
+    const item = this.record();
+    if (!item) return 'Pavati';
+
+    // Receipt Number
+    const rawNo = item.receiptNo ? String(item.receiptNo).trim() : '000';
+    const cleanNo = rawNo.replace(/[^a-zA-Z0-9_-]/g, '');
+
+    // Donor First Name / Name
+    let donorName = '';
+    if (item.nameEn && item.nameEn.trim()) {
+      const parts = item.nameEn.trim().split(/\s+/);
+      donorName = parts[0];
+    } else if (item.nameMr && item.nameMr.trim()) {
+      const cleaned = item.nameMr.trim().replace(/^(श्री\.|श्री|सौ\.|सौ|श्रीमती\.|श्रीमती)\s*/, '');
+      const parts = cleaned.split(/\s+/);
+      donorName = parts[0];
+    }
+    const cleanDonor = (donorName || 'Donor').replace(/[^a-zA-Z0-9_-]/g, '');
+
+    return `Pavati_${cleanNo}_${cleanDonor}`;
+  }
+
+  /**
+   * Triggers native print with document.title temporarily set to automatic file name,
+   * so browser's "Save as PDF" dialog pre-fills "Pavati_123_Rohan.pdf".
+   */
   printReceipt() {
+    const baseName = this.getSafeBaseName();
+    const originalTitle = document.title;
+    document.title = baseName;
     window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1200);
+  }
+
+  /**
+   * Clones the receipt into an off-screen staging container at standard desktop print width (700px),
+   * enforcing full expanded layouts (unwrapped donor rows, horizontal signatures, clean borders),
+   * ensuring the captured canvas is 100% identical to the print view on all devices.
+   */
+  private async captureReceiptCanvas(): Promise<HTMLCanvasElement | null> {
+    const elem = document.getElementById('official-receipt-print-area');
+    if (!elem) return null;
+
+    let staging: HTMLElement | null = null;
+    try {
+      const STANDARDIZED_WIDTH = 700;
+
+      staging = document.createElement('div');
+      staging.id = 'receipt-staging-export';
+      staging.style.position = 'fixed';
+      staging.style.left = '-9999px';
+      staging.style.top = '0';
+      staging.style.width = `${STANDARDIZED_WIDTH}px`;
+      staging.style.minWidth = `${STANDARDIZED_WIDTH}px`;
+      staging.style.maxWidth = `${STANDARDIZED_WIDTH}px`;
+      staging.style.height = 'auto';
+      staging.style.maxHeight = 'none';
+      staging.style.overflow = 'visible';
+      staging.style.zIndex = '-9999';
+      staging.style.pointerEvents = 'none';
+      staging.style.background = '#fffef9';
+      staging.style.margin = '0';
+      staging.style.padding = '0';
+      staging.style.boxSizing = 'border-box';
+
+      // Clone the receipt
+      const clone = elem.cloneNode(true) as HTMLElement;
+      clone.id = 'receipt-export-clone';
+      clone.style.width = `${STANDARDIZED_WIDTH}px`;
+      clone.style.minWidth = `${STANDARDIZED_WIDTH}px`;
+      clone.style.maxWidth = `${STANDARDIZED_WIDTH}px`;
+      clone.style.height = 'auto';
+      clone.style.maxHeight = 'none';
+      clone.style.overflow = 'visible';
+      clone.style.margin = '0';
+      clone.style.padding = '24px 30px';
+      clone.style.border = '2px solid rgba(120, 53, 15, 0.4)';
+      clone.style.borderRadius = '12px';
+      clone.style.background = '#fffef9';
+      clone.style.boxShadow = 'none';
+      clone.style.boxSizing = 'border-box';
+
+      staging.appendChild(clone);
+      document.body.appendChild(staging);
+
+      const canvas = await html2canvas(clone, {
+        scale: 2, // 1400px wide, 300 DPI crisp
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#fffef9',
+        width: STANDARDIZED_WIDTH,
+        windowWidth: STANDARDIZED_WIDTH,
+        logging: false,
+        scrollX: 0,
+        scrollY: 0
+      });
+
+      return canvas;
+    } catch (err) {
+      console.error('Failed to capture standardized receipt canvas:', err);
+      return null;
+    } finally {
+      if (staging && staging.parentNode) {
+        staging.parentNode.removeChild(staging);
+      }
+    }
+  }
+
+  /**
+   * Captures the complete receipt element in high-resolution matching the Print View,
+   * and downloads with automatic file name (e.g. Pavati_123_Rohan.png).
+   */
+  async downloadPng() {
+    if (this.isGeneratingPng() || this.isGeneratingPdf()) return;
+    this.isGeneratingPng.set(true);
+    try {
+      const canvas = await this.captureReceiptCanvas();
+      if (!canvas) return;
+
+      const baseName = this.getSafeBaseName();
+      const filename = `${baseName}.png`;
+      const dataUrl = canvas.toDataURL('image/png');
+
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Error generating receipt PNG:', err);
+    } finally {
+      this.isGeneratingPng.set(false);
+    }
+  }
+
+  /**
+   * Captures the complete receipt and builds a standard PDF containing only the receipt,
+   * downloading directly with automatic file name (e.g. Pavati_123_Rohan.pdf).
+   */
+  async downloadPdf() {
+    if (this.isGeneratingPdf() || this.isGeneratingPng()) return;
+    this.isGeneratingPdf.set(true);
+    try {
+      const canvas = await this.captureReceiptCanvas();
+      if (!canvas) return;
+
+      const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      const base64Data = jpegDataUrl.split(',')[1];
+      const binaryStr = window.atob(base64Data);
+      const len = binaryStr.length;
+      const jpegBytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        jpegBytes[i] = binaryStr.charCodeAt(i);
+      }
+
+      const pdfBlob = this.buildSingleImagePdf(jpegBytes, canvas.width, canvas.height);
+      const baseName = this.getSafeBaseName();
+      const filename = `${baseName}.pdf`;
+
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = blobUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Error generating receipt PDF:', err);
+      // Fallback to print dialog
+      this.printReceipt();
+    } finally {
+      this.isGeneratingPdf.set(false);
+    }
+  }
+
+  /**
+   * Builds a valid PDF 1.4 binary Blob embedding the JPEG image centered on an A4 page.
+   */
+  private buildSingleImagePdf(jpegBytes: Uint8Array, imgWidth: number, imgHeight: number): Blob {
+    const pageWidth = 595.28; // Standard A4 points
+    const pageHeight = 841.89;
+    const margin = 28.35; // 10mm margins
+    const maxWidth = pageWidth - (margin * 2);
+    const maxHeight = pageHeight - (margin * 2);
+
+    let drawWidth = maxWidth;
+    let drawHeight = (imgHeight / imgWidth) * drawWidth;
+    if (drawHeight > maxHeight) {
+      drawHeight = maxHeight;
+      drawWidth = (imgWidth / imgHeight) * drawHeight;
+    }
+
+    const x = (pageWidth - drawWidth) / 2;
+    const y = (pageHeight - drawHeight) / 2;
+
+    const contentStream = `q\n${drawWidth.toFixed(2)} 0 0 ${drawHeight.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm\n/Im1 Do\nQ\n`;
+    const contentLen = contentStream.length;
+
+    const header = `%PDF-1.4\n%\xE2\xE3\xCF\xD3\n`;
+    const obj1 = `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`;
+    const obj2 = `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`;
+    const obj3 = `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth.toFixed(2)} ${pageHeight.toFixed(2)}] /Resources << /XObject << /Im1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`;
+    const obj4Header = `4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${imgWidth} /Height ${imgHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`;
+    const obj4Footer = `\nendstream\nendobj\n`;
+    const obj5 = `5 0 obj\n<< /Length ${contentLen} >>\nstream\n${contentStream}endstream\nendobj\n`;
+
+    const enc = new TextEncoder();
+    const hBytes = enc.encode(header);
+    const o1Bytes = enc.encode(obj1);
+    const o2Bytes = enc.encode(obj2);
+    const o3Bytes = enc.encode(obj3);
+    const o4HBytes = enc.encode(obj4Header);
+    const o4FBytes = enc.encode(obj4Footer);
+    const o5Bytes = enc.encode(obj5);
+
+    const offset1 = hBytes.length;
+    const offset2 = offset1 + o1Bytes.length;
+    const offset3 = offset2 + o2Bytes.length;
+    const offset4 = offset3 + o3Bytes.length;
+    const offset5 = offset4 + o4HBytes.length + jpegBytes.length + o4FBytes.length;
+    const xrefOffset = offset5 + o5Bytes.length;
+
+    const pad = (n: number) => String(n).padStart(10, '0');
+    const xref = `xref\n0 6\n0000000000 65535 f \n${pad(offset1)} 00000 n \n${pad(offset2)} 00000 n \n${pad(offset3)} 00000 n \n${pad(offset4)} 00000 n \n${pad(offset5)} 00000 n \ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+    const xrefBytes = enc.encode(xref);
+
+    const parts: any[] = [
+      hBytes,
+      o1Bytes,
+      o2Bytes,
+      o3Bytes,
+      o4HBytes,
+      jpegBytes,
+      o4FBytes,
+      o5Bytes,
+      xrefBytes
+    ];
+
+    return new Blob(parts, { type: 'application/pdf' });
   }
 
   getAmountInWords(amount: number): string {
@@ -225,4 +563,3 @@ export class ReceiptModalComponent {
     return `अक्षरी रुपये ${amount.toLocaleString('en-IN')} फक्त.`;
   }
 }
-

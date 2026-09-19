@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MandalDataService } from '../../services/mandal-data.service';
 import { TransliterationService } from '../../services/transliteration.service';
 import { KharchRecord } from '../../models/mandal.models';
@@ -8,7 +9,7 @@ import { KharchRecord } from '../../models/mandal.models';
 @Component({
   selector: 'app-kharch',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="space-y-5 pb-8 animate-fade-in">
       
@@ -17,12 +18,24 @@ import { KharchRecord } from '../../models/mandal.models';
         <div class="absolute -right-6 -bottom-8 opacity-10 text-9xl select-none font-bold">₹</div>
         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
+            <!-- Back to Dashboard Button -->
+            <a
+              routerLink="/"
+              class="inline-flex items-center gap-1.5 px-3 py-1 mb-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-rose-100 hover:text-white border border-white/20 text-xs font-bold font-devanagari transition shadow-xs active:scale-95 cursor-pointer group"
+              title="मुख्यपृष्ठावर परत जा / Back to Dashboard"
+            >
+              <svg class="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>{{ mandalData.t('मुख्यपृष्ठावर जा', 'Back to Dashboard') }}</span>
+            </a>
+
             <div class="flex items-center gap-2 text-rose-300 text-xs font-semibold uppercase tracking-wider">
               <span>●</span>
               <span>{{ mandalData.t('खर्च व्यवस्थापन व लेजर', 'Expense Management & Ledger') }}</span>
             </div>
             <h1 class="text-xl sm:text-2xl md:text-3xl font-bold font-devanagari mt-1">
-              {{ mandalData.t('उत्सव खर्च तपशील व व्हाउचर नोंदवही', 'Festival Expenses & Voucher Register') }}
+              {{ mandalData.t('उत्सव खर्च तपशील नोंदवही', 'Festival Expenses Register') }}
             </h1>
             <p class="text-slate-300 text-xs md:text-sm mt-1">
               {{ mandalData.isEnglish() ? ('Official expense entries for ' + mandalData.translateFestival(mandalData.selectedFestival()) + ' (' + mandalData.selectedYear() + ')') : (mandalData.selectedFestival() + ' (' + mandalData.toMarathiDigits(mandalData.selectedYear()) + ') मधील सर्व अधिकृत खर्च नोंदी') }}
@@ -36,7 +49,7 @@ import { KharchRecord } from '../../models/mandal.models';
               <div class="text-lg sm:text-xl font-black text-white">{{ mandalData.formatNum(mandalData.kpi().totalKharch, true) }}</div>
             </div>
             <div class="bg-white/10 backdrop-blur-md rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 border border-white/10 flex-1 sm:flex-none min-w-[120px]">
-              <div class="text-[10.5px] sm:text-[11px] text-rose-200">{{ mandalData.t('व्हाउचर नोंदी', 'Vouchers Logged') }}</div>
+              <div class="text-[10.5px] sm:text-[11px] text-rose-200">{{ mandalData.t('एकूण नोंदी', 'Total Entries') }}</div>
               <div class="text-lg sm:text-xl font-black text-white">{{ mandalData.formatNum(mandalData.kpi().totalKharchEntries) }} {{ mandalData.t('नोंदी', 'Entries') }}</div>
             </div>
           </div>
@@ -111,23 +124,19 @@ import { KharchRecord } from '../../models/mandal.models';
             <thead>
               <tr class="bg-[#f1f5f9] text-slate-700 font-bold font-devanagari border-b border-slate-200">
                 <th class="py-3 px-3 text-center w-12">{{ mandalData.t('अ. क्र.', 'Sr. No.') }}</th>
-                <th class="py-3 px-4">{{ mandalData.t('व्हाउचर क्र.', 'Voucher No.') }}</th>
                 <th class="py-3 px-4">{{ mandalData.t('खर्चाचे नाव', 'Expense Name') }}</th>
                 <th class="py-3 px-4">{{ mandalData.t('प्रकार (Category)', 'Category') }}</th>
                 <th class="py-3 px-4">{{ mandalData.t('ज्याला दिले ते नाव (Payee)', 'Paid To (Payee)') }}</th>
                 <th class="py-3 px-4 text-center">{{ mandalData.t('तारीख', 'Date') }}</th>
                 <th class="py-3 px-4 text-right">{{ mandalData.t('रक्कम', 'Amount') }}</th>
                 <th class="py-3 px-4 text-center">{{ mandalData.t('मंजूरकर्ता', 'Approved By') }}</th>
-                <th class="py-3 px-4 text-center">{{ mandalData.t('व्हाउचर', 'Voucher') }}</th>
+                <th class="py-3 px-4 text-center">{{ mandalData.t('कृती', 'Action') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
               @for (row of filteredList(); track row.id) {
                 <tr class="hover:bg-rose-50/30 transition">
                   <td class="py-3 px-3 text-center text-slate-500 font-medium">{{ mandalData.formatNum(row.srNo) }}</td>
-                  <td class="py-3 px-4 font-mono font-bold text-rose-700">
-                    {{ mandalData.formatNum(row.voucherNo) }}
-                  </td>
                   <td class="py-3 px-4 font-bold text-slate-800 font-devanagari">
                     @if (mandalData.isEnglish()) {
                       <div class="text-sm font-bold">{{ row.nameEn || row.nameMr }}</div>
@@ -167,8 +176,14 @@ import { KharchRecord } from '../../models/mandal.models';
                       (click)="viewVoucher(row)"
                       class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-200 font-bold rounded-md transition text-[11px]"
                     >
-                      {{ mandalData.t('व्हाउचर पहा', 'View Voucher') }}
+                      {{ mandalData.t('तपशील पहा', 'View Details') }}
                     </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="text-center py-8 text-slate-400 font-devanagari text-sm">
+                    {{ mandalData.t('कोणताही खर्च आढळला नाही.', 'No expenses found.') }}
                   </td>
                 </tr>
               }
@@ -187,8 +202,8 @@ import { KharchRecord } from '../../models/mandal.models';
           
           <div class="px-4 py-3 sm:px-6 sm:py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
             <div class="flex items-center gap-2">
-              <span class="text-rose-400 font-bold text-sm sm:text-base">{{ mandalData.t('॥ अधिकृत खर्च व्हाउचर ॥', '॥ Official Expense Voucher ॥') }}</span>
-              <span class="text-[10px] sm:text-xs text-slate-400 font-mono">{{ mandalData.formatNum(v.voucherNo) }}</span>
+              <span class="text-rose-400 font-bold text-sm sm:text-base">{{ mandalData.t('॥ अधिकृत खर्च पावती तपशील ॥', '॥ Official Expense Details ॥') }}</span>
+              <span class="text-[10px] sm:text-xs text-slate-400 font-mono">#{{ mandalData.formatNum(v.srNo || v.id) }}</span>
             </div>
             <button (click)="selectedVoucher.set(null)" class="text-slate-400 hover:text-white p-1" aria-label="Close modal">✕</button>
           </div>
@@ -196,11 +211,11 @@ import { KharchRecord } from '../../models/mandal.models';
           <div class="p-4 sm:p-6 space-y-3 sm:space-y-4 text-xs font-devanagari overflow-y-auto">
             <div class="text-center border-b pb-3">
               <h3 class="font-bold text-base sm:text-lg text-rose-800">{{ mandalData.t('श्री अष्टविनायक मित्र मंडळ, जोगेश्वरी (पश्चिम)', 'Shree Ashtavinayak Mitra Mandal, Jogeshwari (West)') }}</h3>
-              <p class="text-slate-500 text-[10px] sm:text-[11px]">{{ mandalData.t('अधिकृत देयक पावती / व्हाउचर', 'Official Payment Receipt / Voucher') }}</p>
+              <p class="text-slate-500 text-[10px] sm:text-[11px]">{{ mandalData.t('अधिकृत खर्च देयक पावती', 'Official Payment Receipt') }}</p>
             </div>
 
             <div class="grid grid-cols-2 gap-2 sm:gap-3">
-              <div><span class="text-slate-500 text-[11px]">{{ mandalData.t('व्हाउचर क्र:', 'Voucher No:') }}</span> <b class="text-rose-700 font-mono text-xs sm:text-sm ml-1">{{ mandalData.formatNum(v.voucherNo) }}</b></div>
+              <div><span class="text-slate-500 text-[11px]">{{ mandalData.t('नोंद क्र:', 'Entry No:') }}</span> <b class="text-rose-700 font-mono text-xs sm:text-sm ml-1">#{{ mandalData.formatNum(v.srNo || v.id) }}</b></div>
               <div class="text-right"><span class="text-slate-500 text-[11px]">{{ mandalData.t('तारीख:', 'Date:') }}</span> <b class="ml-1">{{ mandalData.formatNum(v.date) }}</b></div>
             </div>
 
@@ -224,7 +239,7 @@ import { KharchRecord } from '../../models/mandal.models';
                 <div class="text-[10px] sm:text-[11px] font-bold text-slate-700">{{ mandalData.t('स्वीकारणारा / पुरवठादार', 'Receiver / Vendor') }}</div>
               </div>
               <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-dashed border-rose-400 flex items-center justify-center text-[7px] sm:text-[8px] text-rose-600 font-bold rotate-[-10deg]">
-                {{ mandalData.t('व्हाउचर तपासले', 'Verified') }}
+                {{ mandalData.t('तपासले व मंजूर', 'Verified') }}
               </div>
               <div>
                 <div class="italic text-slate-400 font-serif mb-1 text-xs">{{ mandalData.t(v.approvedBy || 'खजिनदार', 'Treasurer') }}</div>
@@ -239,7 +254,7 @@ import { KharchRecord } from '../../models/mandal.models';
               {{ mandalData.t('बंद करा', 'Close') }}
             </button>
             <button (click)="printVoucher()" class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold bg-rose-600 text-white rounded-lg hover:bg-rose-700">
-              {{ mandalData.t('प्रिंट व्हाउचर', 'Print Voucher') }}
+              {{ mandalData.t('प्रिंट पावती', 'Print Receipt') }}
             </button>
           </div>
 

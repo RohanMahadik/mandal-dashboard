@@ -1,15 +1,19 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MandalDataService } from '../../services/mandal-data.service';
 import { TransliterationService } from '../../services/transliteration.service';
 import { ReceiptModalComponent } from '../../components/receipt-modal/receipt-modal.component';
 import { VarganiRecord } from '../../models/mandal.models';
 
+export type VarganiSortColumn = 'srNo' | 'name' | 'source' | 'amount' | 'receiptNo' | 'paymentMode' | 'date' | 'status';
+export type SortDirection = 'asc' | 'desc';
+
 @Component({
   selector: 'app-vargani',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReceiptModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ReceiptModalComponent],
   template: `
     <div class="space-y-5 pb-8 animate-fade-in">
       
@@ -18,6 +22,18 @@ import { VarganiRecord } from '../../models/mandal.models';
         <div class="absolute -right-6 -bottom-8 opacity-10 text-9xl select-none font-bold">॥</div>
         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
+            <!-- Back to Dashboard Button -->
+            <a
+              routerLink="/"
+              class="inline-flex items-center gap-1.5 px-3 py-1 mb-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-emerald-100 hover:text-white border border-white/20 text-xs font-bold font-devanagari transition shadow-xs active:scale-95 cursor-pointer group"
+              title="मुख्यपृष्ठावर परत जा / Back to Dashboard"
+            >
+              <svg class="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>{{ mandalData.t('मुख्यपृष्ठावर जा', 'Back to Dashboard') }}</span>
+            </a>
+
             <div class="flex items-center gap-2 text-emerald-300 text-xs font-semibold uppercase tracking-wider">
               <span>●</span>
               <span>{{ mandalData.t('वर्गणी व्यवस्थापन पोर्टल', 'Donation Management Portal') }}</span>
@@ -60,7 +76,7 @@ import { VarganiRecord } from '../../models/mandal.models';
               type="text"
               [ngModel]="searchQuery()"
               (ngModelChange)="searchQuery.set($event); currentPage.set(1)"
-              [placeholder]="mandalData.t('मराठी किंवा इंग्रजीत शोधा... (उदा. Rohan, Patil, शिव)', 'Search in English or Marathi... (e.g. Rohan, Patil, Shiv)')"
+              [placeholder]="mandalData.t('मराठी किंवा इंग्रजीत शोधा... (उदा. Ashok, Gawda, शिव)', 'Search in English or Marathi... (e.g. Ashok, Gawda, Shiv)')"
               class="w-full pl-10 pr-4 py-2 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-devanagari transition"
             />
             @if (searchQuery()) {
@@ -75,9 +91,9 @@ import { VarganiRecord } from '../../models/mandal.models';
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-2 border-t border-slate-100 text-xs">
           
           <div>
-            <label class="block text-slate-500 font-bold mb-1 font-devanagari">{{ mandalData.t('बिल्डिंग', 'Building') }}</label>
+            <label class="block text-slate-500 font-bold mb-1 font-devanagari">{{ mandalData.t('स्त्रोत (Source)', 'Source') }}</label>
             <select [ngModel]="buildingFilter()" (ngModelChange)="buildingFilter.set($event); currentPage.set(1)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-700 focus:ring-1 focus:ring-emerald-500">
-              @for (b of mandalData.buildingsList; track b) {
+              @for (b of mandalData.availableSources(); track b) {
                 <option [value]="b">{{ mandalData.translateBuilding(b) }}</option>
               }
             </select>
@@ -118,9 +134,15 @@ import { VarganiRecord } from '../../models/mandal.models';
       <!-- Table Section -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
         
-        <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between">
-          <div class="text-xs font-bold text-slate-700 font-devanagari">
-            {{ mandalData.t('एकूण नोंदी', 'Total Records') }}: <span class="text-emerald-700 font-extrabold">{{ mandalData.formatNum(filteredList().length) }}</span>
+        <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+            <div class="font-bold text-slate-700 font-devanagari">
+              {{ mandalData.t('एकूण नोंदी', 'Total Records') }}: <span class="text-emerald-700 font-extrabold">{{ mandalData.formatNum(filteredList().length) }}</span>
+            </div>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-devanagari">
+              <span class="text-emerald-600 font-bold">⇅</span>
+              <span>{{ mandalData.t('क्रमवारी', 'Sort') }}: <b>{{ getSortLabel() }}</b></span>
+            </div>
           </div>
           <div class="text-xs text-slate-500">
             {{ mandalData.isEnglish() ? ('Page ' + currentPage() + ' of ' + totalPages()) : ('पान ' + mandalData.toMarathiDigits(currentPage()) + ' पैकी ' + mandalData.toMarathiDigits(totalPages())) }}
@@ -131,26 +153,176 @@ import { VarganiRecord } from '../../models/mandal.models';
           <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[700px]">
             <thead>
               <tr class="bg-[#f1f5f9] text-slate-700 font-bold font-devanagari border-b border-slate-200">
-                <th class="py-3 px-3 text-center w-12">{{ mandalData.t('अ. क्र.', 'Sr. No.') }}</th>
-                <th class="py-3 px-4">{{ mandalData.t('नाव (सभासद)', 'Member Name') }}</th>
-                <th class="py-3 px-4">{{ mandalData.t('बिल्डिंग / विंग', 'Building / Wing') }}</th>
-                <th class="py-3 px-4 text-right">
-                  <span class="inline-flex items-center gap-1 justify-end">
-                    {{ mandalData.t('रक्कम', 'Amount') }}
-                    <span class="text-emerald-700 font-bold" [title]="mandalData.t('सर्वाधिक ते किमान रक्कम क्रमाने', 'Highest to lowest amount')">↓</span>
-                  </span>
+                <!-- 1. अ. क्र. -->
+                <th
+                  (click)="toggleSort('srNo')"
+                  class="py-3 px-3 text-center w-14 cursor-pointer select-none transition group hover:bg-slate-200/80"
+                  [class.bg-emerald-100/60]="sortColumn() === 'srNo'"
+                  [class.text-emerald-950]="sortColumn() === 'srNo'"
+                  [title]="mandalData.t('अ. क्र. नुसार क्रमवारी लावा', 'Sort by Sr. No.')"
+                >
+                  <div class="inline-flex items-center justify-center gap-1">
+                    <span>{{ mandalData.t('अ. क्र.', 'Sr. No.') }}</span>
+                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'srNo'" [class.font-black]="sortColumn() === 'srNo'" [class.opacity-40]="sortColumn() !== 'srNo'">
+                      @if (sortColumn() === 'srNo') {
+                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  </div>
                 </th>
-                <th class="py-3 px-4 text-center">{{ mandalData.t('पावती क्र.', 'Receipt No.') }}</th>
-                <th class="py-3 px-4 text-center">{{ mandalData.t('भरणा पद्धत', 'Payment Mode') }}</th>
-                <th class="py-3 px-4 text-center">{{ mandalData.t('तारीख', 'Date') }}</th>
-                <th class="py-3 px-4 text-center">{{ mandalData.t('पावती', 'Status') }}</th>
+
+                <!-- 2. नाव (सभासद) -->
+                <th
+                  (click)="toggleSort('name')"
+                  class="py-3 px-4 cursor-pointer select-none transition group hover:bg-slate-200/80"
+                  [class.bg-emerald-100/60]="sortColumn() === 'name'"
+                  [class.text-emerald-950]="sortColumn() === 'name'"
+                  [title]="mandalData.t('नावानुसार क्रमवारी लावा', 'Sort by Member Name')"
+                >
+                  <div class="inline-flex items-center gap-1.5">
+                    <span>{{ mandalData.t('नाव (सभासद)', 'Member Name') }}</span>
+                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'name'" [class.font-black]="sortColumn() === 'name'" [class.opacity-40]="sortColumn() !== 'name'">
+                      @if (sortColumn() === 'name') {
+                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  </div>
+                </th>
+
+                <!-- 3. स्त्रोत (Source) -->
+                <th
+                  (click)="toggleSort('source')"
+                  class="py-3 px-4 cursor-pointer select-none transition group hover:bg-slate-200/80"
+                  [class.bg-emerald-100/60]="sortColumn() === 'source'"
+                  [class.text-emerald-950]="sortColumn() === 'source'"
+                  [title]="mandalData.t('स्त्रोतानुसार क्रमवारी लावा', 'Sort by Source')"
+                >
+                  <div class="inline-flex items-center gap-1.5">
+                    <span>{{ mandalData.t('स्त्रोत (Source)', 'Source') }}</span>
+                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'source'" [class.font-black]="sortColumn() === 'source'" [class.opacity-40]="sortColumn() !== 'source'">
+                      @if (sortColumn() === 'source') {
+                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  </div>
+                </th>
+
+                <!-- 4. रक्कम (Amount) -->
+                <th
+                  (click)="toggleSort('amount')"
+                  class="py-3 px-4 text-right cursor-pointer select-none transition group hover:bg-slate-200/80"
+                  [class.bg-emerald-100/60]="sortColumn() === 'amount'"
+                  [class.text-emerald-950]="sortColumn() === 'amount'"
+                  [title]="mandalData.t('रक्कमेनुसार क्रमवारी लावा', 'Sort by Amount')"
+                >
+                  <div class="inline-flex items-center gap-1.5 justify-end">
+                    <span>{{ mandalData.t('रक्कम', 'Amount') }}</span>
+                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'amount'" [class.font-black]="sortColumn() === 'amount'" [class.opacity-40]="sortColumn() !== 'amount'">
+                      @if (sortColumn() === 'amount') {
+                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  </div>
+                </th>
+
+                <!-- 5. पावती क्र. (Receipt No.) -->
+                <th
+                  (click)="toggleSort('receiptNo')"
+                  class="py-3 px-4 text-center cursor-pointer select-none transition group hover:bg-slate-200/80"
+                  [class.bg-emerald-100/60]="sortColumn() === 'receiptNo'"
+                  [class.text-emerald-950]="sortColumn() === 'receiptNo'"
+                  [title]="mandalData.t('पावती क्रमांकानुसार क्रमवारी लावा', 'Sort by Receipt No.')"
+                >
+                  <div class="inline-flex items-center justify-center gap-1.5">
+                    <span>{{ mandalData.t('पावती क्र.', 'Receipt No.') }}</span>
+                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'receiptNo'" [class.font-black]="sortColumn() === 'receiptNo'" [class.opacity-40]="sortColumn() !== 'receiptNo'">
+                      @if (sortColumn() === 'receiptNo') {
+                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  </div>
+                </th>
+
+                <!-- 6. भरणा पद्धत (Payment Mode) -->
+                <th
+                  (click)="toggleSort('paymentMode')"
+                  class="py-3 px-4 text-center cursor-pointer select-none transition group hover:bg-slate-200/80"
+                  [class.bg-emerald-100/60]="sortColumn() === 'paymentMode'"
+                  [class.text-emerald-950]="sortColumn() === 'paymentMode'"
+                  [title]="mandalData.t('भरणा पद्धतीनुसार क्रमवारी लावा', 'Sort by Payment Mode')"
+                >
+                  <div class="inline-flex items-center justify-center gap-1.5">
+                    <span>{{ mandalData.t('भरणा पद्धत', 'Payment Mode') }}</span>
+                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'paymentMode'" [class.font-black]="sortColumn() === 'paymentMode'" [class.opacity-40]="sortColumn() !== 'paymentMode'">
+                      @if (sortColumn() === 'paymentMode') {
+                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  </div>
+                </th>
+
+                <!-- 7. तारीख (Date) -->
+                <th
+                  (click)="toggleSort('date')"
+                  class="py-3 px-4 text-center cursor-pointer select-none transition group hover:bg-slate-200/80"
+                  [class.bg-emerald-100/60]="sortColumn() === 'date'"
+                  [class.text-emerald-950]="sortColumn() === 'date'"
+                  [title]="mandalData.t('तारखेनुसार क्रमवारी लावा', 'Sort by Date')"
+                >
+                  <div class="inline-flex items-center justify-center gap-1.5">
+                    <span>{{ mandalData.t('तारीख', 'Date') }}</span>
+                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'date'" [class.font-black]="sortColumn() === 'date'" [class.opacity-40]="sortColumn() !== 'date'">
+                      @if (sortColumn() === 'date') {
+                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  </div>
+                </th>
+
+                <!-- 8. पावती (Status) -->
+                <th
+                  (click)="toggleSort('status')"
+                  class="py-3 px-4 text-center cursor-pointer select-none transition group hover:bg-slate-200/80"
+                  [class.bg-emerald-100/60]="sortColumn() === 'status'"
+                  [class.text-emerald-950]="sortColumn() === 'status'"
+                  [title]="mandalData.t('पावती स्थितीनुसार क्रमवारी लावा', 'Sort by Status')"
+                >
+                  <div class="inline-flex items-center justify-center gap-1.5">
+                    <span>{{ mandalData.t('पावती', 'Status') }}</span>
+                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'status'" [class.font-black]="sortColumn() === 'status'" [class.opacity-40]="sortColumn() !== 'status'">
+                      @if (sortColumn() === 'status') {
+                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  </div>
+                </th>
+
+                <!-- 9. कृती (Action) -->
                 <th class="py-3 px-4 text-center">{{ mandalData.t('कृती', 'Action') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
               @for (row of paginatedList(); track row.id; let idx = $index) {
                 <tr class="hover:bg-amber-50/40 transition">
-                  <td class="py-3 px-3 text-center text-slate-500 font-medium">{{ mandalData.formatNum((currentPage() - 1) * pageSize() + idx + 1) }}</td>
+                  <td class="py-3 px-3 text-center text-slate-600 font-semibold font-mono">
+                    {{ mandalData.formatNum(row.srNo || ((currentPage() - 1) * pageSize() + idx + 1)) }}
+                  </td>
                   <td class="py-3 px-4 font-semibold text-slate-900 font-devanagari">
                     @if (mandalData.isEnglish()) {
                       <div class="text-sm font-bold">{{ row.nameEn }}</div>
@@ -256,7 +428,42 @@ export class VarganiComponent {
   readonly currentPage = signal<number>(1);
   readonly selectedReceipt = signal<VarganiRecord | null>(null);
 
-  // Filtered List computation (reacts to every keystroke and filter change)
+  // Sorting State (Default: Highest amount first)
+  readonly sortColumn = signal<VarganiSortColumn>('amount');
+  readonly sortDirection = signal<SortDirection>('desc');
+
+  toggleSort(column: VarganiSortColumn) {
+    if (this.sortColumn() === column) {
+      this.sortDirection.update(dir => dir === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortColumn.set(column);
+      this.sortDirection.set(column === 'amount' ? 'desc' : 'asc');
+    }
+    this.currentPage.set(1);
+  }
+
+  getSortLabel(): string {
+    const col = this.sortColumn();
+    const dir = this.sortDirection();
+    const dirMr = dir === 'asc' ? 'कमी ते जास्त' : 'जास्त ते कमी';
+    const dirEn = dir === 'asc' ? 'Ascending' : 'Descending';
+
+    const colMap: Record<VarganiSortColumn, [string, string]> = {
+      srNo: ['अ. क्र.', 'Sr. No.'],
+      name: ['नाव', 'Member Name'],
+      source: ['स्त्रोत', 'Source'],
+      amount: ['रक्कम', 'Amount'],
+      receiptNo: ['पावती क्र.', 'Receipt No.'],
+      paymentMode: ['भरणा पद्धत', 'Payment Mode'],
+      date: ['तारीख', 'Date'],
+      status: ['पावती स्थिती', 'Status']
+    };
+
+    const [mr, en] = colMap[col] || ['रक्कम', 'Amount'];
+    return `${this.mandalData.t(mr, en)} (${this.mandalData.t(dirMr, dirEn)})`;
+  }
+
+  // Filtered List computation (reacts to every keystroke, filter change and sorting)
   readonly filteredList = computed(() => {
     let list = this.mandalData.currentVargani();
     const query = this.searchQuery().trim();
@@ -265,7 +472,7 @@ export class VarganiComponent {
     const pFilter = this.paymentFilter();
 
     if (bFilter !== 'सर्व') {
-      list = list.filter(item => item.building === bFilter);
+      list = list.filter(item => (item.source || item.building) === bFilter || item.building === bFilter);
     }
 
     if (sFilter !== 'सर्व') {
@@ -280,8 +487,74 @@ export class VarganiComponent {
       list = list.filter(item => this.transliteration.matches(query, item));
     }
 
-    // Always show highest amount to lowest
-    return [...list].sort((a, b) => b.amount - a.amount || (a.srNo || 0) - (b.srNo || 0));
+    const col = this.sortColumn();
+    const dir = this.sortDirection() === 'asc' ? 1 : -1;
+
+    return [...list].sort((a, b) => {
+      let diff = 0;
+      switch (col) {
+        case 'srNo': {
+          const aSr = a.srNo ?? a.id ?? 0;
+          const bSr = b.srNo ?? b.id ?? 0;
+          diff = aSr - bSr;
+          break;
+        }
+        case 'name': {
+          const aName = this.mandalData.isEnglish() ? (a.nameEn || a.nameMr) : (a.nameMr || a.nameEn);
+          const bName = this.mandalData.isEnglish() ? (b.nameEn || b.nameMr) : (b.nameMr || b.nameEn);
+          diff = (aName || '').localeCompare(bName || '', this.mandalData.isEnglish() ? 'en' : 'mr', { numeric: true, sensitivity: 'base' });
+          break;
+        }
+        case 'source': {
+          const aSrc = a.source || a.building || '';
+          const bSrc = b.source || b.building || '';
+          diff = aSrc.localeCompare(bSrc, 'mr', { numeric: true, sensitivity: 'base' });
+          break;
+        }
+        case 'amount': {
+          diff = a.amount - b.amount;
+          break;
+        }
+        case 'receiptNo': {
+          const aRec = a.receiptNo ? parseInt(String(a.receiptNo).replace(/\D/g, ''), 10) || 0 : 0;
+          const bRec = b.receiptNo ? parseInt(String(b.receiptNo).replace(/\D/g, ''), 10) || 0 : 0;
+          diff = aRec - bRec;
+          break;
+        }
+        case 'paymentMode': {
+          const aMode = a.paymentMode || 'कॅश';
+          const bMode = b.paymentMode || 'कॅश';
+          diff = aMode.localeCompare(bMode, 'mr');
+          break;
+        }
+        case 'date': {
+          const parseDate = (d?: string): number => {
+            if (!d) return 0;
+            const parts = String(d).trim().split(/[\/\-.]/);
+            if (parts.length === 3) {
+              if (parts[2].length === 4) {
+                return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10)).getTime() || 0;
+              } else if (parts[0].length === 4) {
+                return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)).getTime() || 0;
+              }
+            }
+            return Date.parse(d) || 0;
+          };
+          diff = parseDate(a.date) - parseDate(b.date);
+          break;
+        }
+        case 'status': {
+          diff = (a.status || '').localeCompare(b.status || '', 'mr');
+          break;
+        }
+      }
+
+      if (diff === 0) {
+        diff = (a.srNo ?? a.id ?? 0) - (b.srNo ?? b.id ?? 0);
+      }
+
+      return diff * dir;
+    });
   });
 
   readonly totalPages = computed(() => {

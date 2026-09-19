@@ -4,6 +4,7 @@ export interface VarganiRecord {
   nameMr: string;
   nameEn: string;
   building: string;
+  source?: string;
   amount: number;
   receiptNo: string | null;
   status: 'दिलेली' | 'बाकी';
@@ -23,10 +24,10 @@ export interface KharchRecord {
   category: string;
   amount: number;
   date: string;
-  voucherNo: string;
+  voucherNo?: string;
   festival: string;
   year: number;
-  paidTo: string;
+  paidTo?: string;
   description?: string;
   approvedBy?: string;
 }
@@ -44,8 +45,10 @@ export interface SummaryKpi {
 
 export interface BuildingDistribution {
   building: string;
+  source?: string;
   amount: number;
   color: string;
+  count?: number;
 }
 
 export interface ExpenseDistribution {
@@ -64,6 +67,8 @@ export interface CommitteeMember {
   roleType: 'पदाधिकारी' | 'सल्लागार' | 'प्रमुख सदस्य';
   experienceYears: number;
   avatarBg: string;
+  photoUrl?: string;
+  _photoError?: boolean;
 }
 
 export interface FestivalEvent {
@@ -75,10 +80,14 @@ export interface FestivalEvent {
   year: number;
   descriptionMr: string;
   schedule: {
+    date?: string;
     time: string;
     titleMr: string;
     descMr: string;
     icon: string;
+    category?: string;
+    details?: string;
+    contact?: string;
   }[];
   highlights: string[];
   notices: string[];
@@ -136,6 +145,9 @@ export interface SabhasadMember {
   phone: string;
   joinYear: number;
   status: 'सक्रिय' | 'Active';
+  columnIndex?: number;
+  photoUrl?: string;
+  _photoError?: boolean;
 }
 
 export interface AdvertisementBanner {
@@ -175,5 +187,17 @@ export interface YearlyFestivalRecord {
   netBalance: number;
   noteMr: string;
   noteEn: string;
+}
+
+export interface BankDetails {
+  bankNameMr: string;
+  bankNameEn: string;
+  accountNo: string;
+  ifscCode: string;
+  accountTypeMr: string;
+  accountTypeEn: string;
+  branchMr: string;
+  branchEn: string;
+  upiId: string;
 }
 

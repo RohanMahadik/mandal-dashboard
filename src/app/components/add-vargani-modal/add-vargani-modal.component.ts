@@ -1,4 +1,4 @@
-import { Component, output, inject } from '@angular/core';
+import { Component, output, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MandalDataService } from '../../services/mandal-data.service';
@@ -37,12 +37,11 @@ import { MandalDataService } from '../../services/mandal-data.service';
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">{{ mandalData.t('बिल्डिंग / पत्ता *', 'Building / Wing *') }}</label>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">{{ mandalData.t('स्त्रोत (Source) *', 'Source *') }}</label>
               <select [(ngModel)]="building" name="building" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white">
-                <option value="शिव स्फूर्ती 1">{{ mandalData.translateBuilding('शिव स्फूर्ती 1') }}</option>
-                <option value="शिव स्फूर्ती 2">{{ mandalData.translateBuilding('शिव स्फूर्ती 2') }}</option>
-                <option value="आदर्श नगर">{{ mandalData.translateBuilding('आदर्श नगर') }}</option>
-                <option value="इतर">{{ mandalData.translateBuilding('इतर') }}</option>
+                @for (s of selectableSources(); track s) {
+                  <option [value]="s">{{ mandalData.translateBuilding(s) }}</option>
+                }
               </select>
             </div>
             <div>
@@ -101,6 +100,11 @@ export class AddVarganiModalComponent {
 
   readonly close = output<void>();
 
+  readonly selectableSources = computed(() => {
+    const list = this.mandalData.availableSources().filter(s => s !== 'सर्व');
+    return list.length > 0 ? list : ['शिव स्फूर्ती 1', 'शिव स्फूर्ती 2', 'आदर्श नगर', 'इतर'];
+  });
+
   nameMr = '';
   nameEn = '';
   building = 'शिव स्फूर्ती 1';
@@ -119,6 +123,7 @@ export class AddVarganiModalComponent {
       nameMr: this.nameMr,
       nameEn: this.nameEn || this.nameMr,
       building: this.building,
+      source: this.building,
       amount: Number(this.amount),
       receiptNo: receiptNo,
       status: this.status,
