@@ -61,6 +61,54 @@ export type SortDirection = 'asc' | 'desc';
         </div>
       </div>
 
+      <!-- Festival Quick Selector Bar -->
+      <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-amber-50 rounded-xl p-3 border border-emerald-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-bold text-slate-900 font-devanagari">🚩 {{ mandalData.t('उत्सव वर्गणी निवडा:', 'Select Festival:') }}</span>
+          <span class="text-xs text-emerald-800 font-devanagari hidden sm:inline">
+            {{ mandalData.t('(गणेशोत्सवाची किंवा नवरात्रोत्सवाची वर्गणी पहा)', '(View Ganeshotsav or Navratri donations)') }}
+          </span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            (click)="selectFestival('सार्वजनिक गणेशोत्सव')"
+            class="px-3.5 py-1.5 rounded-xl font-bold font-devanagari text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            [ngClass]="isGaneshActive() ? 'bg-amber-600 text-white ring-2 ring-amber-400' : 'bg-white text-slate-700 hover:bg-amber-100 border border-slate-300'"
+          >
+            <span>🪔</span>
+            <span>{{ mandalData.t('सार्वजनिक गणेशोत्सव', 'Ganesh Utsav') }}</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full" [ngClass]="isGaneshActive() ? 'bg-amber-800 text-white' : 'bg-slate-100 text-slate-600'">
+              {{ mandalData.formatNum(ganeshVarganiTotal(), true) }}
+            </span>
+          </button>
+
+          <button
+            (click)="selectFestival('नवरात्र उत्सव')"
+            class="px-3.5 py-1.5 rounded-xl font-bold font-devanagari text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            [ngClass]="isNavratriActive() ? 'bg-rose-700 text-white ring-2 ring-rose-400' : 'bg-white text-slate-700 hover:bg-rose-50 border border-slate-300'"
+          >
+            <span>🔱</span>
+            <span>{{ mandalData.t('नवरात्र उत्सव', 'Navratri Utsav') }}</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full" [ngClass]="isNavratriActive() ? 'bg-rose-900 text-white' : 'bg-slate-100 text-slate-600'">
+              {{ mandalData.formatNum(navratriVarganiTotal(), true) }}
+            </span>
+          </button>
+
+          <button
+            (click)="selectFestival('संयुक्त (गणेशोत्सव व नवरात्र)')"
+            class="px-3 py-1.5 rounded-xl font-bold font-devanagari text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            [ngClass]="isJointActive() ? 'bg-indigo-700 text-white ring-2 ring-indigo-400' : 'bg-white text-slate-700 hover:bg-indigo-50 border border-slate-300'"
+          >
+            <span>⚖️</span>
+            <span>{{ mandalData.t('सर्व वर्गणी (दोन्ही)', 'All Donations') }}</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full" [ngClass]="isJointActive() ? 'bg-indigo-900 text-white' : 'bg-slate-100 text-slate-600'">
+              {{ mandalData.formatNum(jointVarganiTotal(), true) }}
+            </span>
+          </button>
+        </div>
+      </div>
+
       <!-- Action Bar & Advanced Filters -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 sm:p-5 space-y-3 sm:space-y-4">
         
@@ -193,27 +241,7 @@ export type SortDirection = 'asc' | 'desc';
                   </div>
                 </th>
 
-                <!-- 3. स्त्रोत (Source) -->
-                <th
-                  (click)="toggleSort('source')"
-                  class="py-3 px-4 cursor-pointer select-none transition group hover:bg-slate-200/80"
-                  [class.bg-emerald-100/60]="sortColumn() === 'source'"
-                  [class.text-emerald-950]="sortColumn() === 'source'"
-                  [title]="mandalData.t('स्त्रोतानुसार क्रमवारी लावा', 'Sort by Source')"
-                >
-                  <div class="inline-flex items-center gap-1.5">
-                    <span>{{ mandalData.t('स्त्रोत (Source)', 'Source') }}</span>
-                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'source'" [class.font-black]="sortColumn() === 'source'" [class.opacity-40]="sortColumn() !== 'source'">
-                      @if (sortColumn() === 'source') {
-                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
-                      } @else {
-                        ⇅
-                      }
-                    </span>
-                  </div>
-                </th>
-
-                <!-- 4. रक्कम (Amount) -->
+                <!-- 3. रक्कम (Amount) -->
                 <th
                   (click)="toggleSort('amount')"
                   class="py-3 px-4 text-right cursor-pointer select-none transition group hover:bg-slate-200/80"
@@ -233,7 +261,7 @@ export type SortDirection = 'asc' | 'desc';
                   </div>
                 </th>
 
-                <!-- 5. पावती क्र. (Receipt No.) -->
+                <!-- 4. पावती क्र. (Receipt No.) -->
                 <th
                   (click)="toggleSort('receiptNo')"
                   class="py-3 px-4 text-center cursor-pointer select-none transition group hover:bg-slate-200/80"
@@ -253,7 +281,30 @@ export type SortDirection = 'asc' | 'desc';
                   </div>
                 </th>
 
-                <!-- 6. भरणा पद्धत (Payment Mode) -->
+                <!-- 5. कृती (Action) -->
+                <th class="py-3 px-4 text-center">{{ mandalData.t('कृती', 'Action') }}</th>
+
+                <!-- 6. स्त्रोत (Source) -->
+                <th
+                  (click)="toggleSort('source')"
+                  class="py-3 px-4 cursor-pointer select-none transition group hover:bg-slate-200/80"
+                  [class.bg-emerald-100/60]="sortColumn() === 'source'"
+                  [class.text-emerald-950]="sortColumn() === 'source'"
+                  [title]="mandalData.t('स्त्रोतानुसार क्रमवारी लावा', 'Sort by Source')"
+                >
+                  <div class="inline-flex items-center gap-1.5">
+                    <span>{{ mandalData.t('स्त्रोत (Source)', 'Source') }}</span>
+                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'source'" [class.font-black]="sortColumn() === 'source'" [class.opacity-40]="sortColumn() !== 'source'">
+                      @if (sortColumn() === 'source') {
+                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  </div>
+                </th>
+
+                <!-- 7. भरणा पद्धत (Payment Mode) -->
                 <th
                   (click)="toggleSort('paymentMode')"
                   class="py-3 px-4 text-center cursor-pointer select-none transition group hover:bg-slate-200/80"
@@ -265,26 +316,6 @@ export type SortDirection = 'asc' | 'desc';
                     <span>{{ mandalData.t('भरणा पद्धत', 'Payment Mode') }}</span>
                     <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'paymentMode'" [class.font-black]="sortColumn() === 'paymentMode'" [class.opacity-40]="sortColumn() !== 'paymentMode'">
                       @if (sortColumn() === 'paymentMode') {
-                        {{ sortDirection() === 'asc' ? '▲' : '▼' }}
-                      } @else {
-                        ⇅
-                      }
-                    </span>
-                  </div>
-                </th>
-
-                <!-- 7. तारीख (Date) -->
-                <th
-                  (click)="toggleSort('date')"
-                  class="py-3 px-4 text-center cursor-pointer select-none transition group hover:bg-slate-200/80"
-                  [class.bg-emerald-100/60]="sortColumn() === 'date'"
-                  [class.text-emerald-950]="sortColumn() === 'date'"
-                  [title]="mandalData.t('तारखेनुसार क्रमवारी लावा', 'Sort by Date')"
-                >
-                  <div class="inline-flex items-center justify-center gap-1.5">
-                    <span>{{ mandalData.t('तारीख', 'Date') }}</span>
-                    <span class="text-[11px]" [class.text-emerald-700]="sortColumn() === 'date'" [class.font-black]="sortColumn() === 'date'" [class.opacity-40]="sortColumn() !== 'date'">
-                      @if (sortColumn() === 'date') {
                         {{ sortDirection() === 'asc' ? '▲' : '▼' }}
                       } @else {
                         ⇅
@@ -312,9 +343,6 @@ export type SortDirection = 'asc' | 'desc';
                     </span>
                   </div>
                 </th>
-
-                <!-- 9. कृती (Action) -->
-                <th class="py-3 px-4 text-center">{{ mandalData.t('कृती', 'Action') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -332,23 +360,38 @@ export type SortDirection = 'asc' | 'desc';
                       <div class="text-[11px] text-slate-400 font-normal font-sans">{{ row.nameEn }}</div>
                     }
                   </td>
+                  <!-- 3. रक्कम (Amount) -->
+                  <td class="py-3 px-4 text-right font-black text-sm text-slate-900">
+                    {{ mandalData.formatNum(row.amount, true) }}
+                  </td>
+                  <!-- 4. पावती क्र. (Receipt No.) -->
+                  <td class="py-3 px-4 text-center text-slate-600 font-mono font-bold">
+                    {{ row.receiptNo ? mandalData.formatNum(row.receiptNo) : '—' }}
+                  </td>
+                  <!-- 5. कृती (Action) -->
+                  <td class="py-3 px-4 text-center">
+                    <div class="flex items-center justify-center gap-1.5">
+                      <button
+                        (click)="viewReceipt(row)"
+                        [title]="mandalData.t('पावती पहा / प्रिंट करा', 'View / Print Receipt')"
+                        class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold rounded-md transition text-[11px] flex items-center gap-1 shadow-xs hover:shadow"
+                      >
+                        <span>📄</span>
+                        <span>{{ mandalData.t('पावती', 'Receipt') }}</span>
+                      </button>
+                    </div>
+                  </td>
+                  <!-- 6. स्त्रोत (Source) -->
                   <td class="py-3 px-4 text-slate-700 font-devanagari font-medium">
                     <span class="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[11px]">
                       {{ mandalData.translateBuilding(row.building) }}
                     </span>
                   </td>
-                  <td class="py-3 px-4 text-right font-black text-sm text-slate-900">
-                    {{ mandalData.formatNum(row.amount, true) }}
-                  </td>
-                  <td class="py-3 px-4 text-center text-slate-600 font-mono font-bold">
-                    {{ row.receiptNo ? mandalData.formatNum(row.receiptNo) : '—' }}
-                  </td>
+                  <!-- 7. भरणा पद्धत (Payment Mode) -->
                   <td class="py-3 px-4 text-center text-slate-600 font-devanagari">
                     {{ mandalData.translatePaymentMode(row.paymentMode || 'कॅश') }}
                   </td>
-                  <td class="py-3 px-4 text-center text-slate-500 font-sans">
-                    {{ mandalData.formatNum(row.date) }}
-                  </td>
+                  <!-- 8. पावती (Status) -->
                   <td class="py-3 px-4 text-center">
                     @if (row.status === 'दिलेली') {
                       <span class="badge-green">{{ mandalData.translateStatus('दिलेली') }}</span>
@@ -356,23 +399,11 @@ export type SortDirection = 'asc' | 'desc';
                       <span class="badge-red">{{ mandalData.translateStatus('बाकी') }}</span>
                     }
                   </td>
-                  <td class="py-3 px-4 text-center">
-                    <div class="flex items-center justify-center gap-1.5">
-                      <button
-                        (click)="viewReceipt(row)"
-                        [title]="mandalData.t('पावती पहा / प्रिंट करा', 'View / Print Receipt')"
-                        class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold rounded-md transition text-[11px] flex items-center gap-1"
-                      >
-                        <span>📄</span>
-                        <span>{{ mandalData.t('पावती', 'Receipt') }}</span>
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               }
               @if (paginatedList().length === 0) {
                 <tr>
-                  <td colspan="9" class="py-12 text-center text-slate-400 font-devanagari text-sm">
+                  <td colspan="8" class="py-12 text-center text-slate-400 font-devanagari text-sm">
                     {{ mandalData.t('कोणतीही वर्गणी नोंद आढळली नाही. कृपया शोध शब्द किंवा फिल्टर्स तपासा.', 'No donation records found. Please check search or filters.') }}
                   </td>
                 </tr>
@@ -567,6 +598,19 @@ export class VarganiComponent {
     const start = (page - 1) * size;
     return this.filteredList().slice(start, start + size);
   });
+
+  readonly isGaneshActive = computed(() => this.mandalData.selectedFestival().includes('गणेश'));
+  readonly isNavratriActive = computed(() => this.mandalData.selectedFestival().includes('नवरात्र'));
+  readonly isJointActive = computed(() => this.mandalData.selectedFestival().includes('संयुक्त') || this.mandalData.selectedFestival().includes('Joint'));
+
+  readonly ganeshVarganiTotal = computed(() => this.mandalData.detailedBalanceSheetData()?.ganesh.totalIncome || 490328);
+  readonly navratriVarganiTotal = computed(() => this.mandalData.detailedBalanceSheetData()?.navratri.totalIncome || 273134);
+  readonly jointVarganiTotal = computed(() => this.mandalData.detailedBalanceSheetData()?.joint.totalIncome || 763462);
+
+  selectFestival(festival: string) {
+    this.mandalData.setFestival(festival);
+    this.currentPage.set(1);
+  }
 
   viewReceipt(record: VarganiRecord) {
     this.selectedReceipt.set(record);

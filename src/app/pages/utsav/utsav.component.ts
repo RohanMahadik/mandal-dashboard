@@ -504,7 +504,7 @@ import { FestivalEvent } from '../../models/mandal.models';
                             href="tel:+919820668739"
                             class="px-2 py-0.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-[10px] font-bold"
                           >
-                            📞 ९८२०६६८७३९
+                            📞 +९१ ९८२०६ ६८७३९
                           </a>
                         </div>
                       </div>
@@ -683,7 +683,7 @@ import { FestivalEvent } from '../../models/mandal.models';
                 }
               </div>
               <div class="pt-2 text-[11px] text-amber-900 font-bold border-t border-amber-200">
-                {{ mandalData.t('आपत्कालीन संपर्क: १०० (पोलीस) | १०१ (अग्निशामक) | +91 98201 44552 (मंडळ अध्यक्ष)', 'Emergency Contacts: 100 (Police) | 101 (Fire) | +91 98201 44552 (Mandal President)') }}
+                {{ mandalData.t('आपत्कालीन संपर्क: १०० (पोलीस) | १०१ (अग्निशामक) | +९१ ९८२०१ ४४५५२ (मंडळ अध्यक्ष)', 'Emergency Contacts: 100 (Police) | 101 (Fire) | +91 98201 44552 (Mandal President)') }}
               </div>
             </div>
 

@@ -75,20 +75,31 @@ import { VarganiRecord } from '../../models/mandal.models';
           </div>
         </div>
 
-        <!-- Dedicated "Connect & Support / Key Contacts" Button -->
-        <a
-          routerLink="/connect"
-          class="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-4.5 sm:py-2 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:from-amber-700 hover:to-red-700 text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer font-devanagari group shrink-0"
-        >
-          <span class="text-base group-hover:scale-110 transition-transform">🤝</span>
-          <span>{{ mandalData.t('महत्त्वाचे संपर्क व सहकार्य', 'Important Contacts & Support') }}</span>
-          <span class="px-2 py-0.5 bg-white/20 text-white rounded-full text-[10px] font-sans font-extrabold uppercase tracking-wide">
-            {{ mandalData.t('मदत कक्ष', 'Desk') }}
-          </span>
-          <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-          </svg>
-        </a>
+        <!-- Dedicated Header Actions: "Vishesh Aabhar" & "Connect & Support" -->
+        <div class="flex flex-wrap items-center gap-2">
+          <a
+            routerLink="/vishesh-aabhar"
+            class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-red-700 via-amber-700 to-orange-700 hover:from-red-800 hover:to-amber-800 text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer font-devanagari group shrink-0"
+            title="विशेष आभार व कृतज्ञता दालन / Special Gratitude"
+          >
+            <span class="text-sm group-hover:scale-110 transition-transform">🙏</span>
+            <span>{{ mandalData.t('विशेष आभार', 'Special Gratitude') }}</span>
+          </a>
+
+          <a
+            routerLink="/connect"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-4.5 sm:py-2 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 hover:from-amber-700 hover:to-red-700 text-white text-xs sm:text-sm font-black rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer font-devanagari group shrink-0"
+          >
+            <span class="text-base group-hover:scale-110 transition-transform">🤝</span>
+            <span>{{ mandalData.t('महत्त्वाचे संपर्क व सहकार्य', 'Important Contacts & Support') }}</span>
+            <span class="px-2 py-0.5 bg-white/20 text-white rounded-full text-[10px] font-sans font-extrabold uppercase tracking-wide">
+              {{ mandalData.t('मदत कक्ष', 'Desk') }}
+            </span>
+            <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
 
       </div>
 
@@ -134,11 +145,11 @@ import { VarganiRecord } from '../../models/mandal.models';
               ⭐ {{ mandalData.isEnglish() ? ad.offerBadgeEn : ad.offerBadgeMr }}
             </div>
             <a
-              [href]="'tel:' + ad.phone"
+              [href]="'tel:' + ad.phone.replace(' ', '')"
               class="px-4 py-2 bg-white hover:bg-amber-50 text-slate-900 font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
             >
               <span>📞</span>
-              <span class="font-mono font-bold">{{ ad.phone }}</span>
+              <span class="font-mono font-bold">{{ mandalData.formatPhone(ad.phone) }}</span>
             </a>
           </div>
         </div>
@@ -209,12 +220,15 @@ import { VarganiRecord } from '../../models/mandal.models';
               </svg>
             </div>
             <div class="min-w-0 flex-1">
-              <div class="text-xs font-bold text-slate-600 font-devanagari">{{ mandalData.t('एकूण खर्च', 'Total Expenses') }}</div>
+              <div class="text-xs font-bold text-slate-600 font-devanagari">
+                {{ mandalData.t('एकूण खर्च', 'Total Expenses') }}
+                <span class="text-[10px] text-rose-600 font-normal">({{ mandalData.translateFestival(mandalData.selectedFestival()) }})</span>
+              </div>
               <div class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-0.5 truncate">
                 {{ mandalData.formatNum(mandalData.kpi().totalKharch, true) }}
               </div>
               <div class="text-[11px] text-slate-500 font-devanagari mt-0.5 truncate">
-                {{ mandalData.t('एकूण', 'Total') }} {{ mandalData.formatNum(mandalData.kpi().totalKharchEntries) }} {{ mandalData.t('खर्च नोंदी', 'Expense Entries') }}
+                {{ mandalData.t('एकूण', 'Total') }} {{ mandalData.formatNum(mandalData.currentKharch().length) }} {{ mandalData.t('खर्च व्हाउचर्स', 'Expense Vouchers') }}
               </div>
             </div>
           </div>
@@ -229,12 +243,14 @@ import { VarganiRecord } from '../../models/mandal.models';
               </svg>
             </div>
             <div class="min-w-0 flex-1">
-              <div class="text-xs font-bold text-slate-600 font-devanagari">{{ mandalData.t('शिल्लक रक्कम', 'Balance Amount') }}</div>
+              <div class="text-xs font-bold text-slate-600 font-devanagari">
+                {{ mandalData.selectedFestival().includes('गणेश') ? mandalData.t('नवरात्रीसाठी शिल्लक बाकी', 'Surplus for Navratri') : (mandalData.selectedFestival().includes('नवरात्र') ? mandalData.t('पुढील वर्षासाठी शिल्लक', 'Surplus Carried Forward') : mandalData.t('शिल्लक रक्कम', 'Balance Amount')) }}
+              </div>
               <div class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-0.5 truncate">
                 {{ mandalData.formatNum(mandalData.kpi().balanceAmount, true) }}
               </div>
               <div class="text-[11px] text-slate-500 font-devanagari mt-0.5 truncate">
-                {{ mandalData.t('नक्त शिल्लक गंगाजळी', 'Net Cash Reserve') }}
+                {{ mandalData.selectedFestival().includes('गणेश') ? mandalData.t('गणेशोत्सवातून उरलेली रक्कम', 'Balance from Ganeshotsav') : mandalData.t('नक्त शिल्लक गंगाजळी', 'Net Cash Reserve') }}
               </div>
             </div>
           </div>
@@ -347,35 +363,46 @@ import { VarganiRecord } from '../../models/mandal.models';
                 <tr class="bg-[#f1f5f9] text-slate-700 font-bold font-devanagari border-b border-slate-200">
                   <th class="py-2.5 px-3 text-center w-12">{{ mandalData.t('अ. क्र.', 'Sr. No.') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('नाव', 'Name') }}</th>
-                  <th class="py-2.5 px-3">
-                    <span class="inline-flex items-center gap-1">
+                  <th class="py-2.5 px-3 text-right">
+                    <span class="inline-flex items-center gap-1 justify-end">
                       {{ mandalData.t('रक्कम', 'Amount') }}
                       <span class="text-emerald-700 font-bold" [title]="mandalData.t('सर्वाधिक ते किमान रक्कम क्रमाने', 'Highest to lowest amount')">↓</span>
                     </span>
                   </th>
-                  <th class="py-2.5 px-3">{{ mandalData.t('स्त्रोत', 'Source') }}</th>
                   <th class="py-2.5 px-3 text-center">{{ mandalData.t('पावती क्र.', 'Receipt No.') }}</th>
+                  <th class="py-2.5 px-3 text-center">{{ mandalData.t('कृती', 'Action') }}</th>
+                  <th class="py-2.5 px-3">{{ mandalData.t('स्त्रोत', 'Source') }}</th>
                   <th class="py-2.5 px-3 text-center">{{ mandalData.t('पावती', 'Status') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
                 @for (row of quickVarganiRows(); track row.id; let idx = $index) {
-                  <tr class="hover:bg-amber-50/40 transition cursor-pointer" (click)="openReceipt(row)">
+                  <tr class="hover:bg-amber-50/40 transition">
                     <td class="py-2.5 px-3 text-center text-slate-500 font-medium">{{ mandalData.toMarathiDigits(idx + 1) }}</td>
                     <td class="py-2.5 px-3 font-semibold text-slate-800 font-devanagari">
                       {{ mandalData.isEnglish() ? row.nameEn : row.nameMr }}
                       <span class="block text-[10px] text-slate-400 font-normal font-sans">{{ mandalData.isEnglish() ? row.nameMr : row.nameEn }}</span>
                     </td>
-                    <td class="py-2.5 px-3 font-devanagari font-bold text-slate-900 leading-tight">
+                    <td class="py-2.5 px-3 font-devanagari font-bold text-slate-900 text-right leading-tight">
                       {{ mandalData.formatNum(row.amount, true) }}
+                    </td>
+                    <td class="py-2.5 px-3 text-center text-slate-600 font-mono font-bold">
+                      {{ row.receiptNo ? mandalData.toMarathiDigits(row.receiptNo) : '-' }}
+                    </td>
+                    <td class="py-2.5 px-3 text-center">
+                      <button
+                        (click)="openReceipt(row)"
+                        [title]="mandalData.t('पावती पहा / प्रिंट करा', 'View / Print Receipt')"
+                        class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold rounded text-[11px] inline-flex items-center gap-1 transition"
+                      >
+                        <span>📄</span>
+                        <span>{{ mandalData.t('पावती', 'Receipt') }}</span>
+                      </button>
                     </td>
                     <td class="py-2.5 px-3 font-devanagari">
                       <span class="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-medium whitespace-nowrap">
                         {{ mandalData.translateBuilding(row.building) }}
                       </span>
-                    </td>
-                    <td class="py-2.5 px-3 text-center text-slate-600 font-mono">
-                      {{ row.receiptNo ? mandalData.toMarathiDigits(row.receiptNo) : '-' }}
                     </td>
                     <td class="py-2.5 px-3 text-center">
                       @if (row.status === 'दिलेली') {
@@ -388,7 +415,7 @@ import { VarganiRecord } from '../../models/mandal.models';
                 }
                 @if (quickVarganiRows().length === 0) {
                   <tr>
-                    <td colspan="6" class="py-6 text-center text-slate-400 font-devanagari">
+                    <td colspan="7" class="py-6 text-center text-slate-400 font-devanagari">
                       {{ mandalData.t('कोणतीही नोंद आढळली नाही.', 'No records found.') }}
                     </td>
                   </tr>
@@ -410,7 +437,9 @@ import { VarganiRecord } from '../../models/mandal.models';
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/>
                 </svg>
               </div>
-              <h3 class="text-sm sm:text-base font-bold font-devanagari">{{ mandalData.t('खर्च यादी', 'Expenses List') }}</h3>
+              <h3 class="text-sm sm:text-base font-bold font-devanagari">
+                {{ mandalData.isEnglish() ? (mandalData.translateFestival(mandalData.selectedFestival()) + ' Expenses') : (mandalData.selectedFestival() + ' खर्च यादी') }}
+              </h3>
             </div>
             <a routerLink="/kharch" class="text-xs font-bold text-[#2563eb] hover:text-[#1d4ed8] flex items-center gap-1 font-devanagari transition">
               {{ mandalData.t('सर्व पहा →', 'View All →') }}
@@ -425,7 +454,6 @@ import { VarganiRecord } from '../../models/mandal.models';
                   <th class="py-2.5 px-3 text-center w-12">{{ mandalData.t('अ. क्र.', 'Sr. No.') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('खर्चाचे नाव', 'Expense Name') }}</th>
                   <th class="py-2.5 px-3 text-right">{{ mandalData.t('रक्कम', 'Amount') }}</th>
-                  <th class="py-2.5 px-3 text-center">{{ mandalData.t('तारीख', 'Date') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
@@ -437,9 +465,6 @@ import { VarganiRecord } from '../../models/mandal.models';
                     </td>
                     <td class="py-2.5 px-3 text-right font-bold text-slate-900">
                       {{ mandalData.formatNum(row.amount, true) }}
-                    </td>
-                    <td class="py-2.5 px-3 text-center text-slate-600 font-sans">
-                      {{ mandalData.toMarathiDigits(row.date) }}
                     </td>
                   </tr>
                 }
@@ -475,7 +500,7 @@ import { VarganiRecord } from '../../models/mandal.models';
             >
               <span>🪔</span>
               <span>{{ mandalData.t('गणेशोत्सव - भंडारा वस्तू', 'Ganpati Bhandara Items') }}</span>
-              <span class="px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(mandalData.ganpatiBhandaraItems().length) }}</span>
+              <span class="px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(filteredGanpatiBhandara().length) }}</span>
             </button>
 
             <button
@@ -485,7 +510,7 @@ import { VarganiRecord } from '../../models/mandal.models';
             >
               <span>🔱</span>
               <span>{{ mandalData.t('नवरात्रोत्सव - भंडारा वस्तू', 'Navratri Bhandara Items') }}</span>
-              <span class="px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(mandalData.navratriBhandaraItems().length) }}</span>
+              <span class="px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(filteredNavratriBhandara().length) }}</span>
             </button>
 
             <button
@@ -495,37 +520,69 @@ import { VarganiRecord } from '../../models/mandal.models';
             >
               <span>🌸</span>
               <span>{{ mandalData.t('नवरात्र - साडी देणगीदार', 'Navratri Saree Donors') }}</span>
-              <span class="px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(mandalData.navratriSareeDonors().length) }}</span>
+              <span class="px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(filteredNavratriSaree().length) }}</span>
             </button>
           </div>
         </div>
 
-        <!-- Search Bar for In-Kind Tables -->
-        <div class="relative max-w-md">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <!-- Sub-Bar: Year Tabs (वर्ष टॅब्स) + Search Input -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/70">
+          
+          <!-- Year Switcher Tabs -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-xs font-bold text-slate-600 font-devanagari flex items-center gap-1 mr-1">
+              <span>📅</span>
+              <span>{{ mandalData.t('वर्ष निवडा:', 'Select Year:') }}</span>
+            </span>
+
+            <button
+              (click)="selectedDonationYear.set('all')"
+              class="px-2.5 py-1 rounded-lg text-xs font-bold font-devanagari transition cursor-pointer flex items-center gap-1"
+              [ngClass]="selectedDonationYear() === 'all' ? 'bg-slate-900 text-white shadow-xs font-black' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'"
+            >
+              <span>{{ mandalData.t('सर्व वर्षे', 'All Years') }}</span>
+              <span class="px-1.5 py-0.2 bg-black/10 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(currentCategoryTotalCount()) }}</span>
+            </button>
+
+            @for (y of donationAvailableYears(); track y) {
+              <button
+                (click)="selectedDonationYear.set(y)"
+                class="px-2.5 py-1 rounded-lg text-xs font-bold font-devanagari transition cursor-pointer flex items-center gap-1"
+                [ngClass]="selectedDonationYear() === y ? 'bg-amber-600 text-white shadow-xs font-black' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'"
+              >
+                <span>{{ mandalData.toMarathiDigits(y) }}</span>
+                <span class="px-1.5 py-0.2 bg-black/10 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(currentCategoryYearCount(y)) }}</span>
+              </button>
+            }
           </div>
-          <input
-            type="text"
-            [ngModel]="donationSearchQuery()"
-            (ngModelChange)="donationSearchQuery.set($event)"
-            [placeholder]="mandalData.t('वस्तू किंवा देणगीदाराचे नाव शोधा...', 'Search item or donor name...')"
-            class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-devanagari focus:outline-none focus:ring-1 focus:ring-amber-500"
-          />
+
+          <!-- Search Bar for In-Kind Tables -->
+          <div class="relative w-full md:w-72 shrink-0">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <input
+              type="text"
+              [ngModel]="donationSearchQuery()"
+              (ngModelChange)="donationSearchQuery.set($event)"
+              [placeholder]="mandalData.t('वस्तू किंवा देणगीदाराचे नाव शोधा...', 'Search item or donor name...')"
+              class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-devanagari focus:outline-none focus:ring-1 focus:ring-amber-500"
+            />
+          </div>
         </div>
 
         <!-- 3. TABLE 1: Ganpati Utsav - Bhandara Items Table -->
         @if (selectedDonationTab() === 'ganpatiBhandara') {
           <div class="overflow-x-auto w-full -mx-1 sm:mx-0">
-            <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[650px]">
+            <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[700px]">
               <thead>
                 <tr class="bg-amber-50 text-amber-950 font-bold font-devanagari border-b border-amber-200">
                   <th class="py-2.5 px-3 text-center w-12">{{ mandalData.t('अ. क्र.', 'Sr. No.') }}</th>
+                  <th class="py-2.5 px-3 text-center w-20">{{ mandalData.t('वर्ष', 'Year') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('देणगीदाराचे नाव', 'Donor Name') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('वस्तू / साहित्याचे नाव', 'Item Name') }}</th>
                   <th class="py-2.5 px-3 text-center">{{ mandalData.t('प्रमाण', 'Quantity') }}</th>
                   <th class="py-2.5 px-3 text-center">{{ mandalData.t('एकक', 'Unit') }}</th>
-                  <th class="py-2.5 px-3 text-center">{{ mandalData.t('तारीख', 'Date') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('शेरा', 'Remarks') }}</th>
                 </tr>
               </thead>
@@ -533,6 +590,11 @@ import { VarganiRecord } from '../../models/mandal.models';
                 @for (item of filteredGanpatiBhandara(); track item.id; let idx = $index) {
                   <tr class="hover:bg-amber-50/40 transition">
                     <td class="py-2.5 px-3 text-center text-slate-500 font-medium">{{ mandalData.toMarathiDigits(idx + 1) }}</td>
+                    <td class="py-2.5 px-3 text-center">
+                      <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-md font-bold text-[11px] font-mono">
+                        {{ mandalData.toMarathiDigits(item.year || getItemYear(item)) }}
+                      </span>
+                    </td>
                     <td class="py-2.5 px-3 font-bold text-slate-900 font-devanagari">
                       {{ mandalData.isEnglish() ? item.donorNameEn : item.donorNameMr }}
                     </td>
@@ -547,9 +609,6 @@ import { VarganiRecord } from '../../models/mandal.models';
                       <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-md text-[11px] font-bold font-devanagari">
                         {{ mandalData.isEnglish() ? item.unitEn : item.unitMr }}
                       </span>
-                    </td>
-                    <td class="py-2.5 px-3 text-center text-slate-600 font-mono text-[11px]">
-                      {{ mandalData.toMarathiDigits(item.date) }}
                     </td>
                     <td class="py-2.5 px-3 text-slate-600 font-devanagari text-[11.5px]">
                       {{ mandalData.isEnglish() ? (item.remarksEn || '-') : (item.remarksMr || '-') }}
@@ -571,15 +630,15 @@ import { VarganiRecord } from '../../models/mandal.models';
         <!-- 4. TABLE 2: Navratri Utsav - Bhandara Items Table -->
         @if (selectedDonationTab() === 'navratriBhandara') {
           <div class="overflow-x-auto w-full -mx-1 sm:mx-0">
-            <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[650px]">
+            <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[700px]">
               <thead>
                 <tr class="bg-rose-50 text-rose-950 font-bold font-devanagari border-b border-rose-200">
                   <th class="py-2.5 px-3 text-center w-12">{{ mandalData.t('अ. क्र.', 'Sr. No.') }}</th>
+                  <th class="py-2.5 px-3 text-center w-20">{{ mandalData.t('वर्ष', 'Year') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('देणगीदाराचे नाव', 'Donor Name') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('वस्तू / साहित्याचे नाव', 'Item Name') }}</th>
                   <th class="py-2.5 px-3 text-center">{{ mandalData.t('प्रमाण', 'Quantity') }}</th>
                   <th class="py-2.5 px-3 text-center">{{ mandalData.t('एकक', 'Unit') }}</th>
-                  <th class="py-2.5 px-3 text-center">{{ mandalData.t('तारीख', 'Date') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('शेरा', 'Remarks') }}</th>
                 </tr>
               </thead>
@@ -587,6 +646,11 @@ import { VarganiRecord } from '../../models/mandal.models';
                 @for (item of filteredNavratriBhandara(); track item.id; let idx = $index) {
                   <tr class="hover:bg-rose-50/40 transition">
                     <td class="py-2.5 px-3 text-center text-slate-500 font-medium">{{ mandalData.toMarathiDigits(idx + 1) }}</td>
+                    <td class="py-2.5 px-3 text-center">
+                      <span class="px-2 py-0.5 bg-rose-100 text-rose-900 rounded-md font-bold text-[11px] font-mono">
+                        {{ mandalData.toMarathiDigits(item.year || getItemYear(item)) }}
+                      </span>
+                    </td>
                     <td class="py-2.5 px-3 font-bold text-slate-900 font-devanagari">
                       {{ mandalData.isEnglish() ? item.donorNameEn : item.donorNameMr }}
                     </td>
@@ -601,9 +665,6 @@ import { VarganiRecord } from '../../models/mandal.models';
                       <span class="px-2 py-0.5 bg-rose-100 text-rose-900 rounded-md text-[11px] font-bold font-devanagari">
                         {{ mandalData.isEnglish() ? item.unitEn : item.unitMr }}
                       </span>
-                    </td>
-                    <td class="py-2.5 px-3 text-center text-slate-600 font-mono text-[11px]">
-                      {{ mandalData.toMarathiDigits(item.date) }}
                     </td>
                     <td class="py-2.5 px-3 text-slate-600 font-devanagari text-[11.5px]">
                       {{ mandalData.isEnglish() ? (item.remarksEn || '-') : (item.remarksMr || '-') }}
@@ -625,35 +686,63 @@ import { VarganiRecord } from '../../models/mandal.models';
         <!-- 5. TABLE 3: Navratri Utsav - Saree Donors Table -->
         @if (selectedDonationTab() === 'navratriSaree') {
           <div class="overflow-x-auto w-full -mx-1 sm:mx-0">
-            <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[650px]">
+            <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[700px]">
               <thead>
                 <tr class="bg-purple-50 text-purple-950 font-bold font-devanagari border-b border-purple-200">
                   <th class="py-2.5 px-3 text-center w-12">{{ mandalData.t('अ. क्र.', 'Sr. No.') }}</th>
+                  <th class="py-2.5 px-3 text-center w-20">{{ mandalData.t('वर्ष', 'Year') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('महिला देणगीदाराचे नाव', 'Donor Name') }}</th>
-                  <th class="py-2.5 px-3">{{ mandalData.t('वस्तू / साडीचा प्रकार', 'Item / Saree Type') }}</th>
+                  <th class="py-2.5 px-3">{{ mandalData.t('वस्तू / साडीचा प्रकार व रंग', 'Item / Saree Type & Color') }}</th>
                   <th class="py-2.5 px-3 text-center">{{ mandalData.t('प्रमाण', 'Quantity') }}</th>
-                  <th class="py-2.5 px-3 text-center">{{ mandalData.t('तारीख', 'Date') }}</th>
                   <th class="py-2.5 px-3">{{ mandalData.t('शेरा / विवरण', 'Remarks / Description') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
                 @for (donor of filteredNavratriSaree(); track donor.id; let idx = $index) {
+                  @let sc = mandalData.getSareeColorInfo(donor);
                   <tr class="hover:bg-purple-50/40 transition">
                     <td class="py-2.5 px-3 text-center text-slate-500 font-medium">{{ mandalData.toMarathiDigits(idx + 1) }}</td>
+                    <td class="py-2.5 px-3 text-center">
+                      <span class="px-2 py-0.5 bg-purple-100 text-purple-900 rounded-md font-bold text-[11px] font-mono">
+                        {{ mandalData.toMarathiDigits(donor.year || getItemYear(donor)) }}
+                      </span>
+                    </td>
                     <td class="py-2.5 px-3 font-bold text-slate-900 font-devanagari">
                       {{ mandalData.isEnglish() ? donor.donorNameEn : donor.donorNameMr }}
                       <span class="block text-[10px] text-slate-400 font-normal font-sans">{{ mandalData.isEnglish() ? donor.donorNameMr : donor.donorNameEn }}</span>
                     </td>
-                    <td class="py-2.5 px-3 font-semibold text-purple-900 font-devanagari">
-                      {{ mandalData.isEnglish() ? donor.itemEn : donor.itemMr }}
+                    <td class="py-2.5 px-3 font-devanagari">
+                      <div class="flex items-start sm:items-center gap-2.5">
+                        <!-- Visual Color Swatch Circle -->
+                        <span
+                          class="w-4.5 h-4.5 rounded-full shrink-0 shadow-sm border-2 border-white ring-1 ring-slate-300 mt-0.5 sm:mt-0 transition-transform hover:scale-125 cursor-help"
+                          [style.backgroundColor]="sc.hex"
+                          [title]="mandalData.isEnglish() ? sc.nameEn : sc.nameMr"
+                        ></span>
+                        <div class="flex flex-col min-w-0">
+                          <!-- Saree Item Name -->
+                          <span class="font-bold text-slate-900 leading-tight">
+                            {{ mandalData.isEnglish() ? donor.itemEn : donor.itemMr }}
+                          </span>
+                          <!-- Color Pill / Badge -->
+                          <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+                            <span
+                              class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-bold border shadow-xs"
+                              [style.backgroundColor]="sc.bg"
+                              [style.borderColor]="sc.border"
+                              [style.color]="sc.textColor"
+                            >
+                              <span class="w-2 h-2 rounded-full shrink-0" [style.backgroundColor]="sc.hex"></span>
+                              <span>{{ mandalData.t('रंग:', 'Color:') }} {{ mandalData.isEnglish() ? sc.nameEn : sc.nameMr }}</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td class="py-2.5 px-3 text-center">
                       <span class="px-2 py-0.5 bg-purple-100 text-purple-900 rounded-md text-[11px] font-black font-devanagari">
                         {{ mandalData.toMarathiDigits(donor.quantity) }} {{ mandalData.t('नग', 'Nos') }}
                       </span>
-                    </td>
-                    <td class="py-2.5 px-3 text-center text-slate-600 font-mono text-[11px]">
-                      {{ mandalData.toMarathiDigits(donor.date) }}
                     </td>
                     <td class="py-2.5 px-3 text-slate-600 font-devanagari text-[11.5px]">
                       {{ mandalData.isEnglish() ? (donor.remarksEn || '-') : (donor.remarksMr || '-') }}
@@ -717,10 +806,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly selectedBuildingFilter = signal<string>('सर्व');
   readonly selectedReceiptFilter = signal<string>('सर्व');
 
-  // In-Kind & Bhandara Offerings Section State
-  readonly selectedDonationTab = signal<'ganpatiBhandara' | 'navratriBhandara' | 'navratriSaree'>('ganpatiBhandara');
-  readonly donationSearchQuery = signal<string>('');
-
   // Modals state
   readonly selectedReceiptRecord = signal<VarganiRecord | null>(null);
   readonly showAddVarganiModal = signal<boolean>(false);
@@ -771,9 +856,69 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.startAutoSlide();
   }
 
+  // In-Kind & Bhandara Offerings Section State
+  readonly selectedDonationTab = signal<'ganpatiBhandara' | 'navratriBhandara' | 'navratriSaree'>('ganpatiBhandara');
+  readonly selectedDonationYear = signal<number | 'all'>(2026);
+  readonly donationSearchQuery = signal<string>('');
+
+  // Available distinct years for donations
+  readonly donationAvailableYears = computed<number[]>(() => {
+    const yearsSet = new Set<number>();
+    this.mandalData.ganpatiBhandaraItems().forEach(i => {
+      const y = this.getItemYear(i);
+      if (y) yearsSet.add(y);
+    });
+    this.mandalData.navratriBhandaraItems().forEach(i => {
+      const y = this.getItemYear(i);
+      if (y) yearsSet.add(y);
+    });
+    this.mandalData.navratriSareeDonors().forEach(i => {
+      const y = this.getItemYear(i);
+      if (y) yearsSet.add(y);
+    });
+    this.mandalData.availableYears.forEach(y => yearsSet.add(y));
+    return Array.from(yearsSet).sort((a, b) => b - a);
+  });
+
+  // Helper to extract year from an item
+  getItemYear(item: { year?: number; date?: string }): number {
+    if (item.year) return item.year;
+    if (item.date) {
+      const parts = item.date.split('/');
+      if (parts.length === 3) {
+        const y = parseInt(parts[2], 10);
+        if (!isNaN(y)) return y;
+      }
+    }
+    return 2026;
+  }
+
+  // Count helpers for year buttons
+  currentCategoryTotalCount(): number {
+    const tab = this.selectedDonationTab();
+    if (tab === 'ganpatiBhandara') return this.mandalData.ganpatiBhandaraItems().length;
+    if (tab === 'navratriBhandara') return this.mandalData.navratriBhandaraItems().length;
+    return this.mandalData.navratriSareeDonors().length;
+  }
+
+  currentCategoryYearCount(year: number): number {
+    const tab = this.selectedDonationTab();
+    if (tab === 'ganpatiBhandara') {
+      return this.mandalData.ganpatiBhandaraItems().filter(i => this.getItemYear(i) === year).length;
+    }
+    if (tab === 'navratriBhandara') {
+      return this.mandalData.navratriBhandaraItems().filter(i => this.getItemYear(i) === year).length;
+    }
+    return this.mandalData.navratriSareeDonors().filter(i => this.getItemYear(i) === year).length;
+  }
+
   // Filtered Ganpati Bhandara items
   readonly filteredGanpatiBhandara = computed(() => {
-    const list = this.mandalData.ganpatiBhandaraItems();
+    let list = this.mandalData.ganpatiBhandaraItems();
+    const selectedYear = this.selectedDonationYear();
+    if (selectedYear !== 'all') {
+      list = list.filter(item => this.getItemYear(item) === selectedYear);
+    }
     const query = this.donationSearchQuery().toLowerCase().trim();
     if (!query) return list;
     return list.filter(item =>
@@ -788,7 +933,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Filtered Navratri Bhandara items
   readonly filteredNavratriBhandara = computed(() => {
-    const list = this.mandalData.navratriBhandaraItems();
+    let list = this.mandalData.navratriBhandaraItems();
+    const selectedYear = this.selectedDonationYear();
+    if (selectedYear !== 'all') {
+      list = list.filter(item => this.getItemYear(item) === selectedYear);
+    }
     const query = this.donationSearchQuery().toLowerCase().trim();
     if (!query) return list;
     return list.filter(item =>
@@ -803,7 +952,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Filtered Navratri Saree Donors
   readonly filteredNavratriSaree = computed(() => {
-    const list = this.mandalData.navratriSareeDonors();
+    let list = this.mandalData.navratriSareeDonors();
+    const selectedYear = this.selectedDonationYear();
+    if (selectedYear !== 'all') {
+      list = list.filter(item => this.getItemYear(item) === selectedYear);
+    }
     const query = this.donationSearchQuery().toLowerCase().trim();
     if (!query) return list;
     return list.filter(item =>
@@ -851,6 +1004,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       1200
     );
     this.mandalData.setYear(Number(year));
+    this.selectedDonationYear.set(Number(year));
   }
 
   onFestivalChange(festival: string) {

@@ -144,7 +144,7 @@ import html2canvas from 'html2canvas';
                 <span class="text-slate-500 w-28 sm:w-36 shrink-0 text-xs">{{ mandalData.t('भरणा पद्धत:', 'Payment Mode:') }}</span>
                 <span class="font-semibold text-slate-900">{{ mandalData.translatePaymentMode(item.paymentMode || 'कॅश') }}</span>
                 @if (item.phone) {
-                  <span class="sm:ml-auto text-xs text-slate-500 mt-0.5 sm:mt-0">{{ mandalData.t('मोबाईल:', 'Mobile:') }} {{ mandalData.formatNum(item.phone) }}</span>
+                  <span class="sm:ml-auto text-xs text-slate-500 mt-0.5 sm:mt-0">{{ mandalData.t('मोबाईल:', 'Mobile:') }} {{ mandalData.formatPhone(item.phone) }}</span>
                 }
               </div>
 

@@ -322,7 +322,16 @@
           <span>{{ mandalData.selectedLanguage() === 'mr' ? 'मनोगत' : 'Manogat' }}</span>
         </a>
 
-        <!-- 9. मंडळाचे उपक्रम (Mandal Activities) -->
+        <!-- 9. विशेष आभार (Vishesh Aabhar / Special Gratitude) -->
+        <a routerLink="/vishesh-aabhar" routerLinkActive="sidebar-active"
+          class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition group">
+          <div class="w-5 h-5 flex items-center justify-center text-base">
+            🙏
+          </div>
+          <span class="font-devanagari">{{ mandalData.selectedLanguage() === 'mr' ? 'विशेष आभार' : 'Special Gratitude' }}</span>
+        </a>
+
+        <!-- 10. मंडळाचे उपक्रम (Mandal Activities) -->
         <a routerLink="/upkram" routerLinkActive="sidebar-active"
           class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition group">
           <div class="w-5 h-5 flex items-center justify-center">
@@ -442,6 +451,10 @@
               class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
               <span>{{ mandalData.selectedLanguage() === 'mr' ? 'मनोगत' : 'Manogat' }}</span>
             </a>
+            <a (click)="closeMobileMenu()" routerLink="/vishesh-aabhar" routerLinkActive="sidebar-active"
+              class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+              <span>{{ mandalData.selectedLanguage() === 'mr' ? 'विशेष आभार' : 'Special Gratitude' }}</span>
+            </a>
             <a (click)="closeMobileMenu()" routerLink="/upkram" routerLinkActive="sidebar-active"
               class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
               <span>{{ mandalData.selectedLanguage() === 'mr' ? 'मंडळाचे उपक्रम' : 'Mandal Activities' }}</span>
@@ -495,7 +508,7 @@
           mandalData.selectedLanguage() === 'mr' ? 'आम्हाला जोडा:' : 'Connect With Us:' }}</span>
 
         <!-- WhatsApp -->
-        <a href="https://wa.me/8850616686?text=जय%20श्री%20गणेश!%20🙏%20मी%20श्री%20अष्टविनायक%20मित्र%20मंडळाच्या%20WhatsApp%20ग्रुपमध्ये%20सहभागी%20होऊ%20इच्छितो.%20कृपया%20मला%20ग्रुपमध्ये%20Add%20करावे.%20गणपती%20बाप्पा%20मोरया!%20🚩"
+        <a href="https://wa.me/918850616686?text=जय%20श्री%20गणेश!%20🙏%20मी%20श्री%20अष्टविनायक%20मित्र%20मंडळाच्या%20WhatsApp%20ग्रुपमध्ये%20सहभागी%20होऊ%20इच्छितो.%20कृपया%20मला%20ग्रुपमध्ये%20Add%20करावे.%20गणपती%20बाप्पा%20मोरया!%20🚩"
           target="_blank" rel="noopener noreferrer" title="व्हॉट्सॲप ग्रुप / संपर्क"
           class="w-7 h-7 rounded-full bg-[#25D366]/20 hover:bg-[#25D366] text-[#25D366] hover:text-white flex items-center justify-center transition shadow-xs hover:scale-110">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">

@@ -157,7 +157,7 @@ Chart.register(...registerables);
             <div class="flex items-center justify-between p-2.5 rounded-xl bg-blue-50 border border-blue-200">
               <div>
                 <span class="text-xs font-bold text-blue-900 block">{{ mandalData.t('शिल्लक रक्कम (Balance):', 'Net Balance:') }}</span>
-                <span class="text-[10px] text-blue-700">{{ mandalData.t('गंगाजळी शिल्लक', 'Surplus Reserve') }}</span>
+                <span class="text-[10px] text-blue-700">{{ ganpati?.balanceLabelMr ? (mandalData.isEnglish() ? (ganpati?.balanceLabelEn || 'Transferred to Navratri') : ganpati?.balanceLabelMr) : mandalData.t('गंगाजळी शिल्लक', 'Surplus Reserve') }}</span>
               </div>
               <span class="text-base sm:text-lg font-black text-blue-700">{{ mandalData.formatNum(ganpati?.balance, true) }}</span>
             </div>
@@ -196,11 +196,22 @@ Chart.register(...registerables);
             }
           </div>
 
-          <div class="space-y-3 font-devanagari">
+          <div class="space-y-2.5 font-devanagari">
             <div class="flex items-center justify-between p-2 rounded-lg bg-emerald-50/70 border border-emerald-100">
-              <span class="text-xs font-semibold text-emerald-900">{{ mandalData.t('एकूण वर्गणी जमा (Collection):', 'Total Collection:') }}</span>
+              <span class="text-xs font-semibold text-emerald-900">{{ mandalData.t('वर्गणी जमा (Collection):', 'Donation Collection:') }}</span>
               <span class="text-sm sm:text-base font-black text-emerald-700">{{ mandalData.formatNum(navratri?.totalCollection, true) }}</span>
             </div>
+
+            @if ((navratri?.otherIncome ?? 0) > 0) {
+              <div class="flex items-center justify-between p-2 rounded-lg bg-amber-50/70 border border-amber-100">
+                <span class="text-[11px] font-semibold text-amber-950">{{ mandalData.t('इतर जमा (दानपेटी, लिलाव व गणपती बाकी):', 'Other (Box, Auction & C/F):') }}</span>
+                <span class="text-xs sm:text-sm font-black text-amber-800">+{{ mandalData.formatNum(navratri?.otherIncome, true) }}</span>
+              </div>
+              <div class="flex items-center justify-between px-2 py-1.5 rounded-lg bg-emerald-100/70 border border-emerald-300">
+                <span class="text-xs font-bold text-emerald-950">{{ mandalData.t('एकूण जमा (Total Income):', 'Total Revenue:') }}</span>
+                <span class="text-sm sm:text-base font-black text-emerald-800">{{ mandalData.formatNum(navratri?.totalIncome, true) }}</span>
+              </div>
+            }
 
             <div class="flex items-center justify-between p-2 rounded-lg bg-rose-50/70 border border-rose-100">
               <span class="text-xs font-semibold text-rose-900">{{ mandalData.t('झालेला एकूण खर्च (Expenses):', 'Total Expenses:') }}</span>
@@ -210,7 +221,13 @@ Chart.register(...registerables);
             <div class="flex items-center justify-between p-2.5 rounded-xl bg-blue-50 border border-blue-200">
               <div>
                 <span class="text-xs font-bold text-blue-900 block">{{ mandalData.t('शिल्लक रक्कम (Balance):', 'Net Balance:') }}</span>
-                <span class="text-[10px] text-blue-700">{{ mandalData.t('गंगाजळी शिल्लक', 'Surplus Reserve') }}</span>
+                <span class="text-[10px] text-blue-700 block">
+                  @if ((navratri?.cashBalance ?? 0) > 0 || (navratri?.bankBalance ?? 0) > 0) {
+                    {{ mandalData.isEnglish() ? ('Cash: ' + mandalData.formatNum(navratri?.cashBalance, true) + ' | Bank: ' + mandalData.formatNum(navratri?.bankBalance, true)) : ('रोख: ' + mandalData.formatNum(navratri?.cashBalance, true) + ' | बँक: ' + mandalData.formatNum(navratri?.bankBalance, true)) }}
+                  } @else {
+                    {{ navratri?.balanceLabelMr ? (mandalData.isEnglish() ? (navratri?.balanceLabelEn || 'Surplus Reserve') : navratri?.balanceLabelMr) : mandalData.t('गंगाजळी शिल्लक', 'Surplus Reserve') }}
+                  }
+                </span>
               </div>
               <span class="text-base sm:text-lg font-black text-blue-700">{{ mandalData.formatNum(navratri?.balance, true) }}</span>
             </div>
@@ -297,7 +314,7 @@ Chart.register(...registerables);
 
         <div class="flex flex-wrap items-center justify-center gap-3 text-center">
           <div class="bg-white/10 px-3.5 py-2 rounded-xl border border-white/10">
-            <span class="text-[10px] text-slate-400 block">{{ mandalData.t('एकूण तिन्ही उत्सव वर्गणी', 'Total Collection') }}</span>
+            <span class="text-[10px] text-slate-400 block">{{ mandalData.t('एकूण तिन्ही उत्सव जमा', 'Total Revenue') }}</span>
             <span class="text-base font-black text-emerald-400">{{ mandalData.formatNum(curRecord?.totalCollection, true) }}</span>
           </div>
           <div class="bg-white/10 px-3.5 py-2 rounded-xl border border-white/10">
@@ -533,7 +550,7 @@ Chart.register(...registerables);
                   <th class="p-2.5 sm:px-3.5 text-amber-800">🪔 {{ mandalData.t('गणेशोत्सव (जमा/खर्च)', 'Ganeshotsav (Coll/Exp)') }}</th>
                   <th class="p-2.5 sm:px-3.5 text-rose-800">🔱 {{ mandalData.t('नवरात्र (जमा/खर्च)', 'Navratri (Coll/Exp)') }}</th>
                   <th class="p-2.5 sm:px-3.5 text-indigo-800">⚖️ {{ mandalData.t('आंबेडकर जयंती (जमा/खर्च)', 'Ambedkar (Coll/Exp)') }}</th>
-                  <th class="p-2.5 sm:px-3.5 text-emerald-700">{{ mandalData.t('एकूण वर्गणी जमा', 'Total Collection') }}</th>
+                  <th class="p-2.5 sm:px-3.5 text-emerald-700">{{ mandalData.t('एकूण जमा', 'Total Revenue') }}</th>
                   <th class="p-2.5 sm:px-3.5 text-rose-700">{{ mandalData.t('झालेला एकूण खर्च', 'Total Expenses') }}</th>
                   <th class="p-2.5 sm:px-3.5 text-blue-700 font-black">{{ mandalData.t('निव्वळ शिल्लक', 'Net Balance') }}</th>
                 </tr>
@@ -550,15 +567,15 @@ Chart.register(...registerables);
                       }
                     </td>
                     <td class="p-2.5 sm:px-3.5">
-                      <span class="text-emerald-700 font-medium">{{ mandalData.formatNum(rec.festivals[0]?.totalCollection, true) }}</span> /
+                      <span class="text-emerald-700 font-medium">{{ mandalData.formatNum(rec.festivals[0]?.totalIncome ?? rec.festivals[0]?.totalCollection, true) }}</span> /
                       <span class="text-rose-700 font-medium">{{ mandalData.formatNum(rec.festivals[0]?.totalExpenses, true) }}</span>
                     </td>
                     <td class="p-2.5 sm:px-3.5">
-                      <span class="text-emerald-700 font-medium">{{ mandalData.formatNum(rec.festivals[1]?.totalCollection, true) }}</span> /
+                      <span class="text-emerald-700 font-medium">{{ mandalData.formatNum(rec.festivals[1]?.totalIncome ?? rec.festivals[1]?.totalCollection, true) }}</span> /
                       <span class="text-rose-700 font-medium">{{ mandalData.formatNum(rec.festivals[1]?.totalExpenses, true) }}</span>
                     </td>
                     <td class="p-2.5 sm:px-3.5">
-                      <span class="text-emerald-700 font-medium">{{ mandalData.formatNum(rec.festivals[2]?.totalCollection, true) }}</span> /
+                      <span class="text-emerald-700 font-medium">{{ mandalData.formatNum(rec.festivals[2]?.totalIncome ?? rec.festivals[2]?.totalCollection, true) }}</span> /
                       <span class="text-rose-700 font-medium">{{ mandalData.formatNum(rec.festivals[2]?.totalExpenses, true) }}</span>
                     </td>
                     <td class="p-2.5 sm:px-3.5 text-emerald-700 font-bold">
@@ -695,7 +712,7 @@ export class YearlyArchiveComponent implements AfterViewInit, OnDestroy {
     const fest = this.getFestivalRecord(year, key);
     if (!fest) return 0;
     const metric = this.selectedMetric();
-    if (metric === 'collection') return fest.totalCollection;
+    if (metric === 'collection') return fest.totalIncome ?? fest.totalCollection;
     if (metric === 'expenses') return fest.totalExpenses;
     if (metric === 'balance') return fest.balance;
     return fest.participationEstimate || 0;

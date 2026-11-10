@@ -185,7 +185,7 @@ interface ContactPerson {
                   <!-- Quick Action Buttons -->
                   <div class="flex items-center gap-2 self-end sm:self-center">
                     <a
-                      [href]="'tel:' + p.rawPhone"
+                      [href]="'tel:+' + p.rawPhone"
                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition active:scale-95"
                     >
                       <span>📞</span>
@@ -287,7 +287,7 @@ interface ContactPerson {
                   <!-- Quick Action Buttons -->
                   <div class="flex items-center gap-2 self-end sm:self-center">
                     <a
-                      [href]="'tel:' + p.rawPhone"
+                      [href]="'tel:+' + p.rawPhone"
                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition active:scale-95"
                     >
                       <span>📞</span>
@@ -394,7 +394,7 @@ interface ContactPerson {
                   <!-- Quick Action Buttons -->
                   <div class="flex items-center gap-2 self-end sm:self-center">
                     <a
-                      [href]="'tel:' + p.rawPhone"
+                      [href]="'tel:+' + p.rawPhone"
                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition active:scale-95"
                     >
                       <span>📞</span>
@@ -470,7 +470,7 @@ interface ContactPerson {
 
               <!-- WhatsApp Community -->
               <a
-                href="https://wa.me/8850616686?text=जय%20श्री%20गणेश!%20🙏%20मी%20श्री%20अष्टविनायक%20मित्र%20मंडळाच्या%20WhatsApp%20ग्रुपमध्ये%20सहभागी%20होऊ%20इच्छितो.%20कृपया%20मला%20ग्रुपमध्ये%20Add%20करावे.%20गणपती%20बाप्पा%20मोरया!%20🚩"
+                href="https://wa.me/918850616686?text=जय%20श्री%20गणेश!%20🙏%20मी%20श्री%20अष्टविनायक%20मित्र%20मंडळाच्या%20WhatsApp%20ग्रुपमध्ये%20सहभागी%20होऊ%20इच्छितो.%20कृपया%20मला%20ग्रुपमध्ये%20Add%20करावे.%20गणपती%20बाप्पा%20मोरया!%20🚩"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="p-2.5 rounded-2xl bg-[#25D366] text-white font-bold text-xs flex flex-col items-center gap-1 shadow-xs hover:scale-105 transition cursor-pointer"
@@ -534,7 +534,7 @@ interface ContactPerson {
                   <!-- Quick Action Buttons -->
                   <div class="flex items-center gap-2 self-end sm:self-center">
                     <a
-                      [href]="'tel:' + p.rawPhone"
+                      [href]="'tel:+' + p.rawPhone"
                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition active:scale-95"
                     >
                       <span>📞</span>

@@ -52,17 +52,6 @@ import { MandalDataService } from '../../services/mandal-data.service';
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">{{ mandalData.t('ज्याला दिले ते नाव (Payee) *', 'Paid To (Payee) *') }}</label>
-              <input type="text" [(ngModel)]="paidTo" name="paidTo" required [placeholder]="mandalData.t('उदा. स्वास्तिक डेकोरेटर्स', 'e.g. Swastik Decorators')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">{{ mandalData.t('तारीख *', 'Date *') }}</label>
-              <input type="text" [(ngModel)]="date" name="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500" />
-            </div>
-          </div>
-
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">{{ mandalData.t('खर्च तपशील (Description)', 'Expense Description') }}</label>
             <textarea [(ngModel)]="description" name="description" rows="2" [placeholder]="mandalData.t('खर्चाचे सविस्तर वर्णन...', 'Detailed description of the expense...')" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"></textarea>
@@ -78,7 +67,7 @@ import { MandalDataService } from '../../services/mandal-data.service';
             <button type="button" (click)="close.emit()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition">
               {{ mandalData.t('रद्द करा', 'Cancel') }}
             </button>
-            <button type="submit" [disabled]="!nameMr || !amount || !paidTo" class="px-5 py-2 text-sm bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold rounded-lg shadow transition">
+            <button type="submit" [disabled]="!nameMr || !amount" class="px-5 py-2 text-sm bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold rounded-lg shadow transition">
               {{ mandalData.t('खर्च जतन करा (Save Expense)', 'Save Expense') }}
             </button>
           </div>
@@ -102,7 +91,7 @@ export class AddKharchModalComponent {
   description = '';
 
   onSubmit() {
-    if (!this.nameMr || !this.amount || !this.paidTo) return;
+    if (!this.nameMr || !this.amount) return;
 
     const voucherNo = `V-${this.mandalData.selectedYear()}-0${Math.floor(13 + Math.random() * 20)}`;
 

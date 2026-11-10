@@ -15,7 +15,10 @@ import {
   AdvertisementBanner,
   YearlyFestivalFinancials,
   YearlyFestivalRecord,
-  BankDetails
+  BankDetails,
+  DetailedBalanceSheetEntry,
+  DetailedFestivalBalanceSheet,
+  DetailedBalanceSheetData
 } from '../models/mandal.models';
 
 @Injectable({
@@ -50,6 +53,7 @@ export class MandalDataService {
   readonly availableFestivals = [
     'सार्वजनिक गणेशोत्सव',
     'नवरात्र उत्सव',
+    'संयुक्त (गणेशोत्सव व नवरात्र)',
     'डॉ. बाबासाहेब आंबेडकर जयंती',
     'छत्रपती शिवाजी महाराज जयंती'
   ];
@@ -184,10 +188,133 @@ export class MandalDataService {
     const map: Record<string, string> = {
       'सार्वजनिक गणेशोत्सव': 'Sarvajanik Ganeshotsav',
       'नवरात्र उत्सव': 'Navratri Festival',
+      'संयुक्त (गणेशोत्सव व नवरात्र)': 'Joint (Ganesh & Navratri)',
       'डॉ. बाबासाहेब आंबेडकर जयंती': 'Dr. B. R. Ambedkar Jayanti',
       'छत्रपती शिवाजी महाराज जयंती': 'Chhatrapati Shivaji Maharaj Jayanti'
     };
     return map[fest] || fest;
+  }
+
+  /**
+   * नवरात्र साडी व वस्त्र प्रकारावरून रंग माहिती (रंग नाव, हेक्स कोड, बॅज स्टाईल्स) मिळवा
+   */
+  getSareeColorInfo(donorOrText: any): {
+    nameMr: string;
+    nameEn: string;
+    hex: string;
+    bg: string;
+    border: string;
+    textColor: string;
+  } {
+    if (donorOrText && typeof donorOrText === 'object') {
+      if (donorOrText.colorHex) {
+        return {
+          nameMr: donorOrText.colorNameMr || 'साडीचा रंग',
+          nameEn: donorOrText.colorNameEn || 'Saree Color',
+          hex: donorOrText.colorHex,
+          bg: donorOrText.colorBg || '#faf5ff',
+          border: donorOrText.colorBorder || '#e9d5ff',
+          textColor: donorOrText.colorTextColor || '#7e22ce'
+        };
+      }
+      donorOrText = (donorOrText.itemMr || '') + ' ' + (donorOrText.itemEn || '');
+    }
+
+    const text = String(donorOrText || '').toLowerCase();
+
+    // 1. जांभळा (Purple / Royal Purple)
+    if (text.includes('जांभळ') || text.includes('जांभळी') || text.includes('purple') || text.includes('violet')) {
+      return {
+        nameMr: 'शाही जांभळा',
+        nameEn: 'Royal Purple',
+        hex: '#7e22ce',
+        bg: '#f3e8ff',
+        border: '#d8b4fe',
+        textColor: '#6b21a8'
+      };
+    }
+
+    // 2. लाल / गडद लाल (Crimson / Red)
+    if (text.includes('लाल') || text.includes('red') || text.includes('crimson')) {
+      return {
+        nameMr: 'गडद लाल',
+        nameEn: 'Crimson Red',
+        hex: '#dc2626',
+        bg: '#fef2f2',
+        border: '#fecaca',
+        textColor: '#991b1b'
+      };
+    }
+
+    // 3. पिवळा / सोनेरी (Yellow / Golden)
+    if (text.includes('पिवळ') || text.includes('सोनेरी') || text.includes('yellow') || text.includes('gold')) {
+      return {
+        nameMr: 'सोनेरी पिवळा',
+        nameEn: 'Golden Yellow',
+        hex: '#d97706',
+        bg: '#fefce8',
+        border: '#fef08a',
+        textColor: '#854d0e'
+      };
+    }
+
+    // 4. राणी गुलाबी / गुलाबी (Pink / Rani Pink)
+    if (text.includes('राणी') || text.includes('गुलाबी') || text.includes('pink') || text.includes('rani')) {
+      return {
+        nameMr: 'राणी गुलाबी',
+        nameEn: 'Rani Pink',
+        hex: '#db2777',
+        bg: '#fdf2f8',
+        border: '#fbcfe8',
+        textColor: '#9d174d'
+      };
+    }
+
+    // 5. पाचू हिरवा / हिरवा (Green / Emerald)
+    if (text.includes('हिरव') || text.includes('पाचू') || text.includes('green') || text.includes('emerald')) {
+      return {
+        nameMr: 'पाचू हिरवा',
+        nameEn: 'Emerald Green',
+        hex: '#16a34a',
+        bg: '#f0fdf4',
+        border: '#bbf7d0',
+        textColor: '#166534'
+      };
+    }
+
+    // 6. भगवा / नारंगी / केशरी (Saffron / Orange)
+    if (text.includes('भगवा') || text.includes('नारंगी') || text.includes('केशरी') || text.includes('orange') || text.includes('saffron')) {
+      return {
+        nameMr: 'भगवा नारंगी',
+        nameEn: 'Saffron Orange',
+        hex: '#ea580c',
+        bg: '#fff7ed',
+        border: '#fed7aa',
+        textColor: '#9a3412'
+      };
+    }
+
+    // 7. मोरपंखी निळा / निळा (Peacock Blue / Blue)
+    if (text.includes('मोरपंखी') || text.includes('निळा') || text.includes('blue') || text.includes('peacock')) {
+      return {
+        nameMr: 'मोरपंखी निळा',
+        nameEn: 'Peacock Blue',
+        hex: '#0284c7',
+        bg: '#f0f9ff',
+        border: '#bae6fd',
+        textColor: '#075985'
+      };
+    }
+
+    // Default
+    return {
+      nameMr: 'पारंपरिक रंग',
+      nameEn: 'Traditional Color',
+      hex: '#9333ea',
+      bg: '#faf5ff',
+      border: '#e9d5ff',
+      textColor: '#7e22ce'
+    };
   }
 
   /** Convert any number or string with digits (0-9) to Marathi numerals (०-९) */
@@ -197,10 +324,24 @@ export class MandalDataService {
     return String(val).replace(/[0-9]/g, (d) => marathiDigits[parseInt(d, 10)]);
   }
 
-  /** Formats a phone or contact number with Marathi numerals if Marathi is selected */
+  /** Formats a phone or contact number with country code +91 and Marathi numerals if Marathi is selected */
   formatPhone(phone: string): string {
     if (!phone) return '';
-    return this.selectedLanguage() === 'mr' ? this.toMarathiDigits(phone) : phone;
+    let p = phone.trim();
+    // Normalize country code 91 if not present
+    const hasCountryCode = p.startsWith('+91') || p.startsWith('+९१') || 
+                           p.startsWith('91 ') || p.startsWith('९१ ') ||
+                           p.startsWith('+ 91') || p.startsWith('+ ९१');
+    if (!hasCountryCode) {
+      if (p.startsWith('91') && p.length > 10) {
+        p = `+91 ${p.slice(2).trim()}`;
+      } else if (p.startsWith('९१') && p.length > 10) {
+        p = `+९१ ${p.slice(2).trim()}`;
+      } else {
+        p = `+91 ${p}`;
+      }
+    }
+    return this.selectedLanguage() === 'mr' ? this.toMarathiDigits(p) : p;
   }
 
   /**
@@ -228,21 +369,37 @@ export class MandalDataService {
   // Master Data Stores (Signals)
   private readonly _varganiRecords = signal<VarganiRecord[]>(this.generateInitialVargani());
   private readonly _kharchRecords = signal<KharchRecord[]>(this.generateInitialKharch());
+  readonly detailedBalanceSheetData = signal<DetailedBalanceSheetData>(this.getInitialDetailedBalanceSheet());
 
   // Public readonly signals
   readonly allVargani = this._varganiRecords.asReadonly();
   readonly allKharch = this._kharchRecords.asReadonly();
 
+  // Active Detailed Balance Sheet computed from selected festival
+  readonly currentDetailedSheet = computed<DetailedFestivalBalanceSheet | null>(() => {
+    const data = this.detailedBalanceSheetData();
+    if (!data) return null;
+    const fest = this.selectedFestival();
+    if (fest.includes('नवरात्र')) {
+      return data.navratri;
+    } else if (fest.includes('संयुक्त') || fest.includes('Joint')) {
+      return data.joint;
+    } else {
+      return data.ganesh;
+    }
+  });
+
   // Filtered by selected year and festival (sorted highest amount to lowest)
   readonly currentVargani = computed(() => {
     const year = this.selectedYear();
     const fest = this.selectedFestival();
+    const isJoint = fest.includes('संयुक्त') || fest.includes('Joint');
     return this._varganiRecords()
       .filter(item => {
         const yearMatch = !item.year || item.year === year;
-        const festMatch = !item.festival || item.festival === fest ||
+        const festMatch = isJoint ? true : (!item.festival || item.festival === fest ||
           (fest.includes('गणेश') && item.festival.includes('गणेश')) ||
-          (fest.includes('नवरात्र') && item.festival.includes('नवरात्र'));
+          (fest.includes('नवरात्र') && item.festival.includes('नवरात्र')));
         return yearMatch && festMatch;
       })
       .sort((a, b) => b.amount - a.amount || (a.srNo || 0) - (b.srNo || 0));
@@ -251,25 +408,27 @@ export class MandalDataService {
   readonly currentKharch = computed(() => {
     const year = this.selectedYear();
     const fest = this.selectedFestival();
+    const isJoint = fest.includes('संयुक्त') || fest.includes('Joint');
     return this._kharchRecords().filter(item => {
       const yearMatch = !item.year || item.year === year;
-      const festMatch = !item.festival || item.festival === fest ||
+      const festMatch = isJoint ? true : (!item.festival || item.festival === fest ||
         (fest.includes('गणेश') && item.festival.includes('गणेश')) ||
-        (fest.includes('नवरात्र') && item.festival.includes('नवरात्र'));
+        (fest.includes('नवरात्र') && item.festival.includes('नवरात्र')));
       return yearMatch && festMatch;
     });
   });
 
-  // KPI Metrics computed from current filtered data
+  // KPI Metrics computed from current filtered data and official Detailed Balance Sheet
   readonly kpi = computed<SummaryKpi>(() => {
     const vList = this.currentVargani();
     const kList = this.currentKharch();
+    const det = this.currentDetailedSheet();
 
-    const totalVargani = vList.reduce((sum, item) => sum + item.amount, 0);
+    const totalVargani = (det && det.totalIncome > 0) ? det.totalIncome : vList.reduce((sum, item) => sum + item.amount, 0);
+    const totalKharch = (det && det.totalExpenses > 0) ? det.totalExpenses : kList.reduce((sum, item) => sum + item.amount, 0);
     const totalMembers = vList.length;
-    const totalKharch = kList.reduce((sum, item) => sum + item.amount, 0);
-    const totalKharchEntries = kList.length;
-    const balanceAmount = totalVargani - totalKharch;
+    const totalKharchEntries = (det && det.expenses && det.expenses.length > 0) ? det.expenses.length : kList.length;
+    const balanceAmount = (det && det.surplus !== undefined && det.surplus !== 0) ? det.surplus : (totalVargani - totalKharch);
 
     const receiptsIssued = vList.filter(item => item.status === 'दिलेली').length;
     const receiptPercent = totalMembers > 0 ? Math.round((receiptsIssued / totalMembers) * 100) : 0;
@@ -324,8 +483,36 @@ export class MandalDataService {
     }));
   });
 
-  // Dynamic Expense Distribution computed directly from current filtered Kharch records
+  // Dynamic Expense Distribution computed directly from current filtered Kharch records or Detailed Balance Sheet
   readonly expenseDistribution = computed<ExpenseDistribution[]>(() => {
+    const colorPalette = [
+      '#8b5cf6', // purple
+      '#f97316', // orange
+      '#06b6d4', // cyan
+      '#10b981', // emerald
+      '#ef4444', // red
+      '#3b82f6', // blue
+      '#eab308', // yellow
+      '#ec4899', // pink
+      '#14b8a6', // teal
+      '#6366f1', // indigo
+      '#f43f5e', // rose
+      '#84cc16', // lime
+      '#a855f7', // purple
+      '#0284c7', // sky
+      '#64748b'  // slate
+    ];
+
+    const det = this.currentDetailedSheet();
+    if (det && det.expenses && det.expenses.length > 0) {
+      const sorted = [...det.expenses].sort((a, b) => b.amount - a.amount);
+      return sorted.map((entry, idx) => ({
+        category: entry.name.replace(/\s*\([^)]*\)/g, '').trim(),
+        amount: entry.amount,
+        color: colorPalette[idx % colorPalette.length]
+      }));
+    }
+
     const kList = this.currentKharch();
     if (!kList || kList.length === 0) return [];
 
@@ -352,20 +539,6 @@ export class MandalDataService {
     });
 
     if (map.size === 0) return [];
-
-    const colorPalette = [
-      '#8b5cf6', // purple
-      '#f97316', // orange
-      '#06b6d4', // cyan
-      '#10b981', // emerald
-      '#ef4444', // red
-      '#3b82f6', // blue
-      '#eab308', // yellow
-      '#ec4899', // pink
-      '#14b8a6', // teal
-      '#6366f1', // indigo
-      '#64748b'  // slate
-    ];
 
     // Sort by amount descending
     const sorted = Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
@@ -425,6 +598,8 @@ export class MandalDataService {
 
     const sortedYears = Array.from(yearsSet).sort((a, b) => b - a);
 
+    const detSheet = this.detailedBalanceSheetData();
+
     return sortedYears.map(year => {
       const baseRec = baseList.find(r => r.year === year);
 
@@ -473,22 +648,68 @@ export class MandalDataService {
         }
         bal = coll - exp;
 
+        let totalIncome = coll;
+        let otherIncome = 0;
+        let cashBal: number | undefined;
+        let bankBal: number | undefined;
+        let balLabelMr: string | undefined;
+        let balLabelEn: string | undefined;
+
+        // If detailed audited balance sheet is available for 2026, use official audited figures
+        if (year === 2026 && detSheet) {
+          if (def.key === 'ganpati' && detSheet.ganesh) {
+            totalIncome = detSheet.ganesh.totalIncome || coll;
+            exp = detSheet.ganesh.totalExpenses || exp;
+            bal = detSheet.ganesh.surplus !== undefined ? detSheet.ganesh.surplus : (totalIncome - exp);
+            balLabelMr = 'नवरात्रीसाठी वर्ग बाकी';
+            balLabelEn = 'Transferred to Navratri';
+          } else if (def.key === 'navratri' && detSheet.navratri) {
+            totalIncome = detSheet.navratri.totalIncome || 397473;
+            otherIncome = Math.max(0, totalIncome - coll);
+            exp = detSheet.navratri.totalExpenses || exp;
+            bal = detSheet.navratri.surplus !== undefined ? detSheet.navratri.surplus : (totalIncome - exp);
+            cashBal = detSheet.navratri.cashBalance ?? 374;
+            bankBal = detSheet.navratri.bankBalance ?? 43642;
+            balLabelMr = 'पुढील वर्षासाठी शिल्लक (गंगाजळी)';
+            balLabelEn = 'Net Surplus Carried Forward';
+          }
+        }
+
         return {
           festivalKey: def.key,
           festivalNameMr: def.nameMr,
           festivalNameEn: def.nameEn,
           icon: def.icon,
           totalCollection: coll,
+          totalIncome: totalIncome,
+          otherIncome: otherIncome,
           totalExpenses: exp,
           balance: bal,
+          balanceLabelMr: balLabelMr,
+          balanceLabelEn: balLabelEn,
+          cashBalance: cashBal,
+          bankBalance: bankBal,
           donorsCount: donors,
           participationEstimate: part
         };
       });
 
-      const totalCollection = festivalsToProcess.reduce((sum, f) => sum + f.totalCollection, 0);
-      const totalExpenses = festivalsToProcess.reduce((sum, f) => sum + f.totalExpenses, 0);
-      const netBalance = totalCollection - totalExpenses;
+      let totalCollection = festivalsToProcess.reduce((sum, f) => sum + (f.totalIncome ?? f.totalCollection), 0);
+      let totalExpenses = festivalsToProcess.reduce((sum, f) => sum + f.totalExpenses, 0);
+      let netBalance = totalCollection - totalExpenses;
+
+      if (year === 2026 && detSheet && detSheet.joint) {
+        totalCollection = detSheet.joint.totalIncome || totalCollection;
+        totalExpenses = detSheet.joint.totalExpenses || totalExpenses;
+        netBalance = detSheet.joint.surplus !== undefined ? detSheet.joint.surplus : (totalCollection - totalExpenses);
+      }
+
+      const noteMr = (year === 2026 && detSheet?.joint)
+        ? `वर्ष २०२६ - सर्व उत्सव हिशोब व अंतिम ताळेबंद: एकूण जमा ₹${this.formatNum(totalCollection, true)}, एकूण खर्च ₹${this.formatNum(totalExpenses, true)}, शिल्लक गंगाजळी ₹${this.formatNum(netBalance, true)}.`
+        : (baseRec?.noteMr || `वर्ष ${this.toMarathiDigits(year)} - सर्व उत्सव हिशोब व ताळेबंद.`);
+      const noteEn = (year === 2026 && detSheet?.joint)
+        ? `Year 2026 - Combined Festival Accounts & Balance Sheet: Total Income ₹${totalCollection.toLocaleString('en-IN')}, Total Expenses ₹${totalExpenses.toLocaleString('en-IN')}, Net Surplus ₹${netBalance.toLocaleString('en-IN')}.`
+        : (baseRec?.noteEn || `Year ${year} - Festival accounts & balance sheet.`);
 
       return {
         year: year,
@@ -496,8 +717,8 @@ export class MandalDataService {
         totalCollection: totalCollection,
         totalExpenses: totalExpenses,
         netBalance: netBalance,
-        noteMr: baseRec?.noteMr || `वर्ष ${this.toMarathiDigits(year)} - सर्व उत्सव हिशोब व ताळेबंद.`,
-        noteEn: baseRec?.noteEn || `Year ${year} - Festival accounts & balance sheet.`
+        noteMr: noteMr,
+        noteEn: noteEn
       };
     });
   });
@@ -539,6 +760,7 @@ export class MandalDataService {
 
   // Ganpati Utsav - Bhandara Items / Donations
   readonly ganpatiBhandaraItems = signal<BhandaraItem[]>([
+    // === वर्ष २०२६ (Year 2026) ===
     {
       id: 1,
       festival: 'गणेशोत्सव',
@@ -550,6 +772,7 @@ export class MandalDataService {
       donorNameMr: 'श्री. रमेश नारायण पाटील',
       donorNameEn: 'Ramesh Narayan Patil',
       date: '28/08/2026',
+      year: 2026,
       remarksMr: 'महाप्रसाद अन्नदानासाठी उत्तम दर्जा',
       remarksEn: 'Special high-grade rice for Mahaprasad'
     },
@@ -564,6 +787,7 @@ export class MandalDataService {
       donorNameMr: 'सौ. सुमित्रा विलास सावंत',
       donorNameEn: 'Sumitra Vilas Sawant',
       date: '29/08/2026',
+      year: 2026,
       remarksMr: 'महाप्रसाद भोजनासाठी अर्पण',
       remarksEn: 'Donated for Mahaprasad preparation'
     },
@@ -578,6 +802,7 @@ export class MandalDataService {
       donorNameMr: 'श्री. प्रकाश भिकाजी कदम',
       donorNameEn: 'Prakash Bhikaji Kadam',
       date: '29/08/2026',
+      year: 2026,
       remarksMr: 'प्रसादाचा शिरा व नैवेद्यासाठी',
       remarksEn: 'For sweet Prasad preparation'
     },
@@ -592,6 +817,7 @@ export class MandalDataService {
       donorNameMr: 'श्री. विठ्ठल तुकाराम महाडिक',
       donorNameEn: 'Vitthal Tukaram Mahadik',
       date: '30/08/2026',
+      year: 2026,
       remarksMr: 'सत्यनारायण महापूजा व नैवेद्य',
       remarksEn: 'For Satyanarayan Maha Puja & Prasad'
     },
@@ -606,6 +832,7 @@ export class MandalDataService {
       donorNameMr: 'श्री. सुधीर दत्तात्रय सावंत',
       donorNameEn: 'Sudhir Dattatray Sawant',
       date: '30/08/2026',
+      year: 2026,
       remarksMr: 'महाप्रसाद शिरा वाटप',
       remarksEn: 'For sweet Sheera distribution'
     },
@@ -620,6 +847,7 @@ export class MandalDataService {
       donorNameMr: 'श्री. चंद्रकांत बाबुराव महाडिक',
       donorNameEn: 'Chandrakant Baburao Mahadik',
       date: '31/08/2026',
+      year: 2026,
       remarksMr: 'महाप्रसाद आमटीसाठी',
       remarksEn: 'For Mahaprasad Dal'
     },
@@ -634,6 +862,7 @@ export class MandalDataService {
       donorNameMr: 'मे. राजेश ज्वेलर्स (जोगेश्वरी)',
       donorNameEn: 'M/s Rajesh Jewellers (Jogeshwari)',
       date: '31/08/2026',
+      year: 2026,
       remarksMr: 'उकडीचे मोदक व शिरा सजावट',
       remarksEn: 'For Modak and Sheera garnishing'
     },
@@ -648,13 +877,244 @@ export class MandalDataService {
       donorNameMr: 'श्री. अमोल दिनकर पाटील',
       donorNameEn: 'Amol Dinkar Patil',
       date: '01/09/2026',
+      year: 2026,
       remarksMr: 'भंडारा भोजन चव व सुगंधासाठी',
       remarksEn: 'Special curated spices for Bhandara'
+    },
+
+    // === वर्ष २०२५ (Year 2025) ===
+    {
+      id: 9,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'बासमती तुकडा तांदूळ (उत्तम प्रत)',
+      itemNameEn: 'Basmati Tukda Rice (High Quality)',
+      quantity: 45,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. रमेश नारायण पाटील',
+      donorNameEn: 'Ramesh Narayan Patil',
+      date: '07/09/2025',
+      year: 2025,
+      remarksMr: 'वर्ष २०२५ महाप्रसाद अन्नदान',
+      remarksEn: 'Year 2025 Mahaprasad Grain Donation'
+    },
+    {
+      id: 10,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'शेंगदाणा तेल डबे',
+      itemNameEn: 'Groundnut Oil Cans',
+      quantity: 4,
+      unitMr: 'डबे (६० लिटर)',
+      unitEn: 'Tins (60 Ltr)',
+      donorNameMr: 'सौ. सुमित्रा विलास सावंत',
+      donorNameEn: 'Sumitra Vilas Sawant',
+      date: '08/09/2025',
+      year: 2025,
+      remarksMr: 'वर्ष २०२५ महाप्रसाद भोजन तयारी',
+      remarksEn: 'Offered for 2025 Mahaprasad'
+    },
+    {
+      id: 11,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'पांढरी साखर',
+      itemNameEn: 'White Sugar',
+      quantity: 30,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. प्रकाश भिकाजी कदम',
+      donorNameEn: 'Prakash Bhikaji Kadam',
+      date: '08/09/2025',
+      year: 2025,
+      remarksMr: 'सत्यनारायण शिरा प्रसादासाठी',
+      remarksEn: 'For Prasad preparation'
+    },
+    {
+      id: 12,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'शुद्ध देशी गाईचे तूप',
+      itemNameEn: 'Pure Cow Ghee',
+      quantity: 8,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. विठ्ठल तुकाराम महाडिक',
+      donorNameEn: 'Vitthal Tukaram Mahadik',
+      date: '09/09/2025',
+      year: 2025,
+      remarksMr: 'पूजा विधी व नैवेद्य',
+      remarksEn: 'For Puja Rituals'
+    },
+    {
+      id: 13,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'बारीक सुजी रवा',
+      itemNameEn: 'Fine Semolina',
+      quantity: 20,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. सुधीर दत्तात्रय सावंत',
+      donorNameEn: 'Sudhir Dattatray Sawant',
+      date: '09/09/2025',
+      year: 2025,
+      remarksMr: 'शिरा वाटप',
+      remarksEn: 'For Sheera distribution'
+    },
+    {
+      id: 14,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'हरभरा डाळ',
+      itemNameEn: 'Chana Dal',
+      quantity: 18,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. चंद्रकांत बाबुराव महाडिक',
+      donorNameEn: 'Chandrakant Baburao Mahadik',
+      date: '10/09/2025',
+      year: 2025,
+      remarksMr: 'महाप्रसाद आमटी',
+      remarksEn: 'For Dal preparation'
+    },
+    {
+      id: 15,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'सुकामेवा (काजू बदाम)',
+      itemNameEn: 'Cashews & Almonds',
+      quantity: 5,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'मे. राजेश ज्वेलर्स (जोगेश्वरी)',
+      donorNameEn: 'M/s Rajesh Jewellers',
+      date: '10/09/2025',
+      year: 2025,
+      remarksMr: 'मोदक नैवेद्य सजावट',
+      remarksEn: 'For Modak garnishing'
+    },
+    {
+      id: 16,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'मसाला संच',
+      itemNameEn: 'Curated Spices',
+      quantity: 12,
+      unitMr: 'पॅकेट्स',
+      unitEn: 'Packets',
+      donorNameMr: 'श्री. अमोल दिनकर पाटील',
+      donorNameEn: 'Amol Dinkar Patil',
+      date: '11/09/2025',
+      year: 2025,
+      remarksMr: 'महाप्रसाद भोजन चवदार करण्यासाठी',
+      remarksEn: 'For delicious food seasoning'
+    },
+
+    // === वर्ष २०२४ (Year 2024) ===
+    {
+      id: 17,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'कोलम तांदूळ (उत्तम दर्जा)',
+      itemNameEn: 'Kolam Rice (High Quality)',
+      quantity: 40,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. सदानंद बाळकृष्ण राणे',
+      donorNameEn: 'Sadanand Balkrishna Rane',
+      date: '18/09/2024',
+      year: 2024,
+      remarksMr: 'वर्ष २०२४ महाप्रसाद अन्नदान',
+      remarksEn: 'Year 2024 Mahaprasad Grain'
+    },
+    {
+      id: 18,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'रिफाइंड तेल डबे',
+      itemNameEn: 'Refined Oil Cans',
+      quantity: 4,
+      unitMr: 'डबे (६० लिटर)',
+      unitEn: 'Tins (60 Ltr)',
+      donorNameMr: 'श्री. दीपक विनायक जोशी',
+      donorNameEn: 'Deepak Vinayak Joshi',
+      date: '19/09/2024',
+      year: 2024,
+      remarksMr: 'पुरी व भाजी बनवण्यासाठी',
+      remarksEn: 'For Puri & Sabji preparation'
+    },
+    {
+      id: 19,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'पांढरी साखर',
+      itemNameEn: 'Refined Sugar',
+      quantity: 25,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. संजय शांताराम सुर्वे',
+      donorNameEn: 'Sanjay Shantaram Surve',
+      date: '19/09/2024',
+      year: 2024,
+      remarksMr: 'मोदक व शिरा प्रसादासाठी',
+      remarksEn: 'For Prasad'
+    },
+    {
+      id: 20,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'शुद्ध देशी तूप',
+      itemNameEn: 'Pure Desi Ghee',
+      quantity: 6,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. गणेश बाळाराम शिंदे',
+      donorNameEn: 'Ganesh Balaram Shinde',
+      date: '20/09/2024',
+      year: 2024,
+      remarksMr: 'सत्यनारायण महापूजा विधी',
+      remarksEn: 'For Satyanarayan Puja'
+    },
+    {
+      id: 21,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'बारीक रवा',
+      itemNameEn: 'Fine Rawa',
+      quantity: 20,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'सौ. नंदा सतीश मोरे',
+      donorNameEn: 'Nanda Satish More',
+      date: '20/09/2024',
+      year: 2024,
+      remarksMr: 'महाप्रसाद शिरा वाटप',
+      remarksEn: 'For Sheera distribution'
+    },
+    {
+      id: 22,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'तूर व हरभरा डाळ',
+      itemNameEn: 'Toor & Chana Dal',
+      quantity: 16,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. तुकाराम विठ्ठल शिंदे',
+      donorNameEn: 'Tukaram Vitthal Shinde',
+      date: '21/09/2024',
+      year: 2024,
+      remarksMr: 'महाप्रसाद वरण व आमटी',
+      remarksEn: 'For Dal & Curry'
+    },
+    {
+      id: 23,
+      festival: 'गणेशोत्सव',
+      itemNameMr: 'सोललेले श्रीफळ (नारळ)',
+      itemNameEn: 'Husked Coconuts',
+      quantity: 51,
+      unitMr: 'नग',
+      unitEn: 'Nos',
+      donorNameMr: 'श्री. अनिल भगवान कांबळे',
+      donorNameEn: 'Anil Bhagwan Kamble',
+      date: '22/09/2024',
+      year: 2024,
+      remarksMr: 'महानैवेद्य व तोरण विधी',
+      remarksEn: 'For Puja Rituals'
     }
   ]);
 
   // Navratri Utsav - Bhandara Items / Materials
   readonly navratriBhandaraItems = signal<BhandaraItem[]>([
+    // === वर्ष २०२६ (Year 2026) ===
     {
       id: 101,
       festival: 'नवरात्र उत्सव',
@@ -666,6 +1126,7 @@ export class MandalDataService {
       donorNameMr: 'श्री. सदानंद बाळकृष्ण राणे',
       donorNameEn: 'Sadanand Balkrishna Rane',
       date: '22/09/2026',
+      year: 2026,
       remarksMr: 'नवमी महाप्रसाद अन्नदान',
       remarksEn: 'Navami Mahaprasad distribution'
     },
@@ -680,6 +1141,7 @@ export class MandalDataService {
       donorNameMr: 'सौ. नंदा सतीश मोरे',
       donorNameEn: 'Nanda Satish More',
       date: '23/09/2026',
+      year: 2026,
       remarksMr: 'महाप्रसाद पुरी व भाजीसाठी',
       remarksEn: 'For Mahaprasad Puri and vegetables'
     },
@@ -694,6 +1156,7 @@ export class MandalDataService {
       donorNameMr: 'श्री. दीपक विनायक जोशी',
       donorNameEn: 'Deepak Vinayak Joshi',
       date: '24/09/2026',
+      year: 2026,
       remarksMr: 'देवीच्या महानैवेद्य व खिरीसाठी',
       remarksEn: 'For Kheer offering to Goddess'
     },
@@ -708,6 +1171,7 @@ export class MandalDataService {
       donorNameMr: 'सौ. वंदना सचिन तांबडे',
       donorNameEn: 'Vandana Sachin Tambde',
       date: '25/09/2026',
+      year: 2026,
       remarksMr: 'अष्टमी दुर्गा महाहवन व महानैवेद्य',
       remarksEn: 'For Ashtami Durga Havan and Prasad'
     },
@@ -722,6 +1186,7 @@ export class MandalDataService {
       donorNameMr: 'श्री. संजय शांताराम सुर्वे',
       donorNameEn: 'Sanjay Shantaram Surve',
       date: '26/09/2026',
+      year: 2026,
       remarksMr: 'पंचामृत व पेढे नैवेद्यासाठी',
       remarksEn: 'For Panchamrit and sweet offerings'
     },
@@ -736,13 +1201,184 @@ export class MandalDataService {
       donorNameMr: 'श्री. गणेश बाळाराम शिंदे',
       donorNameEn: 'Ganesh Balaram Shinde',
       date: '27/09/2026',
+      year: 2026,
       remarksMr: 'देवीची ओटी व महाहवन पूर्णाहुती',
       remarksEn: 'For Goddess Oti and Maha Havan'
+    },
+
+    // === वर्ष २०२५ (Year 2025) ===
+    {
+      id: 107,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'दर्जेदार तुकडा बासमती तांदूळ',
+      itemNameEn: 'Quality Tukda Basmati Rice',
+      quantity: 35,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. सदानंद बाळकृष्ण राणे',
+      donorNameEn: 'Sadanand Balkrishna Rane',
+      date: '01/10/2025',
+      year: 2025,
+      remarksMr: 'नवमी महाप्रसाद अन्नदान',
+      remarksEn: 'Navami Mahaprasad distribution'
+    },
+    {
+      id: 108,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'फॉर्च्युन रिफाइंड तेल डबे',
+      itemNameEn: 'Fortune Cooking Oil',
+      quantity: 3,
+      unitMr: 'डबे (४५ लिटर)',
+      unitEn: 'Tins (45 Ltr)',
+      donorNameMr: 'सौ. नंदा सतीश मोरे',
+      donorNameEn: 'Nanda Satish More',
+      date: '02/10/2025',
+      year: 2025,
+      remarksMr: 'महाप्रसाद पुरी व भाजी',
+      remarksEn: 'For Puri and Bhaji'
+    },
+    {
+      id: 109,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'साखर (महानैवेद्यासाठी)',
+      itemNameEn: 'Crystal Sugar',
+      quantity: 25,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. दीपक विनायक जोशी',
+      donorNameEn: 'Deepak Vinayak Joshi',
+      date: '03/10/2025',
+      year: 2025,
+      remarksMr: 'देवीच्या खीर प्रसादासाठी',
+      remarksEn: 'For sweet Kheer Prasad'
+    },
+    {
+      id: 110,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'शुद्ध गावरान गाईचे तूप',
+      itemNameEn: 'Pure Desi Cow Ghee',
+      quantity: 7,
+      unitMr: 'लिटर',
+      unitEn: 'Liters',
+      donorNameMr: 'सौ. वंदना सचिन तांबडे',
+      donorNameEn: 'Vandana Sachin Tambde',
+      date: '04/10/2025',
+      year: 2025,
+      remarksMr: 'दुर्गा महाहवन व महानैवेद्य',
+      remarksEn: 'For Maha Havan rituals'
+    },
+    {
+      id: 111,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'खवा व सुकामेवा',
+      itemNameEn: 'Mawa & Dry Fruits',
+      quantity: 4,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. संजय शांताराम सुर्वे',
+      donorNameEn: 'Sanjay Shantaram Surve',
+      date: '05/10/2025',
+      year: 2025,
+      remarksMr: 'पंचामृत व नैवेद्य पेढे',
+      remarksEn: 'For sweet offerings'
+    },
+    {
+      id: 112,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'सोललेले श्रीफळ (नारळ)',
+      itemNameEn: 'Fresh Coconuts',
+      quantity: 41,
+      unitMr: 'नग',
+      unitEn: 'Nos',
+      donorNameMr: 'श्री. गणेश बाळाराम शिंदे',
+      donorNameEn: 'Ganesh Balaram Shinde',
+      date: '06/10/2025',
+      year: 2025,
+      remarksMr: 'देवीची ओटी व महाहवन',
+      remarksEn: 'For Goddess Oti Puja'
+    },
+
+    // === वर्ष २०२४ (Year 2024) ===
+    {
+      id: 113,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'बासमती तांदूळ',
+      itemNameEn: 'Basmati Rice',
+      quantity: 30,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. रमेश नारायण पाटील',
+      donorNameEn: 'Ramesh Narayan Patil',
+      date: '10/10/2024',
+      year: 2024,
+      remarksMr: 'नवमी महाप्रसाद अन्नदान',
+      remarksEn: 'For Mahaprasad'
+    },
+    {
+      id: 114,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'खाद्यतेल डबे',
+      itemNameEn: 'Cooking Oil Cans',
+      quantity: 3,
+      unitMr: 'डबे (४५ लिटर)',
+      unitEn: 'Tins (45 Ltr)',
+      donorNameMr: 'सौ. सुमित्रा विलास सावंत',
+      donorNameEn: 'Sumitra Vilas Sawant',
+      date: '11/10/2024',
+      year: 2024,
+      remarksMr: 'महाप्रसाद अन्नछत्र',
+      remarksEn: 'For food preparation'
+    },
+    {
+      id: 115,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'साखर',
+      itemNameEn: 'Refined Sugar',
+      quantity: 20,
+      unitMr: 'किलो',
+      unitEn: 'Kg',
+      donorNameMr: 'श्री. प्रकाश भिकाजी कदम',
+      donorNameEn: 'Prakash Bhikaji Kadam',
+      date: '11/10/2024',
+      year: 2024,
+      remarksMr: 'देवी नैवेद्य खीर',
+      remarksEn: 'For Goddess Prasad'
+    },
+    {
+      id: 116,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'देशी गाईचे तूप',
+      itemNameEn: 'Pure Cow Ghee',
+      quantity: 5,
+      unitMr: 'लिटर',
+      unitEn: 'Liters',
+      donorNameMr: 'श्री. विठ्ठल तुकाराम महाडिक',
+      donorNameEn: 'Vitthal Tukaram Mahadik',
+      date: '12/10/2024',
+      year: 2024,
+      remarksMr: 'अष्टमी दुर्गा हवन',
+      remarksEn: 'For Durga Havan'
+    },
+    {
+      id: 117,
+      festival: 'नवरात्र उत्सव',
+      itemNameMr: 'सोललेले नारळ',
+      itemNameEn: 'Husked Coconuts',
+      quantity: 31,
+      unitMr: 'नग',
+      unitEn: 'Nos',
+      donorNameMr: 'श्री. सुधीर दत्तात्रय सावंत',
+      donorNameEn: 'Sudhir Dattatray Sawant',
+      date: '12/10/2024',
+      year: 2024,
+      remarksMr: 'दुर्गा देवी ओटी विधी',
+      remarksEn: 'For Goddess Oti'
     }
   ]);
 
   // Navratri Utsav - Saree & Clothing Donors (महिला वस्त्र देणगीदार)
   readonly navratriSareeDonors = signal<SareeDonor[]>([
+    // === वर्ष २०२६ (Year 2026) ===
     {
       id: 201,
       donorNameMr: 'सौ. सुवर्णा मंगेश कदम',
@@ -751,8 +1387,15 @@ export class MandalDataService {
       itemEn: 'Royal Purple Paithani Saree (Gold Peacock Border)',
       quantity: 1,
       date: '21/09/2026',
+      year: 2026,
       remarksMr: 'घटस्थापना पहिल्या माळेचा शृंगार',
-      remarksEn: 'Ghatsthapana 1st Day adornment'
+      remarksEn: 'Ghatsthapana 1st Day adornment',
+      colorNameMr: 'शाही जांभळा',
+      colorNameEn: 'Royal Purple',
+      colorHex: '#7e22ce',
+      colorBg: '#f3e8ff',
+      colorBorder: '#d8b4fe',
+      colorTextColor: '#6b21a8'
     },
     {
       id: 202,
@@ -762,8 +1405,15 @@ export class MandalDataService {
       itemEn: 'Pure Silk Saree with Rich Zari Border (Crimson Red)',
       quantity: 1,
       date: '22/09/2026',
+      year: 2026,
       remarksMr: 'देवीच्या नित्य पूजेसाठी अर्पण',
-      remarksEn: 'Offered for daily evening Maha Aarti'
+      remarksEn: 'Offered for daily evening Maha Aarti',
+      colorNameMr: 'गडद लाल',
+      colorNameEn: 'Crimson Red',
+      colorHex: '#dc2626',
+      colorBg: '#fef2f2',
+      colorBorder: '#fecaca',
+      colorTextColor: '#991b1b'
     },
     {
       id: 203,
@@ -773,8 +1423,15 @@ export class MandalDataService {
       itemEn: 'Banarasi Brocade Shalu (Golden Yellow)',
       quantity: 1,
       date: '24/09/2026',
+      year: 2026,
       remarksMr: 'ललिता पंचमी विशेष अलंकार शृंगार',
-      remarksEn: 'Lalita Panchami special celebration'
+      remarksEn: 'Lalita Panchami special celebration',
+      colorNameMr: 'सोनेरी पिवळा',
+      colorNameEn: 'Golden Yellow',
+      colorHex: '#d97706',
+      colorBg: '#fefce8',
+      colorBorder: '#fef08a',
+      colorTextColor: '#854d0e'
     },
     {
       id: 204,
@@ -784,8 +1441,15 @@ export class MandalDataService {
       itemEn: 'Kanjivaram Silk Saree (Rani Pink)',
       quantity: 1,
       date: '26/09/2026',
+      year: 2026,
       remarksMr: 'महासप्तमी देवीच्या अंगावरील वस्त्र',
-      remarksEn: 'Offered for Maha Saptami ritual'
+      remarksEn: 'Offered for Maha Saptami ritual',
+      colorNameMr: 'राणी गुलाबी',
+      colorNameEn: 'Rani Pink',
+      colorHex: '#db2777',
+      colorBg: '#fdf2f8',
+      colorBorder: '#fbcfe8',
+      colorTextColor: '#9d174d'
     },
     {
       id: 205,
@@ -795,8 +1459,15 @@ export class MandalDataService {
       itemEn: 'Traditional Nauvari Paithani (Emerald Green)',
       quantity: 1,
       date: '28/09/2026',
+      year: 2026,
       remarksMr: 'महाअष्टमी हवन व कुमारी पूजन वस्त्र',
-      remarksEn: 'Durga Ashtami Maha Havan special offering'
+      remarksEn: 'Durga Ashtami Maha Havan special offering',
+      colorNameMr: 'पाचू हिरवा',
+      colorNameEn: 'Emerald Green',
+      colorHex: '#16a34a',
+      colorBg: '#f0fdf4',
+      colorBorder: '#bbf7d0',
+      colorTextColor: '#166534'
     },
     {
       id: 206,
@@ -806,8 +1477,15 @@ export class MandalDataService {
       itemEn: 'Chanderi Zari Silk Saree (Saffron Orange)',
       quantity: 1,
       date: '29/09/2026',
+      year: 2026,
       remarksMr: 'महानवमी महाकुंकुमार्चन पूजा',
-      remarksEn: 'Maha Navami Kumkumarchan Puja'
+      remarksEn: 'Maha Navami Kumkumarchan Puja',
+      colorNameMr: 'भगवा नारंगी',
+      colorNameEn: 'Saffron Orange',
+      colorHex: '#ea580c',
+      colorBg: '#fff7ed',
+      colorBorder: '#fed7aa',
+      colorTextColor: '#9a3412'
     },
     {
       id: 207,
@@ -817,8 +1495,217 @@ export class MandalDataService {
       itemEn: 'Tussar Silk Saree (Peacock Feather Blue)',
       quantity: 1,
       date: '30/09/2026',
+      year: 2026,
       remarksMr: 'विजयादशमी दसरा शस्त्रपूजन शृंगार',
-      remarksEn: 'Vijayadashami Dasara Shastra Puja'
+      remarksEn: 'Vijayadashami Dasara Shastra Puja',
+      colorNameMr: 'मोरपंखी निळा',
+      colorNameEn: 'Peacock Feather Blue',
+      colorHex: '#0284c7',
+      colorBg: '#f0f9ff',
+      colorBorder: '#bae6fd',
+      colorTextColor: '#075985'
+    },
+
+    // === वर्ष २०२५ (Year 2025) ===
+    {
+      id: 208,
+      donorNameMr: 'सौ. सुवर्णा मंगेश कदम',
+      donorNameEn: 'Suvarna Mangesh Kadam',
+      itemMr: 'जांभळी पैठणी साडी (मोर काठ)',
+      itemEn: 'Purple Paithani Saree (Peacock Border)',
+      quantity: 1,
+      date: '30/09/2025',
+      year: 2025,
+      remarksMr: 'घटस्थापना पहिल्या माळेचा शृंगार',
+      remarksEn: 'Ghatsthapana Adornment',
+      colorNameMr: 'जांभळा',
+      colorNameEn: 'Purple',
+      colorHex: '#7e22ce',
+      colorBg: '#f3e8ff',
+      colorBorder: '#d8b4fe',
+      colorTextColor: '#6b21a8'
+    },
+    {
+      id: 209,
+      donorNameMr: 'सौ. अनुराधा विलास सावंत',
+      donorNameEn: 'Anuradha Vilas Sawant',
+      itemMr: 'काठपदराची रेशमी साडी (लाल रंग)',
+      itemEn: 'Pure Silk Saree (Crimson Red)',
+      quantity: 1,
+      date: '01/10/2025',
+      year: 2025,
+      remarksMr: 'देवीच्या महाआरतीसाठी अर्पण',
+      remarksEn: 'For Evening Aarti',
+      colorNameMr: 'लाल रंग',
+      colorNameEn: 'Crimson Red',
+      colorHex: '#dc2626',
+      colorBg: '#fef2f2',
+      colorBorder: '#fecaca',
+      colorTextColor: '#991b1b'
+    },
+    {
+      id: 210,
+      donorNameMr: 'सौ. वंदना सचिन तांबडे',
+      donorNameEn: 'Vandana Sachin Tambde',
+      itemMr: 'बनारसी शालू (पिवळा रंग)',
+      itemEn: 'Banarasi Shalu (Yellow)',
+      quantity: 1,
+      date: '03/10/2025',
+      year: 2025,
+      remarksMr: 'ललिता पंचमी अलंकार शृंगार',
+      remarksEn: 'Lalita Panchami Adornment',
+      colorNameMr: 'पिवळा रंग',
+      colorNameEn: 'Yellow',
+      colorHex: '#d97706',
+      colorBg: '#fefce8',
+      colorBorder: '#fef08a',
+      colorTextColor: '#854d0e'
+    },
+    {
+      id: 211,
+      donorNameMr: 'सौ. रेखा राजेश परब',
+      donorNameEn: 'Rekha Rajesh Parab',
+      itemMr: 'कांजीवरम सिल्क साडी (गुलाबी)',
+      itemEn: 'Kanjivaram Silk Saree (Pink)',
+      quantity: 1,
+      date: '05/10/2025',
+      year: 2025,
+      remarksMr: 'महासप्तमी वस्त्र',
+      remarksEn: 'Maha Saptami Offering',
+      colorNameMr: 'गुलाबी',
+      colorNameEn: 'Pink',
+      colorHex: '#ec4899',
+      colorBg: '#fdf2f8',
+      colorBorder: '#fbcfe8',
+      colorTextColor: '#9d174d'
+    },
+    {
+      id: 212,
+      donorNameMr: 'सौ. सुनंदा अमोल पाटील',
+      donorNameEn: 'Sunanda Amol Patil',
+      itemMr: 'नऊवारी पैठणी साडी (हिरवा रंग)',
+      itemEn: 'Nauvari Paithani (Green)',
+      quantity: 1,
+      date: '07/10/2025',
+      year: 2025,
+      remarksMr: 'महाअष्टमी हवन वस्त्र',
+      remarksEn: 'Durga Ashtami Havan Offering',
+      colorNameMr: 'हिरवा रंग',
+      colorNameEn: 'Green',
+      colorHex: '#16a34a',
+      colorBg: '#f0fdf4',
+      colorBorder: '#bbf7d0',
+      colorTextColor: '#166534'
+    },
+    {
+      id: 213,
+      donorNameMr: 'सौ. मंगला चंद्रकांत महाडिक',
+      donorNameEn: 'Mangala Chandrakant Mahadik',
+      itemMr: 'चंदेरी जरी साडी (नारंगी)',
+      itemEn: 'Chanderi Zari Saree (Orange)',
+      quantity: 1,
+      date: '08/10/2025',
+      year: 2025,
+      remarksMr: 'महानवमी कुंकुमार्चन',
+      remarksEn: 'Maha Navami Puja',
+      colorNameMr: 'नारंगी',
+      colorNameEn: 'Orange',
+      colorHex: '#ea580c',
+      colorBg: '#fff7ed',
+      colorBorder: '#fed7aa',
+      colorTextColor: '#9a3412'
+    },
+
+    // === वर्ष २०२४ (Year 2024) ===
+    {
+      id: 214,
+      donorNameMr: 'सौ. सुवर्णा मंगेश कदम',
+      donorNameEn: 'Suvarna Mangesh Kadam',
+      itemMr: 'पैठणी साडी (राणी गुलाबी)',
+      itemEn: 'Paithani Saree (Rani Pink)',
+      quantity: 1,
+      date: '09/10/2024',
+      year: 2024,
+      remarksMr: 'घटस्थापना शृंगार',
+      remarksEn: 'Ghatsthapana Ritual',
+      colorNameMr: 'राणी गुलाबी',
+      colorNameEn: 'Rani Pink',
+      colorHex: '#db2777',
+      colorBg: '#fdf2f8',
+      colorBorder: '#fbcfe8',
+      colorTextColor: '#9d174d'
+    },
+    {
+      id: 215,
+      donorNameMr: 'सौ. अनुराधा विलास सावंत',
+      donorNameEn: 'Anuradha Vilas Sawant',
+      itemMr: 'रेशमी साडी (गडद केशरी)',
+      itemEn: 'Silk Saree (Deep Saffron)',
+      quantity: 1,
+      date: '10/10/2024',
+      year: 2024,
+      remarksMr: 'नित्य पूजा वस्त्र',
+      remarksEn: 'Daily Puja Offering',
+      colorNameMr: 'गडद केशरी',
+      colorNameEn: 'Deep Saffron',
+      colorHex: '#ea580c',
+      colorBg: '#fff7ed',
+      colorBorder: '#fed7aa',
+      colorTextColor: '#9a3412'
+    },
+    {
+      id: 216,
+      donorNameMr: 'सौ. वंदना सचिन तांबडे',
+      donorNameEn: 'Vandana Sachin Tambde',
+      itemMr: 'बनारसी साडी (हिरवा रंग)',
+      itemEn: 'Banarasi Saree (Emerald Green)',
+      quantity: 1,
+      date: '11/10/2024',
+      year: 2024,
+      remarksMr: 'पंचमी विशेष पूजा',
+      remarksEn: 'Panchami Puja',
+      colorNameMr: 'हिरवा रंग',
+      colorNameEn: 'Emerald Green',
+      colorHex: '#16a34a',
+      colorBg: '#f0fdf4',
+      colorBorder: '#bbf7d0',
+      colorTextColor: '#166534'
+    },
+    {
+      id: 217,
+      donorNameMr: 'सौ. रेखा राजेश परब',
+      donorNameEn: 'Rekha Rajesh Parab',
+      itemMr: 'कांजीवरम सिल्क (लाल रंग)',
+      itemEn: 'Kanjivaram Silk (Red)',
+      quantity: 1,
+      date: '12/10/2024',
+      year: 2024,
+      remarksMr: 'सप्तमी देवी वस्त्र',
+      remarksEn: 'Saptami Offering',
+      colorNameMr: 'लाल रंग',
+      colorNameEn: 'Red',
+      colorHex: '#dc2626',
+      colorBg: '#fef2f2',
+      colorBorder: '#fecaca',
+      colorTextColor: '#991b1b'
+    },
+    {
+      id: 218,
+      donorNameMr: 'सौ. मंगला चंद्रकांत महाडिक',
+      donorNameEn: 'Mangala Chandrakant Mahadik',
+      itemMr: 'पारंपरिक साडी (पिवळा रंग)',
+      itemEn: 'Traditional Saree (Yellow)',
+      quantity: 1,
+      date: '13/10/2024',
+      year: 2024,
+      remarksMr: 'अष्टमी हवन शृंगार',
+      remarksEn: 'Ashtami Havan',
+      colorNameMr: 'पिवळा रंग',
+      colorNameEn: 'Yellow',
+      colorHex: '#d97706',
+      colorBg: '#fefce8',
+      colorBorder: '#fef08a',
+      colorTextColor: '#854d0e'
     }
   ]);
 
@@ -1037,27 +1924,125 @@ export class MandalDataService {
     }
   ];
 
-  // Initial fallback breakdown matching authentic 2026 Excel data
+  // Initial fallback breakdown matching authentic Excel data
   private getInitialYearlyFestivalBreakdowns(): YearlyFestivalRecord[] {
     return [
       {
         year: 2026,
-        totalCollection: 485000,
-        totalExpenses: 340000,
-        netBalance: 145000,
-        noteMr: 'चालू आर्थिक वर्ष २०२६ - सार्वजनिक गणेशोत्सव भव्य उत्सव व हिशोब पूर्ण.',
-        noteEn: 'Current Year 2026 - Ganeshotsav accounts successfully completed.',
+        totalCollection: 846662,
+        totalExpenses: 803646,
+        netBalance: 43016,
+        noteMr: 'वर्ष २०२६ - सर्व उत्सव हिशोब व अंतिम ताळेबंद: एकूण जमा ₹८,४६,६६२, एकूण खर्च ₹८,०३,६४६, शिल्लक गंगाजळी ₹४३,०१६.',
+        noteEn: 'Year 2026 - Combined Festival Accounts & Balance Sheet: Total Income ₹8,46,662, Total Expenses ₹8,03,646, Net Surplus ₹43,016.',
         festivals: [
           {
             festivalKey: 'ganpati',
             festivalNameMr: 'सार्वजनिक गणेशोत्सव',
             festivalNameEn: 'Ganeshotsav (Ganpati Utsav)',
             icon: '🪔',
-            totalCollection: 485000,
-            totalExpenses: 340000,
-            balance: 145000,
-            donorsCount: 96,
-            participationEstimate: 45000
+            totalCollection: 490329,
+            totalIncome: 490328,
+            otherIncome: 0,
+            totalExpenses: 449189,
+            balance: 41139,
+            balanceLabelMr: 'नवरात्रीसाठी वर्ग बाकी',
+            balanceLabelEn: 'Transferred to Navratri',
+            donorsCount: 251,
+            participationEstimate: 25100
+          },
+          {
+            festivalKey: 'navratri',
+            festivalNameMr: 'नवरात्र उत्सव',
+            festivalNameEn: 'Navratri Utsav',
+            icon: '🔱',
+            totalCollection: 273134,
+            otherIncome: 124339,
+            totalIncome: 397473,
+            totalExpenses: 354457,
+            balance: 44016,
+            balanceLabelMr: 'पुढील वर्षासाठी शिल्लक (गंगाजळी)',
+            balanceLabelEn: 'Net Surplus Carried Forward',
+            cashBalance: 374,
+            bankBalance: 43642,
+            donorsCount: 201,
+            participationEstimate: 20100
+          },
+          {
+            festivalKey: 'ambedkar',
+            festivalNameMr: 'डॉ. बाबासाहेब आंबेडकर जयंती',
+            festivalNameEn: 'Dr. B. R. Ambedkar Jayanti',
+            icon: '⚖️',
+            totalCollection: 0,
+            totalIncome: 0,
+            otherIncome: 0,
+            totalExpenses: 0,
+            balance: 0,
+            donorsCount: 0,
+            participationEstimate: 0
+          }
+        ]
+      },
+      {
+        year: 2025,
+        totalCollection: 440000,
+        totalExpenses: 315000,
+        netBalance: 125000,
+        noteMr: 'वर्ष २०२५ - गणेशोत्सव व नवरात्रोत्सव भव्य धार्मिक व सांस्कृतिक सोहळा संपन्न.',
+        noteEn: 'Year 2025 - Ganeshotsav & Navratri grand celebrations completed.',
+        festivals: [
+          {
+            festivalKey: 'ganpati',
+            festivalNameMr: 'सार्वजनिक गणेशोत्सव',
+            festivalNameEn: 'Ganeshotsav (Ganpati Utsav)',
+            icon: '🪔',
+            totalCollection: 440000,
+            totalExpenses: 315000,
+            balance: 125000,
+            donorsCount: 92,
+            participationEstimate: 42000
+          },
+          {
+            festivalKey: 'navratri',
+            festivalNameMr: 'नवरात्र उत्सव',
+            festivalNameEn: 'Navratri Utsav',
+            icon: '🔱',
+            totalCollection: 0,
+            totalExpenses: 0,
+            balance: 0,
+            donorsCount: 0,
+            participationEstimate: 0
+          },
+          {
+            festivalKey: 'ambedkar',
+            festivalNameMr: 'डॉ. बाबासाहेब आंबेडकर जयंती',
+            festivalNameEn: 'Dr. B. R. Ambedkar Jayanti',
+            icon: '⚖️',
+            totalCollection: 0,
+            totalExpenses: 0,
+            balance: 0,
+            donorsCount: 0,
+            participationEstimate: 0
+          }
+        ]
+      },
+      {
+        year: 2024,
+        totalCollection: 395000,
+        totalExpenses: 285000,
+        netBalance: 110000,
+        noteMr: 'वर्ष २०२४ - रौप्यमहोत्सवी परंपरेचे सातत्य आणि यशस्वी समाजोपयोगी उपक्रम.',
+        noteEn: 'Year 2024 - Community welfare initiatives and festival completion.',
+        festivals: [
+          {
+            festivalKey: 'ganpati',
+            festivalNameMr: 'सार्वजनिक गणेशोत्सव',
+            festivalNameEn: 'Ganeshotsav (Ganpati Utsav)',
+            icon: '🪔',
+            totalCollection: 395000,
+            totalExpenses: 285000,
+            balance: 110000,
+            donorsCount: 88,
+            participationEstimate: 38000
           },
           {
             festivalKey: 'navratri',
@@ -1172,11 +2157,11 @@ export class MandalDataService {
           date: '२४ सप्टेंबर २०२६',
           time: 'रात्री ८:०० वा. नंतर',
           titleMr: 'भव्य भंडारा महाप्रसाद',
-          descMr: 'सर्व भाविकांसाठी अन्नदान व महाप्रसाद वाटप. महाप्रसादासाठी ज्या भाविकांना आपले योगदान द्यायचे असल्यास संपर्क साधावा: जगदीश शिंदे - ९८२०६ ६८७३९.',
+          descMr: 'सर्व भाविकांसाठी अन्नदान व महाप्रसाद वाटप. महाप्रसादासाठी ज्या भाविकांना आपले योगदान द्यायचे असल्यास संपर्क साधावा: जगदीश शिंदे - +९१ ९८२०६ ६८७३९.',
           icon: '🍲',
           category: 'महाप्रसाद (अन्नदान)',
-          details: 'महाप्रसादासाठी ज्या भाविकांना आपले योगदान द्यायचे असल्यास संपर्क साधावा: जगदीश शिंदे - ९८२०६ ६८७३९',
-          contact: 'जगदीश शिंदे - ९८२०६ ६८७३९'
+          details: 'महाप्रसादासाठी ज्या भाविकांना आपले योगदान द्यायचे असल्यास संपर्क साधावा: जगदीश शिंदे - +९१ ९८२०६ ६८७३९',
+          contact: 'जगदीश शिंदे - +९१ ९८२०६ ६८७३९'
         },
         {
           date: '२५ सप्टेंबर २०२६',
@@ -1196,14 +2181,14 @@ export class MandalDataService {
         '२४ सप्टेंबर २०२६: श्री सत्यनारायण महापूजा (दुपारी ३:०० वा. - सहकुटुंब उपस्थिती)',
         '२४ सप्टेंबर २०२६: विशेष सत्कार व सांस्कृतिक पारितोषिक वितरण (सायं. ६:०० ते ७:३०)',
         '२४ सप्टेंबर २०२६: स्थानिक सांस्कृतिक सुरवर भजन (रात्री ८:०० वा.)',
-        '२४ सप्टेंबर २०२६: भव्य भंडारा महाप्रसाद (रात्री ८:०० वा. नंतर | योगदान संपर्क: जगदीश शिंदे - ९८२०६ ६८७३९)',
+        '२४ सप्टेंबर २०२६: भव्य भंडारा महाप्रसाद (रात्री ८:०० वा. नंतर | योगदान संपर्क: जगदीश शिंदे - +९१ ९८२०६ ६८७३९)',
         '२५ सप्टेंबर २०२६: अनंत चतुर्दशी - बाप्पाचे विसर्जन मिरवणूक (सायं. ६:०० वा. - ढोल-ताशांच्या गजरात)'
       ],
       notices: [
         'मंडपात पादत्राणे योग्य ठिकाणी ठेवावीत. शांतता व शिस्त राखावी.',
         'आरती व महाप्रसाद वेळी रांगेत उभे राहून दर्शन घ्यावे. स्वयंसेवकांना सहकार्य करावे.',
         'चित्रकला व वक्तृत्व स्पर्धेसाठी पूर्वनोंदणी व वेळेवर उपस्थिती आवश्यक आहे.',
-        'महाप्रसाद (भंडारा) योगदानासाठी संपर्क: खजिनदार श्री जगदीश शिंदे (९८२०६ ६८७३९).',
+        'महाप्रसाद (भंडारा) योगदानासाठी संपर्क: खजिनदार श्री जगदीश शिंदे (+९१ ९८२०६ ६८७३९).',
         'सर्व देणगीदारांना अधिकृत डिजिटल पावती त्वरित दिली जाईल.'
       ]
     },
@@ -1364,7 +2349,6 @@ export class MandalDataService {
         'रक्कम (₹)': item.amount,
         'पावती क्रमांक': item.receiptNo || 'लागू नाही',
         'पावती स्थिती': item.status,
-        'तारीख': item.date,
         'भरणा पद्धत': item.paymentMode || 'कॅश',
         'उत्सव': item.festival,
         'वर्ष': item.year
@@ -1380,13 +2364,49 @@ export class MandalDataService {
         'प्रकार': item.category,
         'रक्कम (₹)': item.amount,
         'व्हाउचर क्रमांक': item.voucherNo,
-        'तारीख': item.date,
-        'ज्याला दिले ते नाव': item.paidTo,
         'उत्सव': item.festival,
         'वर्ष': item.year
       }));
       const wsKharch = XLSX.utils.json_to_sheet(kharchData);
       XLSX.utils.book_append_sheet(wb, wsKharch, 'खर्च तपशील');
+    }
+
+    if (type === 'balanceSheet') {
+      const sheet = this.currentDetailedSheet();
+      if (sheet) {
+        const rows: any[] = [
+          [sheet.title],
+          ['जमा बाजू (Income / Receipts)', 'रक्कम (₹)', '', 'खर्च बाजू (Expenditure)', 'रक्कम (₹)']
+        ];
+        const maxLen = Math.max(sheet.income.length, sheet.expenses.length);
+        for (let i = 0; i < maxLen; i++) {
+          const inc = sheet.income[i];
+          const exp = sheet.expenses[i];
+          rows.push([
+            inc ? inc.name : '',
+            inc ? inc.amount : '',
+            '',
+            exp ? exp.name : '',
+            exp ? exp.amount : ''
+          ]);
+        }
+        rows.push([
+          'एकूण जमा (Total Income)', sheet.totalIncome,
+          '',
+          'एकूण उत्सव खर्च (Total Expenditure)', sheet.totalExpenses
+        ]);
+        rows.push([
+          '', '', '',
+          sheet.surplusLabelMr || 'शिल्लक रक्कम', sheet.surplus
+        ]);
+        rows.push([
+          'एकूण ताळेबंद (Total Balance)', sheet.totalBalance,
+          '',
+          'एकूण ताळेबंद (Total Balance)', sheet.totalBalance
+        ]);
+        const wsDetail = XLSX.utils.aoa_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, wsDetail, 'अधिकृत ताळेबंद');
+      }
     }
 
     const filename = `Shree_Ashtavinayak_Mandal_${this.selectedFestival()}_${this.selectedYear()}_${type}.xlsx`;
@@ -1680,19 +2700,24 @@ export class MandalDataService {
       if (ganpatiSheet) {
         const rawRows = XLSX.utils.sheet_to_json<any>(ganpatiSheet);
         if (rawRows.length > 0) {
-          const items: BhandaraItem[] = rawRows.map((row, idx) => ({
-            id: idx + 1,
-            festival: 'गणेशोत्सव',
-            itemNameMr: String(getVal(row, 'Item_Name_Mr', 'साहित्याचे नाव - मराठी', 'साहित्याचे नाव') || '').trim(),
-            itemNameEn: String(getVal(row, 'Item_Name_En', 'Item Name - English', 'Item Name') || '').trim(),
-            quantity: getVal(row, 'Quantity', 'संख्या') || 1,
-            unitMr: String(getVal(row, 'Unit', 'एकक') || 'किलो').trim(),
-            unitEn: String(getVal(row, 'Unit_En', 'Unit') || 'Kg').trim(),
-            donorNameMr: String(getVal(row, 'Donor_Name_Mr', 'देणगीदाराचे नाव - मराठी', 'देणगीदाराचे नाव') || '').trim(),
-            donorNameEn: String(getVal(row, 'Donor_Name_En', 'Donor Name - English', 'Donor Name') || '').trim(),
-            date: String(getVal(row, 'Date', 'तारीख') || '25/08/2026').trim(),
-            remarksMr: getVal(row, 'Remarks', 'शेरा') || undefined
-          }));
+          const items: BhandaraItem[] = rawRows.map((row, idx) => {
+            const dStr = String(getVal(row, 'Date', 'तारीख') || '25/08/2026').trim();
+            const yVal = Number(getVal(row, 'Year', 'वर्ष')) || (dStr.includes('/') ? Number(dStr.split('/')[2]) : 2026);
+            return {
+              id: idx + 1,
+              festival: 'गणेशोत्सव',
+              itemNameMr: String(getVal(row, 'Item_Name_Mr', 'साहित्याचे नाव - मराठी', 'साहित्याचे नाव') || '').trim(),
+              itemNameEn: String(getVal(row, 'Item_Name_En', 'Item Name - English', 'Item Name') || '').trim(),
+              quantity: getVal(row, 'Quantity', 'संख्या') || 1,
+              unitMr: String(getVal(row, 'Unit', 'एकक') || 'किलो').trim(),
+              unitEn: String(getVal(row, 'Unit_En', 'Unit') || 'Kg').trim(),
+              donorNameMr: String(getVal(row, 'Donor_Name_Mr', 'देणगीदाराचे नाव - मराठी', 'देणगीदाराचे नाव') || '').trim(),
+              donorNameEn: String(getVal(row, 'Donor_Name_En', 'Donor Name - English', 'Donor Name') || '').trim(),
+              date: dStr,
+              year: yVal,
+              remarksMr: getVal(row, 'Remarks', 'शेरा') || undefined
+            };
+          });
           this.ganpatiBhandaraItems.set(items);
         }
       }
@@ -1702,19 +2727,24 @@ export class MandalDataService {
       if (navratriSheet) {
         const rawRows = XLSX.utils.sheet_to_json<any>(navratriSheet);
         if (rawRows.length > 0) {
-          const items: BhandaraItem[] = rawRows.map((row, idx) => ({
-            id: idx + 101,
-            festival: 'नवरात्र उत्सव',
-            itemNameMr: String(getVal(row, 'Item_Name_Mr', 'साहित्याचे नाव - मराठी', 'साहित्याचे नाव') || '').trim(),
-            itemNameEn: String(getVal(row, 'Item_Name_En', 'Item Name - English', 'Item Name') || '').trim(),
-            quantity: getVal(row, 'Quantity', 'संख्या') || 1,
-            unitMr: String(getVal(row, 'Unit', 'एकक') || 'किलो').trim(),
-            unitEn: String(getVal(row, 'Unit_En', 'Unit') || 'Kg').trim(),
-            donorNameMr: String(getVal(row, 'Donor_Name_Mr', 'देणगीदाराचे नाव - मराठी', 'देणगीदाराचे नाव') || '').trim(),
-            donorNameEn: String(getVal(row, 'Donor_Name_En', 'Donor Name - English', 'Donor Name') || '').trim(),
-            date: String(getVal(row, 'Date', 'तारीख') || '20/09/2026').trim(),
-            remarksMr: getVal(row, 'Remarks', 'शेरा') || undefined
-          }));
+          const items: BhandaraItem[] = rawRows.map((row, idx) => {
+            const dStr = String(getVal(row, 'Date', 'तारीख') || '20/09/2026').trim();
+            const yVal = Number(getVal(row, 'Year', 'वर्ष')) || (dStr.includes('/') ? Number(dStr.split('/')[2]) : 2026);
+            return {
+              id: idx + 101,
+              festival: 'नवरात्र उत्सव',
+              itemNameMr: String(getVal(row, 'Item_Name_Mr', 'साहित्याचे नाव - मराठी', 'साहित्याचे नाव') || '').trim(),
+              itemNameEn: String(getVal(row, 'Item_Name_En', 'Item Name - English', 'Item Name') || '').trim(),
+              quantity: getVal(row, 'Quantity', 'संख्या') || 1,
+              unitMr: String(getVal(row, 'Unit', 'एकक') || 'किलो').trim(),
+              unitEn: String(getVal(row, 'Unit_En', 'Unit') || 'Kg').trim(),
+              donorNameMr: String(getVal(row, 'Donor_Name_Mr', 'देणगीदाराचे नाव - मराठी', 'देणगीदाराचे नाव') || '').trim(),
+              donorNameEn: String(getVal(row, 'Donor_Name_En', 'Donor Name - English', 'Donor Name') || '').trim(),
+              date: dStr,
+              year: yVal,
+              remarksMr: getVal(row, 'Remarks', 'शेरा') || undefined
+            };
+          });
           this.navratriBhandaraItems.set(items);
         }
       }
@@ -1724,16 +2754,21 @@ export class MandalDataService {
       if (sareeSheet) {
         const rawRows = XLSX.utils.sheet_to_json<any>(sareeSheet);
         if (rawRows.length > 0) {
-          const donors: SareeDonor[] = rawRows.map((row, idx) => ({
-            id: idx + 201,
-            donorNameMr: String(getVal(row, 'Donor_Name_Mr', 'भाविकाचे नाव - मराठी', 'भाविकाचे नाव') || '').trim(),
-            donorNameEn: String(getVal(row, 'Donor_Name_En', 'Donor Name - English', 'Donor Name') || '').trim(),
-            itemMr: String(getVal(row, 'Saree_Details_Mr', 'साडी तपशील - मराठी', 'साडी तपशील') || '').trim(),
-            itemEn: String(getVal(row, 'Saree_Details_En', 'Saree Details - English', 'Saree Details') || '').trim(),
-            quantity: Number(getVal(row, 'Quantity', 'संख्या') || 1),
-            date: String(getVal(row, 'Date', 'तारीख') || '21/09/2026').trim(),
-            remarksMr: getVal(row, 'Remarks', 'शेरा') || undefined
-          }));
+          const donors: SareeDonor[] = rawRows.map((row, idx) => {
+            const dStr = String(getVal(row, 'Date', 'तारीख') || '21/09/2026').trim();
+            const yVal = Number(getVal(row, 'Year', 'वर्ष')) || (dStr.includes('/') ? Number(dStr.split('/')[2]) : 2026);
+            return {
+              id: idx + 201,
+              donorNameMr: String(getVal(row, 'Donor_Name_Mr', 'भाविकाचे नाव - मराठी', 'भाविकाचे नाव') || '').trim(),
+              donorNameEn: String(getVal(row, 'Donor_Name_En', 'Donor Name - English', 'Donor Name') || '').trim(),
+              itemMr: String(getVal(row, 'Saree_Details_Mr', 'साडी तपशील - मराठी', 'साडी तपशील') || '').trim(),
+              itemEn: String(getVal(row, 'Saree_Details_En', 'Saree Details - English', 'Saree Details') || '').trim(),
+              quantity: Number(getVal(row, 'Quantity', 'संख्या') || 1),
+              date: dStr,
+              year: yVal,
+              remarksMr: getVal(row, 'Remarks', 'शेरा') || undefined
+            };
+          });
           this.navratriSareeDonors.set(donors);
         }
       }
@@ -1823,6 +2858,17 @@ export class MandalDataService {
         }
       }
 
+      // 8. Detailed / detail (अधिकृत ताळेबंद व जमा-खर्च वर्गवारी)
+      const detailedSheet = findSheet('Detailed', 'detail', 'ताळेबंद');
+      if (detailedSheet) {
+        const rawRows = XLSX.utils.sheet_to_json<any[]>(detailedSheet, { header: 1 });
+        const parsedDetailed = this.parseDetailedSheet(rawRows);
+        if (parsedDetailed) {
+          this.detailedBalanceSheetData.set(parsedDetailed);
+          console.log('[MandalDataService] Successfully parsed Detailed balance sheet from Excel.');
+        }
+      }
+
       this.isExcelLoaded.set(true);
       this.excelFileName.set(fileName);
       this.lastExcelUpdate.set(new Date());
@@ -1869,11 +2915,11 @@ export class MandalDataService {
     // 4 | संदीप शिंदे | शिव स्फूर्ती 1 | ₹ 5,000 | 100004 | दिलेली
     // 5 | प्रिया कदम | शिव स्फूर्ती 2 | ₹ 2,500 | - | बाकी
     records.push(
-      { id: 1, srNo: 1, nameMr: 'रोहन महाडिक', nameEn: 'Rohan Mahadik', building: 'शिव स्फूर्ती 1', amount: 5000, receiptNo: '100001', status: 'दिलेली', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '01/09/2026', paymentMode: 'UPI / GPay', phone: '9820112233' },
-      { id: 2, srNo: 2, nameMr: 'हर्ष फाटक', nameEn: 'Harsh Phatak', building: 'शिव स्फूर्ती 2', amount: 5000, receiptNo: '100002', status: 'दिलेली', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '01/09/2026', paymentMode: 'कॅश', phone: '9820223344' },
-      { id: 3, srNo: 3, nameMr: 'अमोल पाटील', nameEn: 'Amol Patil', building: 'आदर्श नगर', amount: 2500, receiptNo: null, status: 'बाकी', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '02/09/2026', paymentMode: 'कॅश', phone: '9820334455' },
-      { id: 4, srNo: 4, nameMr: 'संदीप शिंदे', nameEn: 'Sandeep Shinde', building: 'शिव स्फूर्ती 1', amount: 5000, receiptNo: '100004', status: 'दिलेली', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '02/09/2026', paymentMode: 'कॅश', phone: '9820445566' },
-      { id: 5, srNo: 5, nameMr: 'प्रिया कदम', nameEn: 'Priya Kadam', building: 'शिव स्फूर्ती 2', amount: 2500, receiptNo: null, status: 'बाकी', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '02/09/2026', paymentMode: 'कॅश', phone: '9820556677' }
+      { id: 1, srNo: 1, nameMr: 'रोहन महाडिक', nameEn: 'Rohan Mahadik', building: 'शिव स्फूर्ती 1', amount: 5000, receiptNo: '100001', status: 'दिलेली', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '01/09/2026', paymentMode: 'UPI / GPay', phone: '+91 98201 12233' },
+      { id: 2, srNo: 2, nameMr: 'हर्ष फाटक', nameEn: 'Harsh Phatak', building: 'शिव स्फूर्ती 2', amount: 5000, receiptNo: '100002', status: 'दिलेली', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '01/09/2026', paymentMode: 'कॅश', phone: '+91 98202 23344' },
+      { id: 3, srNo: 3, nameMr: 'अमोल पाटील', nameEn: 'Amol Patil', building: 'आदर्श नगर', amount: 2500, receiptNo: null, status: 'बाकी', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '02/09/2026', paymentMode: 'कॅश', phone: '+91 98203 34455' },
+      { id: 4, srNo: 4, nameMr: 'संदीप शिंदे', nameEn: 'Sandeep Shinde', building: 'शिव स्फूर्ती 1', amount: 5000, receiptNo: '100004', status: 'दिलेली', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '02/09/2026', paymentMode: 'कॅश', phone: '+91 98204 45566' },
+      { id: 5, srNo: 5, nameMr: 'प्रिया कदम', nameEn: 'Priya Kadam', building: 'शिव स्फूर्ती 2', amount: 2500, receiptNo: null, status: 'बाकी', festival: 'सार्वजनिक गणेशोत्सव', year: 2026, date: '02/09/2026', paymentMode: 'कॅश', phone: '+91 98205 56677' }
     );
 
     // Now populate remaining 91 records to complete exactly 96 members for 2026 Ganeshotsav
@@ -1955,7 +3001,7 @@ export class MandalDataService {
           year: 2026,
           date: `${day}/09/2026`,
           paymentMode: i % 3 === 0 ? 'UPI / GPay' : 'कॅश',
-          phone: `9820${(100000 + records.length).toString().slice(1)}`
+          phone: `+91 9820${(100000 + records.length).toString().slice(1)}`
         });
       }
     };
@@ -2196,5 +3242,264 @@ export class MandalDataService {
     // Exact count: 12 entries!
 
     return list;
+  }
+
+  parseDetailedSheet(rawRows: any[][]): DetailedBalanceSheetData | null {
+    try {
+      const result: DetailedBalanceSheetData = {
+        joint: {
+          title: 'श्री गणेशोत्सव आणि नवरात्रोत्सव २०२६ - संयुक्त ताळेबंद (Joint Balance Sheet)',
+          festivalKey: 'joint',
+          festivalNameMr: 'संयुक्त (गणेशोत्सव व नवरात्र)',
+          festivalNameEn: 'Joint Balance Sheet (Ganesh & Navratri)',
+          income: [],
+          expenses: [],
+          totalIncome: 0,
+          totalExpenses: 0,
+          surplus: 0,
+          surplusLabelMr: 'पुढील वर्षासाठी शिल्लक रक्कम (Total Surplus)',
+          surplusLabelEn: 'Total Surplus Carried Forward',
+          totalBalance: 0
+        },
+        ganesh: {
+          title: 'श्री गणेशोत्सव २०२६ - ताळेबंद (Ganesh Utsav Balance Sheet)',
+          festivalKey: 'ganesh',
+          festivalNameMr: 'सार्वजनिक गणेशोत्सव',
+          festivalNameEn: 'Ganeshotsav (Ganpati Utsav)',
+          income: [],
+          expenses: [],
+          totalIncome: 0,
+          totalExpenses: 0,
+          surplus: 0,
+          surplusLabelMr: 'नवरात्रीसाठी शिल्लक बाकी (Surplus for Navratri)',
+          surplusLabelEn: 'Surplus for Navratri',
+          totalBalance: 0
+        },
+        navratri: {
+          title: 'श्री नवरात्रोत्सव २०२६ - ताळेबंद (Navratri Utsav Balance Sheet)',
+          festivalKey: 'navratri',
+          festivalNameMr: 'नवरात्र उत्सव',
+          festivalNameEn: 'Navratri Utsav',
+          income: [],
+          expenses: [],
+          totalIncome: 0,
+          totalExpenses: 0,
+          surplus: 0,
+          surplusLabelMr: 'पुढील वर्षासाठी शिल्लक (Surplus Carried Forward)',
+          surplusLabelEn: 'Surplus Carried Forward',
+          totalBalance: 0,
+          cashBalance: 0,
+          bankBalance: 0
+        }
+      };
+
+      let currentSection: 'joint' | 'ganesh' | 'navratri' | null = null;
+
+      const cleanNum = (val: any): number => {
+        if (typeof val === 'number') return isNaN(val) ? 0 : val;
+        if (!val) return 0;
+        const cleaned = String(val).replace(/[^0-9.-]/g, '');
+        const num = Number(cleaned);
+        return isNaN(num) ? 0 : num;
+      };
+
+      rawRows.forEach(row => {
+        if (!row || row.length === 0) return;
+        const text0 = String(row[0] || '').trim();
+        const text3 = String(row[3] || '').trim();
+
+        if (text0.includes('संयुक्त ताळेबंद') || text0.includes('Joint Balance Sheet')) {
+          currentSection = 'joint';
+          result.joint.title = text0;
+          return;
+        } else if (text0.includes('गणेशोत्सव') && (text0.includes('ताळेबंद') || text0.includes('Balance Sheet'))) {
+          currentSection = 'ganesh';
+          result.ganesh.title = text0;
+          return;
+        } else if (text0.includes('नवरात्र') && (text0.includes('ताळेबंद') || text0.includes('Balance Sheet'))) {
+          currentSection = 'navratri';
+          result.navratri.title = text0;
+          return;
+        }
+
+        if (!currentSection) return;
+
+        // Skip headers
+        if (text0.includes('जमा बाजू') || text3.includes('खर्च बाजू') || text3.includes('खर्च आणि शिल्लक')) {
+          return;
+        }
+
+        const sec = result[currentSection];
+
+        // Left side: Income
+        const incomeLabel = text0;
+        const incomeAmount = cleanNum(row[1]);
+        if (incomeLabel && incomeAmount > 0) {
+          if (incomeLabel.includes('एकूण जमा') || incomeLabel.includes('Total Income')) {
+            sec.totalIncome = incomeAmount;
+          } else if (incomeLabel.includes('एकूण ताळेबंद') || incomeLabel.includes('Total Balance')) {
+            sec.totalBalance = incomeAmount;
+          } else {
+            sec.income.push({ name: incomeLabel, amount: incomeAmount });
+          }
+        }
+
+        // Right side: Expenses & Surplus
+        const expLabel = text3;
+        const expAmount = cleanNum(row[4]);
+        if (expLabel) {
+          if (expLabel.includes('एकूण उत्सव खर्च') || expLabel.includes('एकूण खर्च') || expLabel.includes('Total Expenditure')) {
+            sec.totalExpenses = expAmount;
+          } else if (expLabel.includes('शिल्लक') || expLabel.includes('Surplus')) {
+            if (expLabel.includes('रोख शिल्लक') || expLabel.includes('Cash')) {
+              sec.cashBalance = expAmount;
+            } else if (expLabel.includes('बँक शिल्लक') || expLabel.includes('Bank Balance')) {
+              sec.bankBalance = expAmount;
+            } else {
+              sec.surplus = expAmount;
+            }
+          } else if (expLabel.includes('एकूण ताळेबंद') || expLabel.includes('Total Balance')) {
+            if (!sec.totalBalance) sec.totalBalance = expAmount;
+          } else if (expAmount > 0) {
+            sec.expenses.push({ name: expLabel, amount: expAmount });
+          }
+        }
+      });
+
+      // Recalculate totals if omitted
+      (['joint', 'ganesh', 'navratri'] as const).forEach(k => {
+        const sec = result[k];
+        const incSum = sec.income.reduce((s, i) => s + i.amount, 0);
+        if (sec.totalIncome === 0 && incSum > 0) {
+          sec.totalIncome = incSum;
+        }
+        const expSum = sec.expenses.reduce((s, e) => s + e.amount, 0);
+        if (sec.totalExpenses === 0 && expSum > 0) {
+          sec.totalExpenses = expSum;
+        }
+        if (sec.totalBalance === 0) {
+          sec.totalBalance = Math.max(sec.totalIncome, sec.totalExpenses + sec.surplus);
+        }
+      });
+
+      return result;
+    } catch (e) {
+      console.error('[MandalDataService] Failed to parse Detailed sheet:', e);
+      return null;
+    }
+  }
+
+  private getInitialDetailedBalanceSheet(): DetailedBalanceSheetData {
+    return {
+      joint: {
+        title: 'श्री गणेशोत्सव आणि नवरात्रोत्सव २०२६ - संयुक्त ताळेबंद (Joint Balance Sheet)',
+        festivalKey: 'joint',
+        festivalNameMr: 'संयुक्त (गणेशोत्सव व नवरात्र)',
+        festivalNameEn: 'Joint Balance Sheet (Ganesh & Navratri)',
+        income: [
+          { name: 'गणेशोत्सव वर्गणी (Ganpati Vargani)', amount: 490328 },
+          { name: 'नवरात्र वर्गणी (Navratri Vargani)', amount: 273134 },
+          { name: 'दानपेटी (Danpeti)', amount: 37000 },
+          { name: 'हार लिलाव (Haar Auction)', amount: 11660 },
+          { name: 'साडी लिलाव (Sadi Lilav)', amount: 30500 },
+          { name: 'ब्लाउज पीस (Blouse Piece)', amount: 390 },
+          { name: 'इतर जमा (Other Income)', amount: 3650 }
+        ],
+        expenses: [
+          { name: 'मंडपवाला (Mandapwala)', amount: 251000 },
+          { name: 'लाईटवाला (Lightwala)', amount: 170000 },
+          { name: 'भंडारा (Bhandara)', amount: 81243 },
+          { name: 'इतर (Other)', amount: 69602 },
+          { name: 'साऊंड (Sound)', amount: 40000 },
+          { name: 'विसर्जन (Visarjan)', amount: 35800 },
+          { name: 'स्पायरो शो (Spyro Show)', amount: 28720 },
+          { name: 'सत्कार आणि बक्षीस (Satkar & Bhakshish)', amount: 28003 },
+          { name: 'प्रिंटिंग आणि स्टेशनरी (Printing & Stationary)', amount: 21190 },
+          { name: 'फटाके (Fatake)', amount: 17240 },
+          { name: 'बेंजो (Banjo)', amount: 16000 },
+          { name: 'सादरा (Sadra)', amount: 13090 },
+          { name: 'जनरेटर (Generator)', amount: 9500 },
+          { name: 'कोजागिरी (Kojagiri)', amount: 9258 },
+          { name: 'रबर आर्ट (Rubber Art)', amount: 9000 },
+          { name: 'तुतारी (Tutari)', amount: 4000 }
+        ],
+        totalIncome: 846662,
+        totalExpenses: 803646,
+        surplus: 43016,
+        surplusLabelMr: 'पुढील वर्षासाठी शिल्लक रक्कम (Total Surplus)',
+        surplusLabelEn: 'Total Surplus Carried Forward',
+        totalBalance: 846662
+      },
+      ganesh: {
+        title: 'श्री गणेशोत्सव २०२६ - ताळेबंद (Ganesh Utsav Balance Sheet)',
+        festivalKey: 'ganesh',
+        festivalNameMr: 'सार्वजनिक गणेशोत्सव',
+        festivalNameEn: 'Ganeshotsav (Ganpati Utsav)',
+        income: [
+          { name: 'गणेशोत्सव वर्गणी (Ganpati Vargani)', amount: 490328 }
+        ],
+        expenses: [
+          { name: 'मंडपवाला (Mandapwala)', amount: 181000 },
+          { name: 'लाईटवाला (Lightwala)', amount: 85000 },
+          { name: 'भंडारा (Bhandara)', amount: 41523 },
+          { name: 'विसर्जन (Visarjan)', amount: 25800 },
+          { name: 'इतर (Other)', amount: 23578 },
+          { name: 'स्पायरो शो (Spyro show)', amount: 23000 },
+          { name: 'बेंजो (Banjo)', amount: 15000 },
+          { name: 'साऊंड (Sound)', amount: 13000 },
+          { name: 'प्रिंटिंग आणि स्टेशनरी (Printing & Stationary)', amount: 10580 },
+          { name: 'रबर आर्ट (Rubber Art)', amount: 9000 },
+          { name: 'फटाके (Fatake)', amount: 8360 },
+          { name: 'जनरेटर (Generator)', amount: 7000 },
+          { name: 'सत्कार आणि बक्षीस (Satkar & Bhakshish)', amount: 6348 }
+        ],
+        totalIncome: 490328,
+        totalExpenses: 449189,
+        surplus: 41139,
+        surplusLabelMr: 'नवरात्रीसाठी शिल्लक बाकी (Surplus for Navratri)',
+        surplusLabelEn: 'Surplus for Navratri',
+        totalBalance: 490328
+      },
+      navratri: {
+        title: 'श्री नवरात्रोत्सव २०२६ - ताळेबंद (Navratri Utsav Balance Sheet)',
+        festivalKey: 'navratri',
+        festivalNameMr: 'नवरात्र उत्सव',
+        festivalNameEn: 'Navratri Utsav',
+        income: [
+          { name: 'गणपती शिल्लक बाकी (Ganpati Surplus B/F)', amount: 41139 },
+          { name: 'नवरात्र वर्गणी (Navratri Vargani)', amount: 273134 },
+          { name: 'दानपेटी (Danpeti)', amount: 37000 },
+          { name: 'साडी लिलाव (Sadi Lilav)', amount: 30500 },
+          { name: 'हार लिलाव (Haar Auction)', amount: 11660 },
+          { name: 'इतर जमा (Other Income)', amount: 3650 },
+          { name: 'ब्लाउज पीस (Blouse Piece)', amount: 390 }
+        ],
+        expenses: [
+          { name: 'लाईटवाला (Lightwala)', amount: 85000 },
+          { name: 'मंडपवाला (Mandapwala)', amount: 70000 },
+          { name: 'इतर (Other)', amount: 46024 },
+          { name: 'भंडारा (Bhandara)', amount: 39720 },
+          { name: 'साऊंड (Sound)', amount: 27000 },
+          { name: 'सत्कार आणि बक्षीस (Satkar & Bhakshish)', amount: 21655 },
+          { name: 'सादरा (Sadra)', amount: 13090 },
+          { name: 'प्रिंटिंग आणि स्टेशनरी (Printing & Stationary)', amount: 10610 },
+          { name: 'विसर्जन (Visarjan)', amount: 10000 },
+          { name: 'कोजागिरी (Kojagiri)', amount: 9258 },
+          { name: 'फटाके (Fatake)', amount: 8880 },
+          { name: 'स्पायरो शो (Spyro show)', amount: 5720 },
+          { name: 'तुतारी (Tutari)', amount: 4000 },
+          { name: 'जनरेटर (Generator)', amount: 2500 },
+          { name: 'बेंजो (Banjo)', amount: 1000 }
+        ],
+        totalIncome: 397473,
+        totalExpenses: 354457,
+        surplus: 44016,
+        surplusLabelMr: 'पुढील वर्षासाठी शिल्लक (Surplus Carried Forward)',
+        surplusLabelEn: 'Surplus Carried Forward',
+        totalBalance: 397473,
+        cashBalance: 374,
+        bankBalance: 43642
+      }
+    };
   }
 }

@@ -75,6 +75,34 @@ export interface DignitaryMessage {
         </div>
       </div>
 
+      <!-- Dignitary Quick Selector Ribbon (अध्यक्ष + ५ सन्माननीय मान्यवर) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+        @for (d of dignitaries; track d.id; let idx = $index) {
+          <button
+            (click)="goToSlide(idx)"
+            class="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl border-2 transition-all cursor-pointer text-left shadow-2xs hover:shadow-md"
+            [ngClass]="currentSlideIndex() === idx
+              ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-500 ring-2 ring-amber-400/50 scale-[1.02]'
+              : 'bg-white hover:bg-slate-50 border-slate-200 opacity-80 hover:opacity-100'"
+            [title]="mandalData.isEnglish() ? d.nameEn : d.nameMr"
+          >
+            <img
+              [src]="d.photoUrl"
+              [alt]="d.nameMr"
+              class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover object-top border border-amber-300 shadow-2xs shrink-0"
+            />
+            <div class="min-w-0 flex-1">
+              <div class="text-[11px] sm:text-xs font-black font-devanagari truncate" [ngClass]="currentSlideIndex() === idx ? 'text-amber-950 font-bold' : 'text-slate-800'">
+                {{ mandalData.isEnglish() ? d.tabLabelEn : d.tabLabelMr }}
+              </div>
+              <div class="text-[9.5px] sm:text-[10px] text-amber-800 font-semibold truncate font-devanagari">
+                {{ d.icon }} {{ mandalData.isEnglish() ? d.badgeEn : d.badgeMr }}
+              </div>
+            </div>
+          </button>
+        }
+      </div>
+
       <!-- Mobile Navigation Bar (Arrows & Counter Shown Above Slider on Mobile) -->
       <div class="flex sm:hidden items-center justify-between bg-white rounded-2xl p-2.5 px-3.5 border-2 border-amber-300 shadow-sm">
         <div class="flex items-center gap-2 min-w-0 flex-1 mr-2">
@@ -169,11 +197,11 @@ export interface DignitaryMessage {
                   <!-- Portrait Frame with Cultural Ring -->
                   <div class="relative group">
                     <div class="w-36 h-36 sm:w-44 sm:h-44 rounded-3xl p-2 bg-gradient-to-tr from-amber-600 via-yellow-400 to-amber-700 shadow-xl ring-4 ring-amber-400/40 overflow-hidden flex items-center justify-center">
-                      @if (current.photoUrl && current.id === 'president') {
+                      @if (current.photoUrl) {
                         <img
                           [src]="current.photoUrl"
                           [alt]="current.nameMr + ' - ' + current.designationMr"
-                          class="w-full h-full object-cover rounded-2xl transition duration-500 group-hover:scale-105"
+                          class="w-full h-full object-cover object-top rounded-2xl transition duration-500 group-hover:scale-105"
                         />
                       } @else {
                         <div
@@ -357,20 +385,20 @@ export class ManogatComponent implements OnInit, OnDestroy {
   readonly dignitaries: DignitaryMessage[] = [
     {
       id: 'president',
-      tabLabelMr: 'अध्यक्षांचे मनोगत',
-      tabLabelEn: "President's Message",
-      badgeMr: '🚩 मंडळ अध्यक्ष',
-      badgeEn: 'Mandal President',
-      icon: '🚩',
+      tabLabelMr: 'श्री. बाळासाहेब यादव',
+      tabLabelEn: 'Shri. Balasaheb Yadav',
+      badgeMr: '👑 अध्यक्ष • अष्टविनायक मंडळ',
+      badgeEn: 'President • Ashtavinayak Mandal',
+      icon: '👑',
       nameMr: 'श्री. बाळासाहेब यादव',
       nameEn: 'Shri. Balasaheb Yadav',
-      designationMr: 'अध्यक्ष, श्री अष्टविनायक मित्र मंडळ',
-      designationEn: 'President, Shree Ashtavinayak Mitra Mandal',
-      organizationMr: 'रजि. न. १९२३ जी.वी.वी.एस.डी (स्थापना १९९७)',
-      organizationEn: 'Reg. No. 1923 GBVSD (Est. 1997)',
+      designationMr: 'अध्यक्ष, श्री अष्टविनायक मित्र मंडळ (रजि.)',
+      designationEn: 'President, Shree Ashtavinayak Mitra Mandal (Regd.)',
+      organizationMr: 'श्री अष्टविनायक मित्र मंडळ, जोगेश्वरी (पश्चिम)',
+      organizationEn: 'Shree Ashtavinayak Mitra Mandal, Jogeshwari (West)',
       areaMr: 'शिव स्फूर्ती, आदर्श नगर, जोगेश्वरी (प), मुंबई',
       areaEn: 'Shiv Sphurti, Adarsh Nagar, Jogeshwari (W), Mumbai',
-      photoUrl: '/Sabhasad/Balasaheb%20Yadav.jpg',
+      photoUrl: '/Manogat/Balasaheb%20Yadav.jpg',
       avatarBg: '#991b1b',
       initial: 'बा',
       tenureMr: '२८+ वर्षे अविरत सांस्कृतिक व सामाजिक सेवा',
@@ -384,208 +412,208 @@ export class ManogatComponent implements OnInit, OnDestroy {
         'सन <b>१९९७</b> साली एका लहानशा मंडपात आणि मोजक्या निष्ठावंत सहकाऱ्यांच्या साथीने लावलेले हे रोपटे आज तब्बल <b>२८ वर्षांनंतर</b> एका भव्य वटवृक्षात रूपांतरित झाले आहे, याचा मला मंडळाचा अध्यक्ष म्हणून सार्थ अभिमान आणि मनस्वी आनंद वाटतो. आमच्या मंडळाची मूळ ताकद ही केवळ उत्सवाचा डामडौल नसून आपल्या सोसायटीतील प्रत्येक कुटुंबाचा परस्पर विश्वास, आत्मीयता आणि "आपलेच मंडळ" ही उत्स्फूर्त भावना आहे.',
         'गेल्या पाव शतकाहून अधिक काळात आम्ही केवळ सार्वजनिक गणेशोत्सवच नव्हे, तर नऊ दिवसांचा भक्तीमय नवरात्रोत्सव आणि महामानव भारतरत्न डॉ. बाबासाहेब आंबेडकर जयंती अत्यंत उत्साहात आणि सामाजिक बांधिलकी जपत साजरी केली आहे. उत्सवातील प्रत्येक रुपयाचा पारदर्शक हिशोब ठेवणे, कम्प्युटराइज्ड पावत्या देणे आणि शिल्लक गंगाजळीचा विनियोग मोफत आरोग्य शिबिरे, गरजू विद्यार्थ्यांचे शिक्षण आणि सामाजिक कार्यासाठी करणे ही आपली सुसंस्कृत परंपरा राहिली आहे.',
         'यंदाही महिला भगिनींनी नवरात्रीत मोठ्या भक्तिभावाने अर्पण केलेल्या साड्या, अन्नदानासाठी भरभरून मिळालेले धान्य-साहित्य आणि तरुण मुलांचे अहोरात्र श्रम हे आपल्या ऐक्याचे जिवंत प्रतीक आहेत. आपण सर्वजण असाच एकोपा जपत पुढील पिढीकडे हा सांस्कृतिक वारसा अभिमानाने सोपवूया.',
-        '<b>विघ्नहर्ता गणराया आणि आई जगदंबा आपणा सर्वांना उदंड आरोग्य, सुख-समृद्धी आणि भरभराट देवो, हीच श्रींच्या चरणी नम्र प्रार्थना!</b>'
+        'मंडळाच्या या अधिकृत डिजिटल पोर्टलद्वारे आपण जमा-खर्च, वर्गणीदार, पावती व सर्व छायाचित्रे पारदर्शकपणे पाहू शकता. आपल्या सर्वांचे सहकार्य, आशीर्वाद आणि बाप्पाची कृपा अशीच निरंतर लाभो, हीच श्री गजाननाच्या व आदिशक्तीच्या चरणी नम्र प्रार्थना!'
       ],
       paragraphsEn: [
-        'Respected elders, mothers, sisters, dear youth members, and children of Shiv Sphurti and Adarsh Nagar,',
-        'What began in <b>1997</b> with humble devotion and a handful of dedicated youth has today completed <b>28 glorious years</b> of uninterrupted cultural and social service. As the President of Shree Ashtavinayak Mitra Mandal, my heart fills with profound gratitude seeing how our small gathering has blossomed into a cherished community family.',
-        'Our Mandal stands on the unshakeable pillars of transparency, collective harmony, and selfless service. Across Ganeshotsav, Navratri, and Dr. B. R. Ambedkar Jayanti, we have consistently upheld absolute financial integrity with digital receipts, audited balance sheets, and reinvesting surplus reserves into free medical checkups, educational scholarships, and local welfare.',
-        'The overwhelming generosity of our mothers donating sarees, donors contributing Bhandara provisions, and our youth volunteering day and night proves that faith binds us together beyond words. Let us pledge to safeguard and nurture this sacred heritage for generations to come.',
-        '<b>May Lord Vighnaharta and Mother Jagdamba bless each family with peace, abundant health, and enduring prosperity!</b>'
+        'Respected elders, mothers, sisters, young companions, and beloved children of Shiv Sphurti and Adarsh Nagar,',
+        'In the year <b>1997</b>, with just a small pandal and a handful of dedicated associates, we planted a seed that has today blossomed over <b>28 glorious years</b> into a magnificent banyan tree. As President, I feel profound pride and gratitude. The true strength of our Mandal has never been mere pageantry; it is the mutual trust, affection, and spontaneous feeling of "our own family" shared by every household in our colony.',
+        'Across more than a quarter-century, we have celebrated not only Sarvajanik Ganeshotsav, but also nine divine nights of Navratri and the birth anniversary of Bharat Ratna Dr. Babasaheb Ambedkar with immense fervor and civic responsibility. Auditing every single rupee transparently, issuing computerized receipts, and utilizing surplus funds for medical relief and children\'s education has been our cultural hallmark.',
+        'The sarees lovingly offered by our sisters during Navratri, the overwhelming donations for community meals, and the tireless day-and-night toil of our youth reflect the vibrant soul of our unity. Together, let us preserve this timeless heritage and pass it proudly to upcoming generations.',
+        'Through this official digital portal, every member can independently review our income, expenses, vouchers, and celebrations with complete transparency. May the divine grace of Lord Ganesha and Goddess Jagdamba keep showering upon all our families!'
       ],
-      signatureName: 'B. Yadav',
+      signatureName: 'Balasaheb Yadav',
       signTitleMr: 'अध्यक्ष, श्री अष्टविनायक मित्र मंडळ',
       signTitleEn: 'President, Shree Ashtavinayak Mitra Mandal'
     },
     {
-      id: 'mentor',
-      tabLabelMr: 'ज्येष्ठ मार्गदर्शक',
-      tabLabelEn: 'Senior Mentor',
-      badgeMr: '🏛️ संस्थापक सल्लागार',
-      badgeEn: 'Founding Advisor',
+      id: 'vaibhav-dalvi',
+      tabLabelMr: 'श्री. वैभव दळवी',
+      tabLabelEn: 'Shri. Vaibhav Dalvi',
+      badgeMr: '🚩 संस्थापक/अध्यक्ष • शिवसेना (UBT)',
+      badgeEn: 'Founder & President • Shivsena (UBT)',
+      icon: '🚩',
+      nameMr: 'श्री. वैभव दळवी',
+      nameEn: 'Shri. Vaibhav Dalvi',
+      designationMr: 'संस्थापक/अध्यक्ष - साईपरिवार फाउंडेशन | शिवसेना (UBT)',
+      designationEn: 'Founder/President - Sai Parivar Foundation | Shivsena (UBT)',
+      organizationMr: 'साईपरिवार फाउंडेशन, जोगेश्वरी (पश्चिम)',
+      organizationEn: 'Sai Parivar Foundation, Jogeshwari (West)',
+      areaMr: 'जोगेश्वरी (पश्चिम), मुंबई',
+      areaEn: 'Jogeshwari (West), Mumbai',
+      photoUrl: '/Manogat/Vaibhav%20Dalvi.png',
+      avatarBg: '#ea580c',
+      initial: 'वै',
+      tenureMr: 'कार्यकुशल नेतृत्व व अविरत जनसेवा',
+      tenureEn: 'Dynamic Leadership & Dedicated Social Service',
+      greetingMr: '॥ जय गणेश, जय महाराष्ट्र व सस्नेह सदिच्छा ॥',
+      greetingEn: '॥ Jai Ganesh, Jai Maharashtra & Warm Greetings ॥',
+      leadQuoteMr: 'श्री अष्टविनायक मित्र मंडळाने शिव स्फूर्ती व आदर्श नगर परिसरात भक्ती, संस्कृती आणि युवकांच्या विधायक समाजकार्याचा एक आदर्श दीपस्तंभ उभा केला आहे.',
+      leadQuoteEn: 'Shree Ashtavinayak Mitra Mandal has established an exemplary benchmark of devotion, cultural heritage, and youth-led community service across Shiv Sphurti and Adarsh Nagar.',
+      paragraphsMr: [
+        'जोगेश्वरी पश्चिम परिसरातील सार्वजनिक उत्सव आणि सामाजिक चळवळींचा विचार करताना <b>श्री अष्टविनायक मित्र मंडळ</b> हे नेहमीच अग्रभागी राहिले आहे. मंडळाचे कार्यकर्ते केवळ उत्सवापुरते एकत्र येत नाहीत, तर वर्षभर गोरगरीब, गरजू नागरिकांच्या मदतीसाठी आणि समाजोपयोगी उपक्रमांसाठी तत्परतेने धावून येतात.',
+        'साईपरिवार फाउंडेशनच्या माध्यमातून आणि शिवसेना (UBT) परिवाराच्या जनसेवेतून आम्ही नेहमीच अष्टविनायक मंडळाच्या सामाजिक कार्याचे जवळून साक्षीदार राहिलो आहोत. रक्तदान शिबिरे, सर्वसमावेशक आरोग्य शिबिरे, गुणवंत विद्यार्थ्यांचे कौतुक आणि परिसरातील युवकांना एकत्र आणून विधायक दिशा देण्याचे कार्य या मंडळाने अविरतपणे चालवले आहे.',
+        'उत्सवातील शिस्त, पारदर्शक हिशोब, सर्वधर्मीय बंधुभाव आणि लोकसहभागाची परंपरा ही या मंडळाची खरी ताकद आहे. अशा निष्ठावंत कार्यकर्त्यांच्या पाठीशी उभे राहणे हे आमचे कर्तव्य आहे. श्री अष्टविनायक मित्र मंडळाच्या सर्व भावी उपक्रमांना साईपरिवार आणि शिवसेना (UBT) परिवाराच्या वतीने मनःपूर्वक सदिच्छा व हार्दिक शुभेच्छा!'
+      ],
+      paragraphsEn: [
+        'When reflecting upon the vibrant community festivals and social initiatives of Jogeshwari West, <b>Shree Ashtavinayak Mitra Mandal</b> has consistently led from the front. Its dedicated cadre does not assemble solely for celebration, but remains on call throughout the year to aid the underprivileged and serve community needs.',
+        'Through the Sai Parivar Foundation and the public service ethos of Shivsena (UBT), we have closely witnessed the Mandal\'s multifaceted social endeavors—from mega blood donation drives and free medical camps to student felicitations and positively channeling youth energy.',
+        'Unwavering civic discipline, audited financial transparency, and warm brotherhood form the bedrock of this Mandal. On behalf of Sai Parivar Foundation and Shivsena (UBT), I extend our sincerest blessings and wholehearted support to Shree Ashtavinayak Mitra Mandal!'
+      ],
+      signatureName: 'Vaibhav Dalvi',
+      signTitleMr: 'संस्थापक/अध्यक्ष, साईपरिवार फाउंडेशन (शिवसेना UBT)',
+      signTitleEn: 'Founder/President, Sai Parivar Foundation (Shivsena UBT)'
+    },
+    {
+      id: 'divya-singh',
+      tabLabelMr: 'सौ. दिव्या अवनीश सिंह',
+      tabLabelEn: 'Smt. Divya Avneesh Singh',
+      badgeMr: '🏛️ नगरसेविका • प्रभाग क्र. ६१',
+      badgeEn: 'Corporator • Ward No. 61',
       icon: '🏛️',
-      nameMr: 'श्री. रामकृष्ण पांडुरंग सावंत',
-      nameEn: 'Shri. Ramkrishna P. Sawant',
-      designationMr: 'संस्थापक सदस्य व ज्येष्ठ सल्लागार',
-      designationEn: 'Founding Trustee & Senior Mentor',
-      organizationMr: 'शिव स्फूर्ती रहिवासी मंडळ, आदर्श नगर',
-      organizationEn: 'Shiv Sphurti Residents Welfare, Adarsh Nagar',
-      areaMr: 'जोगेश्वरी (पश्चिम), मुंबई-४००१०२',
-      areaEn: 'Jogeshwari (West), Mumbai-400102',
-      photoUrl: '',
-      avatarBg: '#047857',
-      initial: 'रा',
-      tenureMr: '१९९७ पासून अविरत मार्गदर्शन (२८ वर्षे)',
-      tenureEn: 'Guiding Force Since 1997 (28 Years)',
-      greetingMr: '॥ परंपरेचा पाया मजबूत, नव्या पिढीचे विचार जागृत ॥',
-      greetingEn: '॥ Rooted in Heritage, Inspiring the New Generation ॥',
-      leadQuoteMr: '१९९७ साली ज्या पिढीने खांद्याला खांदा लावून आदर्श नगरमध्ये गणपती बाप्पाची स्थापना केली, त्या प्रेरणेचा वटवृक्ष आज संपूर्ण जोगेश्वरीत अभिमानाने उभा आहे.',
-      leadQuoteEn: 'The sacred flame lit in 1997 by our founding youth in Adarsh Nagar stands today as a majestic beacon of unity across Jogeshwari West.',
-      paragraphsMr: [
-        'आमच्या काळात साधनसामग्री मर्यादित होती, पण उत्साह आणि निष्ठा अथांग होती. शिव स्फूर्ती इमारतीच्या प्रांगणात आम्ही सर्व जाती-धर्माच्या शेजाऱ्यांनी मिळून जेव्हा पहिल्यांदा "गणपती बाप्पा मोरया" असा गजर केला, तेव्हापासून आजतागायत या परिसराची एकजूट कधीही खंडित झाली नाही.',
-        'आजची तरुण पिढी ज्या आत्मीयतेने आणि तंत्रज्ञानाचा वापर करून डिजिटल हिशोब, ऑनलाइन पावत्या आणि शिस्तबद्ध नियोजन करत आहे, ते पाहून आमचे मन भरून येते. मंडळाचे अध्यक्ष बाळासाहेब यादव आणि त्यांच्या सर्व सहकाऱ्यांनी जुन्या आदर्शांना नवी आधुनिक जोड दिली आहे.',
-        'माझे सर्व तरुणांना एकच सांगणे आहे: उत्सव मोठा करा, पण त्यातली भक्ती, शिस्त, वडीलधाऱ्यांचा आदर आणि गरिबांना मदत करण्याची वृत्ती कधीही ढळू देऊ नका. अष्टविनायक मंडळाला माझ्या मनःपूर्वक शुभेच्छा व आशीर्वाद!'
-      ],
-      paragraphsEn: [
-        'In 1997, our physical resources were modest, but our devotion and mutual trust were boundless. When all neighbors in Shiv Sphurti first chanted "Ganpati Bappa Morya" together, an unbreakable bond of brotherhood was forged.',
-        'Seeing today’s young brigade adopt modern digital systems, computer receipts, transparent balance sheets, and punctual discipline warms my heart. President Balasaheb Yadav and the executive committee have skillfully bridged timeless cultural values with contemporary excellence.',
-        'My blessing to the youth is simple: celebrate grandly, but always preserve humility, reverence for elders, safety for all, and a helping hand for underprivileged students.'
-      ],
-      signatureName: 'R. P. Sawant',
-      signTitleMr: 'संस्थापक सल्लागार व ज्येष्ठ मार्गदर्शक',
-      signTitleEn: 'Founding Advisor & Senior Mentor'
-    },
-    {
-      id: 'corporator',
-      tabLabelMr: 'स्थानिक लोकप्रतिनिधी',
-      tabLabelEn: 'Local Representative',
-      badgeMr: '⚖️ समाजसेवक व लोकप्रतिनिधी',
-      badgeEn: 'Community Leader & Ex-Corporator',
-      icon: '⚖️',
-      nameMr: 'ॲड. सुहास रमेश देसाई',
-      nameEn: 'Adv. Suhas Ramesh Desai',
-      designationMr: 'माजी नगरसेवक व ज्येष्ठ समाजसेवक (प्रभाग क्र. ६४)',
-      designationEn: 'Ex-Corporator & Senior Social Worker (Ward 64)',
-      organizationMr: 'जोगेश्वरी पश्चिम जनसेवा प्रतिष्ठान',
-      organizationEn: 'Jogeshwari West Public Welfare Trust',
-      areaMr: 'आदर्श नगर व जोगेश्वरी पश्चिम',
-      areaEn: 'Adarsh Nagar & Jogeshwari West',
-      photoUrl: '',
-      avatarBg: '#1d4ed8',
-      initial: 'सु',
-      tenureMr: '२५+ वर्षे जनसेवा व विकासकामे',
-      tenureEn: '25+ Years of Dedicated Public Service',
-      greetingMr: '॥ सेवा हीच ईश्वरभक्ती, जनशक्ती हीच खरी ताकद ॥',
-      greetingEn: '॥ Public Service is Divine Worship ॥',
-      leadQuoteMr: 'श्री अष्टविनायक मित्र मंडळाने नेहमीच उत्सवाला केवळ मिरवणुकीपुरते मर्यादित न ठेवता सामाजिक प्रबोधन आणि नागरिकांच्या सेवेचे भक्कम अधिष्ठान दिले आहे.',
-      leadQuoteEn: 'Shree Ashtavinayak Mitra Mandal has elevated traditional festivities into a powerhouse of community upliftment and civic discipline.',
-      paragraphsMr: [
-        'जोगेश्वरी पश्चिमेतील शेकडो मंडळांमध्ये श्री अष्टविनायक मित्र मंडळ हे आपल्या कडक शिस्तीसाठी, ध्वनीप्रदूषण नियमांच्या काटेकोर पालनासाठी आणि पारदर्शक कारभारासाठी विशेष गौरविले जाते.',
-        'मंडळाच्या वतीने राबविले जाणारे भव्य रक्तदान शिबिर, गरजू शालेय विद्यार्थ्यांना वह्या-पुस्तके वाटप, ज्येष्ठ नागरिकांसाठी आरोग्य तपासणी आणि पर्यावरणपूरक उत्सव साजरे करण्याचे धोरण हे इतरांसाठी आदर्शवत आहे.',
-        'एक लोकप्रतिनिधी म्हणून या मंडळाच्या प्रत्येक विधायक कार्यात पाठीशी उभे राहताना मला मनस्वी समाधान लाभते. येत्या काळातही आपल्या आदर्श नगर परिसरातील सर्व लोकोपयोगी कामांसाठी माझे संपूर्ण सहकार्य सदैव तत्पर राहील.'
-      ],
-      paragraphsEn: [
-        'Among numerous mandals across Jogeshwari West, Shree Ashtavinayak Mitra Mandal stands out for exemplary civic discipline, zero noise violations, and crystal-clear administration.',
-        'Their regular mega blood donation drives, distribution of books and stationery to needy students, senior citizen health checkups, and eco-friendly immersions set a gold standard in civic responsibility.',
-        'As a local representative, it is an honor to support their public endeavors. I reiterate my steadfast commitment to work shoulder-to-shoulder with the Mandal for continuous neighborhood progress.'
-      ],
-      signatureName: 'Adv. S. R. Desai',
-      signTitleMr: 'माजी नगरसेवक व ज्येष्ठ विधीज्ञ',
-      signTitleEn: 'Ex-Corporator & Advocate High Court'
-    },
-    {
-      id: 'police',
-      tabLabelMr: 'सुरक्षा सल्लागार',
-      tabLabelEn: 'Safety Advisor',
-      badgeMr: '🛡️ पोलीस निरीक्षक (से.नि.)',
-      badgeEn: 'Sr. Inspector (Retd.)',
-      icon: '🛡️',
-      nameMr: 'श्री. विलास नारायण मोहिते',
-      nameEn: 'Shri. Vilas Narayan Mohite',
-      designationMr: 'वरिष्ठ पोलीस निरीक्षक (से.नि.) व सुरक्षा सल्लागार',
-      designationEn: 'Sr. Police Inspector (Retd.) & Safety Advisor',
-      organizationMr: 'मुंबई पोलीस दल (सेवानिवृत्त)',
-      organizationEn: 'Mumbai Police (Retd.)',
-      areaMr: 'जोगेश्वरी (पश्चिम), मुंबई',
-      areaEn: 'Jogeshwari (West), Mumbai',
-      photoUrl: '',
-      avatarBg: '#334155',
-      initial: 'वि',
-      tenureMr: '३४ वर्षे पोलीस सेवा (राष्ट्रपती पदक सन्मानित)',
-      tenureEn: '34 Years Mumbai Police (Presidential Medalist)',
-      greetingMr: '॥ शिस्तबद्ध उत्सव, सुरक्षित समाज, शांततामय जोगेश्वरी ॥',
-      greetingEn: '॥ Disciplined Festivity, Safe Neighborhood ॥',
-      leadQuoteMr: 'गणेशोत्सव व नवरात्रौत्सवात महिला भगिनी आणि लहान मुलांची सुरक्षितता ही अष्टविनायक मंडळाच्या स्वयंसेवकांची पहिली प्राथमिकता राहिली आहे.',
-      leadQuoteEn: 'Ensuring total safety for women, children, and senior citizens has always been the hallmark of Ashtavinayak Mandal’s volunteer force.',
-      paragraphsMr: [
-        'माझ्या ३४ वर्षांच्या पोलीस सेवेत मी शेकडो उत्सव मंडळे जवळून पाहिली आहेत. परंतु, श्री अष्टविनायक मित्र मंडळाच्या कार्यकर्त्यांमध्ये असलेली शिस्त, शांतता आणि कायदा-सुव्यवस्थेबद्दलचा आदर खरोखर वाखाणण्याजोगा आहे.',
-        'उत्सवाच्या १० दिवसांत मंडप परिसरात सीसीटीव्ही निगराणी, अग्निशामक साधनांची सज्जता, २४ तास स्वयंसेवकांचा पहारा आणि गर्दीचे चोख व्यवस्थापन यामुळे येथे कधीही कोणताही अनुचित प्रकार घडलेला नाही.',
-        'विशेषतः रात्रीच्या आरतीच्या वेळी आणि विसर्जन मिरवणुकीत महिला भगिनी निर्भयपणे सहभागी होऊ शकतात, हेच या मंडळाच्या सुसंस्कृत वातावरणाचे सर्वात मोठे प्रमाणपत्र आहे.'
-      ],
-      paragraphsEn: [
-        'In my 34 years in the Mumbai Police force, I have monitored hundreds of community celebrations. The voluntary discipline and respect for public order exhibited by Ashtavinayak Mandal are exemplary.',
-        'Equipped with 24x7 CCTV monitoring, functional fire extinguishers, well-trained youth volunteers, and seamless crowd routing, the mandal maintains a spotless zero-incident record.',
-        'That women and children participate fearlessly in late-night aartis and immersion rallies testifies to the safe and respectful environment cultivated here.'
-      ],
-      signatureName: 'V. N. Mohite',
-      signTitleMr: 'वरिष्ठ पोलीस निरीक्षक (से.नि.)',
-      signTitleEn: 'Sr. Police Inspector (Retd.)'
-    },
-    {
-      id: 'mahila',
-      tabLabelMr: 'महिला प्रतिनिधी',
-      tabLabelEn: 'Women Representative',
-      badgeMr: '🌸 महिला मंडळ अध्यक्षा',
-      badgeEn: 'Women Wing Head',
-      icon: '🌸',
-      nameMr: 'सौ. सुनंदा शांताराम गुरव',
-      nameEn: 'Smt. Sunanda Shantaram Gurav',
-      designationMr: 'अध्यक्षा, शिव स्फूर्ती महिला बचत गट व समाजसेविका',
-      designationEn: 'President, Mahila Bachat Gat & Social Activist',
-      organizationMr: 'आदर्श नगर महिला विकास समिती',
-      organizationEn: 'Adarsh Nagar Women Welfare Committee',
-      areaMr: 'शिव स्फूर्ती, जोगेश्वरी (पश्चिम)',
-      areaEn: 'Shiv Sphurti, Jogeshwari (West)',
-      photoUrl: '',
+      nameMr: 'सौ. दिव्या अवनीश सिंह',
+      nameEn: 'Smt. Divya Avneesh Singh',
+      designationMr: 'नगरसेविका, प्रभाग (वॉर्ड) - ६१, जोगेश्वरी (पश्चिम)',
+      designationEn: 'Municipal Corporator, Ward - 61, Jogeshwari (West)',
+      organizationMr: 'बृहन्मुंबई महानगरपालिका (BMC)',
+      organizationEn: 'Municipal Corporation of Greater Mumbai',
+      areaMr: 'प्रभाग क्र. ६१, जोगेश्वरी (पश्चिम), मुंबई',
+      areaEn: 'Ward 61, Jogeshwari (West), Mumbai',
+      photoUrl: '/Manogat/Divya%20avneesh%20singh.png',
       avatarBg: '#be185d',
-      initial: 'सु',
-      tenureMr: '२०+ वर्षे महिला सक्षमीकरण व सामाजिक कार्य',
-      tenureEn: '20+ Years in Women Empowerment',
-      greetingMr: '॥ नारी शक्तीचा सन्मान, संस्कृतीचा जागर ॥',
-      greetingEn: '॥ Honoring Womanhood & Cultural Devotion ॥',
-      leadQuoteMr: 'मंडळाच्या प्रत्येक कार्यात महिलांची सक्रिय भागीदारी आणि सन्मान हे आमच्या शिव स्फूर्ती परिवाराचे सर्वात सुंदर वैभव आहे.',
-      leadQuoteEn: 'Active involvement and dignified respect for women in every mandal endeavor is the crown jewel of our community.',
+      initial: 'दि',
+      tenureMr: 'प्रभाग ६१ जनसेवक, विकासकामे व महिला सक्षमीकरण',
+      tenureEn: 'Ward 61 Public Service, Development & Women Welfare',
+      greetingMr: '॥ गणपती बाप्पा मोरया, आदिशक्ती जगदंबेचा जयजयकार ॥',
+      greetingEn: '॥ Ganpati Bappa Morya & Jai Mata Di ॥',
+      leadQuoteMr: 'प्रभाग ६१ ची लोकप्रतिनिधी म्हणून श्री अष्टविनायक मित्र मंडळाच्या धार्मिक, सांस्कृतिक व महिला सक्षमीकरणाच्या उपक्रमांचे मला नेहमीच मनापासून कौतुक वाटते.',
+      leadQuoteEn: 'As the elected representative of Ward 61, I take immense pride in the cultural vibrancy, civic responsibility, and women empowerment initiatives of Shree Ashtavinayak Mitra Mandal.',
       paragraphsMr: [
-        'नवरात्रौत्सवातील नऊ दिवसांचा अखंड जागर असो किंवा महाप्रसादाचा भव्य भंडारा असो, आमच्या परिसरातील सर्व माता-भगिनी एकत्र येऊन अन्नदानाचा सोहळा यशस्वी करतात. शेकडो भाविकांना गरम, सात्त्विक महाप्रसाद वाढताना मिळणारा आनंद अवर्णनीय असतो.',
-        'मंडळाने महिलांसाठी हळदी-कुंकू, पारंपरिक रांगोळी स्पर्धा, आरोग्य तपासणी शिबिरे आणि स्वयंसिद्धा महिलांचे कौतुक असे अनेक प्रेरणादायी उपक्रम सुरू ठेवले आहेत.',
-        'अष्टविनायक मंडळ हे आम्हा सर्व महिलांसाठी केवळ गणेशोत्सव मंडळ नसून एक आधारवड आहे. गणपती बाप्पा आणि आई जगदंबेच्या आशीर्वादाने हे मंडळ असेच प्रगतीपथावर राहो!'
+        'आपल्या प्रभाग क्र. ६१ मधील <b>श्री अष्टविनायक मित्र मंडळ (शिव स्फूर्ती, आदर्श नगर)</b> हे संपूर्ण जोगेश्वरीचे भूषण आहे. गेल्या २८ वर्षांपासून हे मंडळ गणेशोत्सव आणि नवरात्रोत्सव केवळ धार्मिक विधी म्हणून नव्हे, तर परिसरातील प्रत्येक कुटुंबाला एकत्र बांधणारा एक भव्य कौटुंबिक स्नेहमेळावा म्हणून साजरा करत आहे.',
+        'विशेषतः नवरात्रोत्सवामध्ये महिला भगिनींचा होणारा सन्मान, अन्नदानाचा भव्य भंडारा, पारंपारिक दांडिया-गरबा आणि महिला बचत गटांना दिलेले प्रोत्साहन हे या मंडळाचे खास वैशिष्ट्य आहे. सुरक्षित वातावरण आणि चोख शिस्तीमुळे रात्रीच्या आरती व कार्यक्रमांत माता-भगिनी निर्भयपणे सहभागी होतात, हे मंडळाच्या सुसंस्कृत वातावरणाचे प्रतीक आहे.',
+        'प्रभागातील रस्ते, पथदिवे, पाणीपुरवठा आणि स्वच्छता यांसारख्या नागरी सुविधांचे प्रश्न सोडवताना अष्टविनायक मंडळाचे पदाधिकारी नेहमीच प्रशासनाशी समन्वय साधून सक्रिय सहकार्य करतात. लोकप्रतिनिधी या नात्याने या मंडळाच्या प्रत्येक विधायक कार्याला माझे संपूर्ण पाठबळ सदैव राहील!'
       ],
       paragraphsEn: [
-        'Whether it is the nine auspicious nights of Navratri or the grand community Bhandara, mothers and sisters across Adarsh Nagar assemble with unmatched devotion to prepare and serve wholesome Maha-Prasad.',
-        'The Mandal regularly hosts Haldi-Kunku, traditional rangoli exhibitions, women healthcare camps, and felicitates women self-help entrepreneurs, inspiring everyone.',
-        'To all of us, Shree Ashtavinayak Mitra Mandal is not merely an event organizer, but our extended family providing encouragement and community strength.'
+        'Located in our Ward 61, <b>Shree Ashtavinayak Mitra Mandal (Shiv Sphurti, Adarsh Nagar)</b> is a shining emblem of community pride. For 28 glorious years, this Mandal has transformed Ganeshotsav and Navratri into grand festivals of family bonding, collective harmony, and civic camaraderie.',
+        'Particularly praiseworthy is the Mandal’s heartfelt respect for women: the auspicious Navratri celebrations, community Bhandaras, traditional Garba, and constant encouragement for local women self-help initiatives. The spotless safety and respectful atmosphere allow mothers and sisters to participate with utmost joy and assurance.',
+        'Whenever municipal and civic enhancements—roads, illumination, sanitation, or water supply—are addressed in our ward, Ashtavinayak Mandal’s youth and leadership proactively collaborate with civic authorities. As their Corporator, my full administrative and personal support will always stand with this noble Mandal!'
       ],
-      signatureName: 'S. S. Gurav',
-      signTitleMr: 'अध्यक्षा, महिला बचत गट',
-      signTitleEn: 'President, Women Welfare Group'
+      signatureName: 'Divya A. Singh',
+      signTitleMr: 'नगरसेविका, प्रभाग (वॉर्ड) क्र. ६१',
+      signTitleEn: 'Municipal Corporator, Ward No. 61'
     },
     {
-      id: 'patron',
-      tabLabelMr: 'प्रतिष्ठित देणगीदार',
-      tabLabelEn: 'Prominent Patron',
-      badgeMr: '💼 उद्योजक व देणगीदार',
-      badgeEn: 'Industrialist & Patron',
-      icon: '💼',
-      nameMr: 'श्री. संजय अनंत वर्तक',
-      nameEn: 'Shri. Sanjay Anant Vartak',
-      designationMr: 'व्यवस्थापकीय संचालक, वर्तक ग्रुप व मुख्य देणगीदार',
-      designationEn: 'Managing Director, Vartak Group & Chief Patron',
-      organizationMr: 'जोगेश्वरी व्यापारी व उद्योजक कल्याणकारी संघटना',
-      organizationEn: 'Jogeshwari Traders & Industrialists Association',
-      areaMr: 'जोगेश्वरी (पश्चिम), मुंबई',
-      areaEn: 'Jogeshwari (West), Mumbai',
-      photoUrl: '',
+      id: 'haroon-khan',
+      tabLabelMr: 'मा. श्री. हारून खान (आमदार)',
+      tabLabelEn: 'Hon. Shri. Haroon Khan (MLA)',
+      badgeMr: '⚖️ आमदार • १६४-वर्सोवा विधानसभा',
+      badgeEn: 'Member of Legislative Assembly • 164-Versova',
+      icon: '⚖️',
+      nameMr: 'मा. श्री. हारून खान',
+      nameEn: 'Hon. Shri. Haroon Khan',
+      designationMr: 'आमदार (MLA) - १६४, वर्सोवा विधानसभा मतदारसंघ',
+      designationEn: 'Member of Legislative Assembly (MLA) - 164, Versova Constituency',
+      organizationMr: 'महाराष्ट्र राज्य विधानसभा',
+      organizationEn: 'Maharashtra Legislative Assembly',
+      areaMr: '१६४ - वर्सोवा विधानसभा मतदारसंघ, मुंबई',
+      areaEn: '164 - Versova Constituency, Mumbai',
+      photoUrl: '/Manogat/Haroon%20khan.png',
+      avatarBg: '#047857',
+      initial: 'हा',
+      tenureMr: 'वर्सोवा विधानसभा जनसेवक व सर्वसमावेशक विकास',
+      tenureEn: 'People\'s Representative & Inclusive Development, Versova',
+      greetingMr: '॥ समस्त नागरिकांना सस्नेह जय हिंद व मनःपूर्वक सदिच्छा ॥',
+      greetingEn: '॥ Warmest Greetings & Sincere Best Wishes to All ॥',
+      leadQuoteMr: 'वर्सोवा विधानसभा मतदारसंघातील श्री अष्टविनायक मित्र मंडळ हे सामाजिक ऐक्य, सर्वधर्मसमभाव आणि शिस्तप्रिय उत्सवाचे एक उत्तम व प्रेरक उदाहरण आहे.',
+      leadQuoteEn: 'Shree Ashtavinayak Mitra Mandal in Versova Constituency is an inspiring beacon of social harmony, communal brotherhood, and disciplined celebrations.',
+      paragraphsMr: [
+        'वर्सोवा विधानसभा मतदारसंघातील (१६४) जोगेश्वरी पश्चिम भागातील <b>श्री अष्टविनायक मित्र मंडळ</b> गेल्या पाव शतकाहून अधिक काळ सामाजिक व सांस्कृतिक एकतेची ज्योत तेवत ठेवत आहे. सार्वजनिक गणेशोत्सव, आदिशक्तीचा नवरात्रोत्सव आणि भारतरत्न डॉ. बाबासाहेब आंबेडकर जयंती या तिन्ही उत्सवांत सर्व समाजातील लोक खांद्याला खांदा लावून सहभागी होतात, हे या मतदारसंघाचे खरे सामर्थ्य आहे.',
+        'मंडळाने तंत्रज्ञानाचा अंगीकार करून संपूर्ण संगणकीय हिशोब, डिजिटल पावत्या आणि पारदर्शक ताळेबंद जनतेसमोर मांडला आहे, ही आजच्या काळातील एक अत्यंत आदर्श आणि कौतुकास्पद पद्धत आहे. मंडळाचे कार्यकर्ते रक्तदान, परिसर स्वच्छता, वृक्षारोपण आणि जनकल्याणकारी कामात नेहमीच पुढे असतात.',
+        'आपल्या मतदारसंघातील या जुन्या व नामांकित संस्थेला माझे आमदार म्हणून सर्वतोपरी सहकार्य राहील. अष्टविनायक मित्र मंडळाच्या माध्यमातून आपल्या जोगेश्वरी परिसराची शांतता, सामाजिक बंधुभाव आणि विकास असाच उत्तरोत्तर बहरत राहो, हीच माझी मनःपूर्वक सदिच्छा!'
+      ],
+      paragraphsEn: [
+        'Representing the 164 - Versova Assembly Constituency, it brings me great satisfaction to witness <b>Shree Ashtavinayak Mitra Mandal</b> upholding the torch of communal brotherhood and cultural unity in Jogeshwari West for over two and a half decades. Across Ganeshotsav, Navratri, and Dr. B. R. Ambedkar Jayanti, citizens from all walks of life celebrate together as one unified family.',
+        'The Mandal’s progressive adoption of digital accounting, instant online receipts, and publicly audited balance sheets sets a gold standard for transparent NGO administration. Moreover, their active involvement in blood donation drives, cleanliness missions, and local civic assistance reflects genuine commitment to public welfare.',
+        'As the Member of Legislative Assembly, I extend my unconditional cooperation to this respected organization. May Shree Ashtavinayak Mitra Mandal continue to foster peace, inclusive harmony, and all-round prosperity in our beloved Jogeshwari!'
+      ],
+      signatureName: 'Haroon Khan',
+      signTitleMr: 'आमदार (MLA), १६४ - वर्सोवा विधानसभा',
+      signTitleEn: 'Member of Legislative Assembly, 164 - Versova'
+    },
+    {
+      id: 'avneesh-singh',
+      tabLabelMr: 'श्री. अवनीश सिंह',
+      tabLabelEn: 'Shri. Avneesh Singh',
+      badgeMr: '🇮🇳 अध्यक्ष • उत्तर भारतीय प्रकोष्ठ',
+      badgeEn: 'President • North Indian Cell',
+      icon: '🇮🇳',
+      nameMr: 'श्री. अवनीश सिंह',
+      nameEn: 'Shri. Avneesh Singh',
+      designationMr: 'अध्यक्ष - उत्तर भारतीय प्रकोष्ठ (मुंबई काँग्रेस)',
+      designationEn: 'President - North Indian Cell (Mumbai Congress)',
+      organizationMr: 'मुंबई प्रदेश काँग्रेस कमिटी (MRCC)',
+      organizationEn: 'Mumbai Regional Congress Committee',
+      areaMr: 'जोगेश्वरी व मुंबई शहर',
+      areaEn: 'Jogeshwari & Greater Mumbai',
+      photoUrl: '/Manogat/Avneesh%20Singh.png',
+      avatarBg: '#1d4ed8',
+      initial: 'अ',
+      tenureMr: 'सर्वसमावेशक सामाजिक बांधिलकी व जनसेवा',
+      tenureEn: 'Inclusive Social Commitment & Public Service',
+      greetingMr: '॥ जय गणेश, सस्नेह जय हिंद व मनःपूर्वक मंगलकामना ॥',
+      greetingEn: '॥ Jai Ganesh, Jai Hind & Heartfelt Best Wishes ॥',
+      leadQuoteMr: 'श्री अष्टविनायक मित्र मंडळाने मराठी, उत्तर भारतीय व सर्व प्रांतांतील नागरिकांना एकाच कुटुंबाप्रमाणे प्रेमाच्या धाग्यात बांधून ठेवले आहे.',
+      leadQuoteEn: 'Shree Ashtavinayak Mitra Mandal has bound together Marathi, North Indian, and diverse communities into one united, loving family.',
+      paragraphsMr: [
+        'मुंबई हे विविधतेत एकतेचे वैश्विक प्रतीक आहे. जोगेश्वरी पश्चिमेतील शिव स्फूर्ती आणि आदर्श नगर परिसरातील <b>श्री अष्टविनायक मित्र मंडळ</b> या एकात्मतेचे सजीव दर्शन घडवते. येथे मराठी भाषिक असो वा उत्तर भारतीय बांधव, सर्वजण एकत्र येऊन मोठ्या भक्तीभावाने आणि उत्साहाने सण साजरे करतात.',
+        'मंडळाच्या वतीने नऊ दिवसांचा नवरात्रोत्सव, अखंड गरबा-दांडिया, अष्टमीचे पवित्र हवन आणि महाप्रसादाचा भव्य भंडारा ज्या आत्मीयतेने आयोजित केला जातो, त्यामुळे परिसरातील प्रत्येक कुटुंबाला हे मंडळ आपलेच वाटते. सण-उत्सवाच्या निमित्ताने आपापसातील स्नेह व बंधुभाव वृद्धिंगत करण्याचे मोठे कार्य हे मंडळ करत आहे.',
+        'मंडळाचे पदाधिकारी, निष्ठावंत कार्यकर्ते आणि उत्साही युवा पिढीचे नियोजन अतिशय प्रशंसनीय आहे. उत्तर भारतीय प्रकोष्ठ आणि माझ्या वैयक्तिक वतीने श्री अष्टविनायक मित्र मंडळाला आणि परिसरातील समस्त भाविकांना उदंड प्रगती व सुख-समृद्धीसाठी हार्दिक मंगलमय सदिच्छा!'
+      ],
+      paragraphsEn: [
+        'Mumbai is renowned worldwide as a tapestry of unity in diversity. <b>Shree Ashtavinayak Mitra Mandal</b> in Shiv Sphurti and Adarsh Nagar personifies this beautiful cultural integration, where Marathi and North Indian families join hands with equal enthusiasm to celebrate every festival.',
+        'The devotion with which the Mandal organizes the nine nights of Navratri, traditional Garba, Ashtami Havan, and the grand community Maha-Prasad instills a heartwarming sense of belonging in every household. It bridges communities and enriches social brotherhood.',
+        'The dedicated leadership and dynamic youth committee deserve highest accolades for their selfless teamwork and flawless execution. On behalf of the North Indian Cell and personally, I wish Shree Ashtavinayak Mitra Mandal ever-growing success, unity, and prosperity!'
+      ],
+      signatureName: 'Avneesh Singh',
+      signTitleMr: 'अध्यक्ष, उत्तर भारतीय प्रकोष्ठ (मुंबई काँग्रेस)',
+      signTitleEn: 'President, North Indian Cell (Mumbai Congress)'
+    },
+    {
+      id: 'sanjay-pandey',
+      tabLabelMr: 'श्री. संजय पांडे',
+      tabLabelEn: 'Shri. Sanjay Pandey',
+      badgeMr: '🌿 प्रदेशाध्यक्ष • भाजपा उत्तर भारतीय मोर्चा | जलमित्र',
+      badgeEn: 'State President • BJP Uttar Bhartiya Morcha | Water Warrior',
+      icon: '🌿',
+      nameMr: 'श्री. संजय पांडे',
+      nameEn: 'Shri. Sanjay Pandey',
+      designationMr: 'अध्यक्ष - भाजपा महाराष्ट्र उत्तर भारतीय मोर्चा | माजी प्रदेश सचिव, भाजपा महाराष्ट्र | माजी राष्ट्रीय उपाध्यक्ष, BJYM',
+      designationEn: 'President @Bjp4Maharashtra Uttar Bhartiya Morcha | Fmr Secretary of BJP Maha | Fmr National VP @BJYM | Politician, Philanthropist, Water Warrior',
+      organizationMr: 'भारतीय जनता पार्टी (महाराष्ट्र)',
+      organizationEn: 'Bharatiya Janata Party (Maharashtra)',
+      areaMr: 'महाराष्ट्र राज्य व मुंबई',
+      areaEn: 'Maharashtra State & Mumbai',
+      photoUrl: '/Manogat/Sanjay%20Pandey.png',
       avatarBg: '#b45309',
       initial: 'सं',
-      tenureMr: '१५+ वर्षे मंडळ मुख्य हितचिंतक',
-      tenureEn: '15+ Years Chief Patron & Sponsor',
-      greetingMr: '॥ दातृत्व हीच खरी समृद्धी, पारदर्शकता हाच विश्वास ॥',
-      greetingEn: '॥ Philanthropy with Total Transparency ॥',
-      leadQuoteMr: 'मंडळाचे पारदर्शक आर्थिक व्यवहार, संगणकीय पावत्या आणि प्रत्येक रुपयाचा अचूक हिशोब पाहिल्यावर देणगीदारांचा विश्वास द्विगुणित होतो.',
-      leadQuoteEn: 'Experiencing the mandal’s transparent accounts, instant computer receipts, and audited books inspires immense trust among donors.',
+      tenureMr: 'जलमित्र (Water Warrior), पर्यावरण संवर्धन व समाजकार्य',
+      tenureEn: 'Water Warrior, Philanthropist & Environmental Activism',
+      greetingMr: '॥ राष्ट्राय स्वाहा, इदं न मम | सेवा हीच ईश्वरभक्ती ॥',
+      greetingEn: '॥ Dedicated to the Nation | Service to Humanity is Divine Worship ॥',
+      leadQuoteMr: 'श्री अष्टविनायक मित्र मंडळाने उत्सवाच्या माध्यमातून पर्यावरण रक्षण, जलसंवर्धन आणि सुसंस्कृत समाजाची यशस्वी उभारणी केली आहे.',
+      leadQuoteEn: 'Shree Ashtavinayak Mitra Mandal has harnessed community celebrations to champion environmental conservation, water preservation, and cultural values.',
       paragraphsMr: [
-        'एक स्थानिक उद्योजक म्हणून मी मुंबईतील अनेक सामाजिक व धार्मिक संस्थांना जवळून पाहिले आहे. परंतु, श्री अष्टविनायक मित्र मंडळाने जी हिशोबाची पारदर्शकता ठेवली आहे, ती खरोखर अद्वितीय आहे.',
-        'इथे दिलेला प्रत्येक रुपया हा खरोखरच समाजोपयोगी कामासाठी, गरजूंच्या मदतीसाठी आणि उत्सवाच्या पवित्र कार्यासाठीच वापरला जातो, याची खात्री प्रत्येक देणगीदाराला असते.',
-        'मंडळाच्या सर्व पदाधिकाऱ्यांचे मी मनापासून कौतुक करतो आणि सर्व स्थानिक व्यावसायिक बांधवांना आवाहन करतो की त्यांनी अष्टविनायक मंडळाच्या लोकोपयोगी उपक्रमांना सढळ हाताने सहकार्य करावे.'
+        'धार्मिक उत्सव हे केवळ डामडौलाचे प्रदर्शन नसून ते समाजाला विधायक दिशा देणारे आणि राष्ट्रउभारणीत हातभार लावणारे माध्यम असतात, हे <b>श्री अष्टविनायक मित्र मंडळाने</b> आपल्या अविरत कार्यावरून दाखवून दिले आहे. गेली २८ वर्षे आदर्श नगर, जोगेश्वरी भागात संस्कृती, परंपरा आणि लोककल्याण जपण्याचे मोठे कार्य हे मंडळ करत आहे.',
+        'एक जलमित्र (Water Warrior) आणि पर्यावरण कार्यकर्ता म्हणून मला विशेष अभिमान वाटतो की हे मंडळ पर्यावरणपूरक मूर्तींची स्थापना, निर्माल्य व्यवस्थापन, उत्सवात पाण्याचा काटकसरीने वापर आणि वृक्षारोपणासारख्या गंभीर मुद्यांवर समाजात सक्रिय जनजागृती करते. मंडळाचा प्रत्येक उपक्रम सामाजिक उत्तरदायित्वाची जाणीव ठेवून राबवला जातो.',
+        'हिशोबाची १००% पारदर्शकता, तरुणांना दिलेली शिस्त आणि सर्वसमावेशक सेवाभाव याबद्दल अष्टविनायक मंडळाचे पदाधिकारी व स्वयंसेवकांचे मनःपूर्वक अभिनंदन. विघ्नहर्ता गणराया आणि आदिशक्ती जगदंबेच्या आशीर्वादाने मंडळाची ही जनसेवा अशीच अखंड चालू राहो, हीच ईश्वरचरणी विनम्र प्रार्थना!'
       ],
       paragraphsEn: [
-        'As an entrepreneur, I interact with multiple organizations across Mumbai. The financial integrity and technological transparency modeled by Shree Ashtavinayak Mitra Mandal are truly commendable.',
-        'Every donor is confident that every rupee contributed is judiciously channeled into public welfare, educational assistance, and authentic spiritual celebration.',
-        'I salute the selfless team under President Mangesh Kadam and urge all business owners and residents to generously support this model institution.'
+        'Cultural festivals are not mere celebrations; they are potent platforms for social transformation, youth character-building, and nation-building. <b>Shree Ashtavinayak Mitra Mandal</b> has exemplified this truth through 28 years of consistent grassroots work in Adarsh Nagar, Jogeshwari West.',
+        'As a Water Warrior and environmental philanthropist, it gladdens my heart to see this Mandal champion eco-friendly idols, Nirmalya composting, responsible water conservation, and tree plantation drives during festivals. Every initiative is executed with keen ecological and civic consciousness.',
+        'Total financial transparency, exemplary youth discipline, and selfless devotion define this organization. I heartily congratulate the office-bearers and volunteers. May Lord Vighnaharta and Mother Jagdamba bless Shree Ashtavinayak Mitra Mandal with boundless strength to serve society for decades to come!'
       ],
-      signatureName: 'S. A. Vartak',
-      signTitleMr: 'मुख्य देणगीदार व उद्योगपती',
-      signTitleEn: 'Managing Director & Chief Patron'
+      signatureName: 'Sanjay Pandey',
+      signTitleMr: 'अध्यक्ष, भाजपा महाराष्ट्र उत्तर भारतीय मोर्चा व जलमित्र',
+      signTitleEn: 'President, BJP Maharashtra Uttar Bhartiya Morcha & Water Warrior'
     }
   ];
 

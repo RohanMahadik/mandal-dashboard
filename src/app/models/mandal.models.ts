@@ -117,6 +117,7 @@ export interface BhandaraItem {
   donorNameMr: string;
   donorNameEn: string;
   date: string;
+  year?: number;
   remarksMr?: string;
   remarksEn?: string;
 }
@@ -129,8 +130,15 @@ export interface SareeDonor {
   itemEn: string;
   quantity: number;
   date: string;
+  year?: number;
   remarksMr?: string;
   remarksEn?: string;
+  colorNameMr?: string;
+  colorNameEn?: string;
+  colorHex?: string;
+  colorBg?: string;
+  colorBorder?: string;
+  colorTextColor?: string;
 }
 
 export interface SabhasadMember {
@@ -173,8 +181,14 @@ export interface YearlyFestivalFinancials {
   festivalNameEn: string;
   icon: string;
   totalCollection: number;
+  totalIncome?: number;
+  otherIncome?: number;
   totalExpenses: number;
   balance: number;
+  balanceLabelMr?: string;
+  balanceLabelEn?: string;
+  cashBalance?: number;
+  bankBalance?: number;
   donorsCount?: number;
   participationEstimate?: number;
 }
@@ -200,4 +214,35 @@ export interface BankDetails {
   branchEn: string;
   upiId: string;
 }
+
+export interface DetailedBalanceSheetEntry {
+  name: string;
+  amount: number;
+  nameEn?: string;
+  note?: string;
+}
+
+export interface DetailedFestivalBalanceSheet {
+  title: string;
+  festivalKey: 'ganesh' | 'navratri' | 'joint';
+  festivalNameMr: string;
+  festivalNameEn: string;
+  income: DetailedBalanceSheetEntry[];
+  expenses: DetailedBalanceSheetEntry[];
+  totalIncome: number;
+  totalExpenses: number;
+  surplus: number;
+  surplusLabelMr?: string;
+  surplusLabelEn?: string;
+  totalBalance: number;
+  cashBalance?: number;
+  bankBalance?: number;
+}
+
+export interface DetailedBalanceSheetData {
+  joint: DetailedFestivalBalanceSheet;
+  ganesh: DetailedFestivalBalanceSheet;
+  navratri: DetailedFestivalBalanceSheet;
+}
+
 

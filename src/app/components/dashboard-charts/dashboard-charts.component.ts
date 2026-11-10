@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, effect, inject } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, effect, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { MandalDataService } from '../../services/mandal-data.service';
@@ -29,32 +29,52 @@ Chart.register(...registerables);
 
       <!-- Chart 2: जमा - खर्चाचा आढावा (Pie Chart) -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 sm:p-4.5 md:p-5 flex flex-col justify-between h-full">
-        <div class="mb-3 flex items-center justify-between">
+        <div class="mb-3 flex items-center justify-between gap-2 flex-wrap">
           <h3 class="text-sm sm:text-base font-bold text-slate-800 font-devanagari">
             {{ mandalData.t('जमा - खर्चाचा आढावा', 'Income - Expense Overview') }}
           </h3>
+          <span class="inline-flex items-center text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full font-devanagari">
+            {{ mandalData.t('एकूण वर्गणी', 'Total Vargani') }}: {{ mandalData.formatNum(mandalData.kpi().totalVargani, true) }}
+          </span>
         </div>
-        <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-around gap-3 min-h-[220px]">
+        <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-around gap-3 min-h-[220px]" [class.hidden]="pieBreakdown().baseTotal === 0">
           <div class="relative w-[150px] sm:w-[170px] h-[150px] sm:h-[170px] shrink-0">
             <canvas #pieCanvas></canvas>
           </div>
-          <!-- Custom Legend matching reference image -->
-          <div class="flex flex-row sm:flex-col justify-center gap-2 sm:gap-3 text-[11px] sm:text-xs font-semibold text-slate-700 font-devanagari flex-wrap">
-            <div class="flex items-center gap-1.5">
-              <span class="w-3 h-3 rounded-full bg-[#22c55e] inline-block shrink-0"></span>
-              <span>{{ mandalData.t('वर्गणी', 'Donations') }} ({{ mandalData.formatNum(mandalData.kpi().totalVargani, true) }})</span>
+          <!-- Custom Legend showing Expense & Balance breakdown of donations -->
+          <div class="flex flex-row sm:flex-col justify-center gap-2 sm:gap-2.5 text-[11px] sm:text-xs font-semibold text-slate-700 font-devanagari flex-wrap">
+            <div class="flex items-center gap-2 bg-slate-50/80 border border-slate-100 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2">
+              <span class="w-3 h-3 rounded-full bg-[#ef4444] inline-block shrink-0 shadow-xs"></span>
+              <div class="flex flex-col">
+                <span class="text-slate-800 font-bold">
+                  {{ mandalData.t('खर्च', 'Expenses') }}: {{ mandalData.formatNum(pieBreakdown().kharchAmount, true) }}
+                </span>
+                <span class="text-[10px] text-slate-500 font-normal">
+                  {{ mandalData.formatNum(pieBreakdown().kharchPct) }}% {{ mandalData.t('वर्गणीच्या', 'of donations') }}
+                </span>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <span class="w-3 h-3 rounded-full bg-[#ef4444] inline-block shrink-0"></span>
-              <span>{{ mandalData.t('खर्च', 'Expenses') }} ({{ mandalData.formatNum(mandalData.kpi().totalKharch, true) }})</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="w-3 h-3 rounded-full bg-[#3b82f6] inline-block shrink-0"></span>
-              <span>{{ mandalData.t('शिल्लक', 'Balance') }} ({{ mandalData.formatNum(mandalData.kpi().balanceAmount, true) }})</span>
+            <div class="flex items-center gap-2 bg-slate-50/80 border border-slate-100 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2">
+              <span class="w-3 h-3 rounded-full bg-[#3b82f6] inline-block shrink-0 shadow-xs"></span>
+              <div class="flex flex-col">
+                <span class="text-slate-800 font-bold">
+                  {{ pieBreakdown().balanceAmount < 0 ? mandalData.t('तूट', 'Deficit') : mandalData.t('शिल्लक', 'Balance') }}: {{ mandalData.formatNum(pieBreakdown().balanceAmount, true) }}
+                </span>
+                <span class="text-[10px] text-slate-500 font-normal">
+                  {{ mandalData.formatNum(pieBreakdown().balancePct) }}% {{ mandalData.t('वर्गणीच्या', 'of donations') }}
+                </span>
+              </div>
             </div>
           </div>
-
         </div>
+        @if (pieBreakdown().baseTotal === 0) {
+          <div class="flex flex-col items-center justify-center min-h-[220px] text-center text-slate-400 p-4">
+            <span class="text-3xl mb-1.5">📊</span>
+            <p class="text-xs font-devanagari font-semibold text-slate-600">
+              {{ mandalData.t('या निवडीसाठी जमा-खर्चाची माहिती उपलब्ध नाही.', 'No income-expense data available for this selection.') }}
+            </p>
+          </div>
+        }
       </div>
 
       <!-- Chart 3: खर्चाचे वितरण (Horizontal Bar Chart) -->
@@ -91,6 +111,40 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
   private pieChart: Chart | null = null;
   private horizontalBarChart: Chart | null = null;
 
+  // Dynamic Pie Chart breakdown: Expenses (खर्च) and Balance (शिल्लक) as parts of Total Collection (वर्गणी)
+  readonly pieBreakdown = computed(() => {
+    const kpi = this.mandalData.kpi();
+    const totalVargani = kpi.totalVargani || 0;
+    const kharchAmount = kpi.totalKharch || 0;
+    const balanceAmount = kpi.balanceAmount || 0;
+    const effectiveBalance = Math.max(0, balanceAmount);
+
+    const baseTotal = totalVargani > 0 ? totalVargani : (kharchAmount + effectiveBalance);
+
+    let kharchPct = 0;
+    let balancePct = 0;
+
+    if (baseTotal > 0) {
+      if (balanceAmount <= 0 && kharchAmount > 0) {
+        kharchPct = 100;
+        balancePct = 0;
+      } else {
+        kharchPct = Math.round((kharchAmount / baseTotal) * 100);
+        balancePct = 100 - kharchPct;
+      }
+    }
+
+    return {
+      totalVargani,
+      kharchAmount,
+      balanceAmount,
+      effectiveBalance,
+      baseTotal,
+      kharchPct,
+      balancePct
+    };
+  });
+
   constructor() {
     // Reactive effect to rebuild or update charts when data or digit language changes
     effect(() => {
@@ -100,6 +154,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
       this.mandalData.kpi();
       this.mandalData.expenseDistribution();
       this.mandalData.useMarathiDigits();
+      this.pieBreakdown();
 
       this.updateCharts();
     });
@@ -203,39 +258,44 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
     if (!ctx) return;
 
     const mandal = this.mandalData;
+    const self = this;
 
-    // Percentages: 55% Vargani, 29% Kharch, 16% Balance
+    // Dynamic percentages drawn inside pie arcs (खर्च आणि शिल्लक)
     const piePercentagesPlugin = {
       id: 'piePercentages',
       afterDatasetsDraw(chart: any) {
         const { ctx } = chart;
         const meta = chart.getDatasetMeta(0);
+        const breakdown = self.pieBreakdown();
+        const pcts = [breakdown.kharchPct, breakdown.balancePct];
+
         ctx.save();
         ctx.font = 'bold 12px Mukta, sans-serif';
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const labels = [
-          mandal.toMarathiDigits('55%'),
-          mandal.toMarathiDigits('29%'),
-          mandal.toMarathiDigits('16%')
-        ];
         meta.data.forEach((arc: any, index: number) => {
-          const center = arc.getCenterPoint();
-          ctx.fillText(labels[index], center.x, center.y);
+          const val = chart.data.datasets[0].data[index];
+          const pct = pcts[index];
+          if (val > 0 && pct >= 5) {
+            const center = arc.getCenterPoint();
+            ctx.fillText(mandal.formatNum(pct) + '%', center.x, center.y);
+          }
         });
         ctx.restore();
       }
     };
 
+    const breakdown = this.pieBreakdown();
+
     this.pieChart = new Chart(ctx, {
       type: 'pie',
       data: {
-        labels: [mandal.t('वर्गणी', 'Donations'), mandal.t('खर्च', 'Expenses'), mandal.t('शिल्लक', 'Balance')],
+        labels: [mandal.t('खर्च', 'Expenses'), mandal.t('शिल्लक', 'Balance')],
         datasets: [{
-          data: [55, 29, 16],
-          backgroundColor: ['#22c55e', '#ef4444', '#3b82f6'],
+          data: [breakdown.kharchAmount, breakdown.effectiveBalance],
+          backgroundColor: ['#ef4444', '#3b82f6'],
           borderColor: '#ffffff',
           borderWidth: 2
         }]
@@ -247,7 +307,13 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (ctx) => `${ctx.label}: ${mandal.toMarathiDigits(ctx.raw)}%`
+              label: (ctx) => {
+                const isKharch = ctx.dataIndex === 0;
+                const b = self.pieBreakdown();
+                const pct = isKharch ? b.kharchPct : b.balancePct;
+                const amt = ctx.raw as number;
+                return `${ctx.label}: ${mandal.formatNum(amt, true)} (${mandal.formatNum(pct)}%)`;
+              }
             }
           }
         }
@@ -344,7 +410,9 @@ export class DashboardChartsComponent implements AfterViewInit, OnDestroy {
 
     // 2. Update Pie Chart
     if (this.pieChart) {
-      this.pieChart.data.labels = [mandal.t('वर्गणी', 'Donations'), mandal.t('खर्च', 'Expenses'), mandal.t('शिल्लक', 'Balance')];
+      const breakdown = this.pieBreakdown();
+      this.pieChart.data.labels = [mandal.t('खर्च', 'Expenses'), mandal.t('शिल्लक', 'Balance')];
+      this.pieChart.data.datasets[0].data = [breakdown.kharchAmount, breakdown.effectiveBalance];
       this.pieChart.update();
     }
 
