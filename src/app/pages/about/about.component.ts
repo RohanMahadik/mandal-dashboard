@@ -4,14 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MandalDataService } from '../../services/mandal-data.service';
 import { SabhasadMember, CommitteeMember } from '../../models/mandal.models';
+import { BestSabhasadShowcaseComponent } from '../../components/best-sabhasad-showcase/best-sabhasad-showcase.component';
+import { ConfettiBurstComponent } from '../../components/confetti-burst/confetti-burst.component';
 import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, BestSabhasadShowcaseComponent, ConfettiBurstComponent],
   template: `
     <div class="space-y-6 pb-10 animate-fade-in">
+      <app-confetti-burst #aboutConfetti [autoFire]="false"></app-confetti-burst>
       
       <!-- Top Banner -->
       <div class="bg-gradient-to-r from-amber-800 via-orange-900 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-md relative overflow-hidden">
@@ -395,6 +398,14 @@ import html2canvas from 'html2canvas';
             </p>
           </div>
 
+          <!-- Best Sabhasad Awards 2026 Spotlight -->
+          <div class="mb-5">
+            <app-best-sabhasad-showcase
+              [showMembersLink]="false"
+              (celebrate)="aboutConfetti.triggerBurst()"
+            ></app-best-sabhasad-showcase>
+          </div>
+
           <!-- Controls Bar: Search & View Toggle -->
           <div class="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-xs mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             
@@ -492,6 +503,14 @@ import html2canvas from 'html2canvas';
                           <span class="font-bold text-slate-900 font-devanagari text-xs truncate group-hover:text-red-900 transition">
                             {{ mandalData.isEnglish() ? mem.nameEn : mem.nameMr }}
                           </span>
+                          @if (getBestMemberAwardBadge(mem); as award) {
+                            <span
+                              class="shrink-0 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black font-devanagari"
+                              [title]="award"
+                            >
+                              🏆
+                            </span>
+                          }
                         </div>
 
                         <!-- Hover Action Icons -->
@@ -527,13 +546,19 @@ import html2canvas from 'html2canvas';
                 <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md hover:border-amber-300 transition-all p-4 flex flex-col justify-between space-y-3 group">
                   
                   <!-- Card Top: Sr No. -->
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-center justify-between gap-2">
                     <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-black text-[11px] font-devanagari">
                       अ. क्र. {{ mandalData.toMarathiDigits(mem.srNo) }}
                     </span>
-                    <span class="text-[10.5px] text-slate-400 font-devanagari font-bold">
-                      {{ mandalData.t('नोंदणीकृत सभासद', 'Registered Member') }}
-                    </span>
+                    @if (getBestMemberAwardBadge(mem); as award) {
+                      <span class="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black text-[10px] font-devanagari shadow-2xs truncate">
+                        🏆 {{ award }}
+                      </span>
+                    } @else {
+                      <span class="text-[10.5px] text-slate-400 font-devanagari font-bold">
+                        {{ mandalData.t('नोंदणीकृत सभासद', 'Registered Member') }}
+                      </span>
+                    }
                   </div>
 
                   <!-- Card Body: Member Photo/Initial & Details -->
@@ -1084,6 +1109,21 @@ export class AboutComponent {
   getMemberPhoto(mem: SabhasadMember | null): string | undefined {
     if (!mem) return '/Sabhasad/Balasaheb%20Yadav.jpg';
     return mem.photoUrl || (mem.id === 1 || mem.nameEn?.includes('Balasaheb') ? '/Sabhasad/Balasaheb%20Yadav.jpg' : undefined);
+  }
+
+  /**
+   * Returns 2026 Best Sabhasad award badge label for honored members
+   */
+  getBestMemberAwardBadge(mem: SabhasadMember | null): string | null {
+    if (!mem) return null;
+    const nameEn = (mem.nameEn || '').toLowerCase();
+    if (mem.id === 4 || nameEn.includes('rohan mahadik')) {
+      return this.mandalData.t('सर्वोत्कृष्ट सभासद (नवरात्र २०२६)', 'Best Member (Navratri 2026)');
+    }
+    if (mem.id === 11 || nameEn.includes('akshay ujavane') || nameEn.includes('akshay ujawne')) {
+      return this.mandalData.t('सर्वोत्कृष्ट सभासद (गणेशोत्सव २०२६)', 'Best Member (Ganesh Utsav 2026)');
+    }
+    return null;
   }
 
   /**

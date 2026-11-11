@@ -331,6 +331,15 @@
           <span class="font-devanagari">{{ mandalData.selectedLanguage() === 'mr' ? 'विशेष आभार' : 'Special Gratitude' }}</span>
         </a>
 
+        <!-- 10. सर्वोत्कृष्ट सभासद २०२६ (Best Sabhasad 2026) -->
+        <a routerLink="/sarvotkrusht-sabhasad" routerLinkActive="sidebar-active"
+          class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition group">
+          <div class="w-5 h-5 flex items-center justify-center text-base">
+            🏆
+          </div>
+          <span class="font-devanagari">{{ mandalData.selectedLanguage() === 'mr' ? 'सर्वोत्कृष्ट सभासद २०२६' : 'Best Sabhasad 2026' }}</span>
+        </a>
+
         <!-- 10. मंडळाचे उपक्रम (Mandal Activities) -->
         <a routerLink="/upkram" routerLinkActive="sidebar-active"
           class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition group">
@@ -454,6 +463,10 @@
             <a (click)="closeMobileMenu()" routerLink="/vishesh-aabhar" routerLinkActive="sidebar-active"
               class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
               <span>{{ mandalData.selectedLanguage() === 'mr' ? 'विशेष आभार' : 'Special Gratitude' }}</span>
+            </a>
+            <a (click)="closeMobileMenu()" routerLink="/sarvotkrusht-sabhasad" routerLinkActive="sidebar-active"
+              class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+              <span>🏆 {{ mandalData.selectedLanguage() === 'mr' ? 'सर्वोत्कृष्ट सभासद २०२६' : 'Best Sabhasad 2026' }}</span>
             </a>
             <a (click)="closeMobileMenu()" routerLink="/upkram" routerLinkActive="sidebar-active"
               class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition">

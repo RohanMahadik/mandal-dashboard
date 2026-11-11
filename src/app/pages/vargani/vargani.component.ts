@@ -197,69 +197,14 @@ export type SortDirection = 'asc' | 'desc';
           </div>
         </div>
 
-        <!-- Mobile Card View (Optimized for Phones & Tablets < md) -->
-        <div class="md:hidden divide-y divide-slate-100 bg-white">
-          @for (row of paginatedList(); track row.id; let idx = $index) {
-            <div class="p-3.5 hover:bg-amber-50/40 transition">
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-start gap-2.5">
-                  <span class="w-6 h-6 rounded-full bg-emerald-50 text-emerald-800 font-bold text-[11px] flex items-center justify-center shrink-0 border border-emerald-200 mt-0.5">
-                    {{ mandalData.toMarathiDigits(row.srNo || ((currentPage() - 1) * pageSize() + idx + 1)) }}
-                  </span>
-                  <div>
-                    <div class="font-bold text-slate-900 font-devanagari text-sm leading-snug">
-                      {{ mandalData.isEnglish() ? (row.nameEn || row.nameMr) : (row.nameMr || row.nameEn) }}
-                    </div>
-                    <div class="text-[10px] text-slate-400 font-normal">
-                      {{ mandalData.isEnglish() ? row.nameMr : row.nameEn }}
-                    </div>
-                  </div>
-                </div>
-                <div class="text-right shrink-0">
-                  <div class="text-base font-black text-emerald-800 font-devanagari leading-none">
-                    {{ mandalData.formatNum(row.amount, true) }}
-                  </div>
-                  @if (row.receiptNo) {
-                    <div class="text-[10px] text-slate-400 font-mono mt-0.5">
-                      पावती #{{ mandalData.toMarathiDigits(row.receiptNo) }}
-                    </div>
-                  }
-                </div>
-              </div>
-
-              <div class="flex items-center justify-between text-xs mt-2.5 pt-2 border-t border-slate-100">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10.5px] font-medium text-slate-700">
-                    {{ mandalData.translateBuilding(row.building) }}
-                  </span>
-                  @if (row.status === 'दिलेली') {
-                    <span class="badge-green text-[10.5px]">{{ mandalData.translateStatus('दिलेली') }}</span>
-                  } @else {
-                    <span class="badge-red text-[10.5px]">{{ mandalData.translateStatus('बाकी') }}</span>
-                  }
-                  <span class="text-[10.5px] text-slate-500 font-medium">
-                    {{ mandalData.translatePaymentMode(row.paymentMode || 'कॅश') }}
-                  </span>
-                </div>
-                <button
-                  (click)="viewReceipt(row)"
-                  class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold rounded text-[11px] inline-flex items-center gap-1 shadow-2xs transition"
-                >
-                  <span>📄</span>
-                  <span>{{ mandalData.t('पावती', 'Receipt') }}</span>
-                </button>
-              </div>
-            </div>
-          }
-          @if (paginatedList().length === 0) {
-            <div class="py-12 text-center text-slate-400 font-devanagari text-xs px-4">
-              {{ mandalData.t('कोणतीही वर्गणी नोंद आढळली नाही. कृपया शोध शब्द किंवा फिल्टर्स तपासा.', 'No donation records found. Please check search or filters.') }}
-            </div>
-          }
+        <!-- Mobile Horizontal Scroll Hint -->
+        <div class="md:hidden px-3 py-1.5 bg-amber-50/80 border-b border-amber-100 text-[10.5px] text-amber-800 font-devanagari flex items-center justify-between">
+          <span>👉 {{ mandalData.t('संपूर्ण कॉलम्स पाहण्यासाठी टेबल उजवीकडे स्क्रोल करा', 'Scroll table horizontally to view all columns') }}</span>
+          <span class="font-bold">↔</span>
         </div>
 
-        <!-- Desktop Table View (For screens >= md) -->
-        <div class="hidden md:block overflow-x-auto w-full">
+        <!-- Table View (Visible on both Mobile and Desktop) -->
+        <div class="overflow-x-auto w-full">
           <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[700px]">
             <thead>
               <tr class="bg-[#f1f5f9] text-slate-700 font-bold font-devanagari border-b border-slate-200">

@@ -11,6 +11,7 @@ import { UpkramComponent } from './pages/upkram/upkram.component';
 import { ConnectComponent } from './pages/connect/connect.component';
 import { GalleryComponent } from './pages/gallery/gallery.component';
 import { VisheshAabharComponent } from './pages/vishesh-aabhar/vishesh-aabhar.component';
+import { SarvotkrushtSabhasadComponent } from './pages/sarvotkrusht-sabhasad/sarvotkrusht-sabhasad.component';
 
 export const routes: Routes = [
   { path: '', component: DashboardComponent, title: 'मुखपृष्ठ - श्री अष्टविनायक मित्र मंडळ' },
@@ -23,6 +24,7 @@ export const routes: Routes = [
   { path: 'about', component: AboutComponent, title: 'मंडळाची माहिती व सभासद यादी - श्री अष्टविनायक मित्र मंडळ' },
   { path: 'manogat', component: ManogatComponent, title: 'मनोगत - श्री अष्टविनायक मित्र मंडळ' },
   { path: 'vishesh-aabhar', component: VisheshAabharComponent, title: 'विशेष आभार - श्री अष्टविनायक मित्र मंडळ' },
+  { path: 'sarvotkrusht-sabhasad', component: SarvotkrushtSabhasadComponent, title: 'सर्वोत्कृष्ट सभासद २०२६ - श्री अष्टविनायक मित्र मंडळ' },
   { path: 'upkram', component: UpkramComponent, title: 'मंडळाचे उपक्रम - श्री अष्टविनायक मित्र मंडळ' },
   { path: 'connect', component: ConnectComponent, title: 'महत्त्वाचे संपर्क व सहकार्य केंद्र - श्री अष्टविनायक मित्र मंडळ' },
   { path: '**', redirectTo: '' }

@@ -3,14 +3,30 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { MandalDataService } from '../../services/mandal-data.service';
+import { GALLERY_2026_EVENT_FOLDERS, GALLERY_2026_PHOTOS, GalleryEventFolderMeta } from './gallery-2026-photos';
+
+export type GalleryCategoryKey =
+  | 'ganesh-events'
+  | 'ganpati-visarjan'
+  | 'swachhata'
+  | 'navratri'
+  | 'kojagiri'
+  | 'diwali-kandil'
+  | 'bathukamma'
+  | 'ambedkar-jayanti'
+  | 'shiv-jayanti';
 
 export interface GalleryPhoto {
   id: number;
   titleMr: string;
   titleEn: string;
-  category: 'ganesh-events' | 'ganpati-visarjan' | 'swachhata' | 'navratri' | 'bathukamma' | 'ambedkar-jayanti' | 'shiv-jayanti';
+  category: GalleryCategoryKey;
   categoryMr: string;
   categoryEn: string;
+  eventKey?: string;
+  eventTitleMr?: string;
+  eventTitleEn?: string;
+  folderName?: string;
   icon: string;
   date: string;
   year: string;
@@ -62,49 +78,95 @@ export interface GalleryPhoto {
           <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span class="px-3 py-1 bg-white/20 backdrop-blur-xs rounded-lg font-bold border border-white/20 flex items-center gap-1.5">
               <span>🖼️</span>
-              <span>{{ mandalData.t('एकूण छायाचित्रे:', 'Total Photos:') }} {{ mandalData.formatNum(photos.length.toString()) }}</span>
+              <span>{{ mandalData.t('एकूण छायाचित्रे:', 'Total Photos:') }} {{ mandalData.formatNum(yearScopedPhotos().length.toString()) }}</span>
             </span>
             <span class="px-3 py-1 bg-amber-400 text-slate-950 rounded-lg font-bold flex items-center gap-1.5 shadow-xs">
-              <span>✓</span>
-              <span>{{ mandalData.t('केवळ संबंधित व अस्सल उत्सव फोटो', 'Authentic Event-Specific Photos') }}</span>
+              <span>✨</span>
+              <span>{{ mandalData.t('२०२६ चे अस्सल व स्पष्ट उत्सव फोटो', 'Crisp Non-Repeated 2026 Event Photos') }}</span>
             </span>
           </div>
         </div>
       </div>
 
-      <!-- Category Filter Tabs & Search Bar -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200/80 p-4 space-y-4">
+      <!-- Year Tabs + Category Filter Tabs + Event Folder Sub-Tabs & Search Bar -->
+      <div class="bg-white rounded-xl shadow-xs border border-slate-200/80 p-4 space-y-3.5">
+
+        <!-- Year Selector Tabs (2026 Featured Tab vs Archive vs All) -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div class="flex flex-wrap items-center gap-2">
+            @for (yt of yearTabs; track yt.key) {
+              <button
+                type="button"
+                (click)="selectYear(yt.key)"
+                [ngClass]="
+                  selectedYear() === yt.key
+                    ? 'bg-gradient-to-r from-[#991b1b] via-[#c2410c] to-[#ea580c] text-white font-black shadow-md border-amber-400'
+                    : 'bg-amber-50/70 hover:bg-amber-100 text-slate-800 font-bold border-amber-200/80'
+                "
+                class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-devanagari border transition-all cursor-pointer flex items-center gap-2 active:scale-95"
+              >
+                <span>{{ yt.icon }}</span>
+                <span>{{ mandalData.isEnglish() ? yt.nameEn : yt.nameMr }}</span>
+                <span
+                  class="text-[11px] font-sans px-2 py-0.5 rounded-full font-extrabold"
+                  [ngClass]="selectedYear() === yt.key ? 'bg-amber-300 text-slate-950' : 'bg-white text-amber-900 border border-amber-200'"
+                >
+                  {{ mandalData.formatNum(getYearCount(yt.key).toString()) }}
+                </span>
+              </button>
+            }
+          </div>
+
+          <!-- Group by Event Folder Toggle (available in 2026 / All view) -->
+          @if (selectedYear() !== '२०२५') {
+            <button
+              type="button"
+              (click)="groupByEvent.set(!groupByEvent())"
+              [ngClass]="
+                groupByEvent()
+                  ? 'bg-amber-100 text-amber-900 border-amber-400 font-bold'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 font-semibold'
+              "
+              class="px-3 py-1.5 rounded-xl text-xs font-devanagari border transition cursor-pointer flex items-center gap-1.5"
+              title="इव्हेंट फोल्डरनुसार विभागून पहा / Group by Event Folder"
+            >
+              <span>📂</span>
+              <span>{{ mandalData.t(groupByEvent() ? 'फोल्डरनुसार विभाग: चालू' : 'फोल्डरनुसार विभाग: बंद', groupByEvent() ? 'Folder Grouping: On' : 'Folder Grouping: Off') }}</span>
+            </button>
+          }
+        </div>
         
         <!-- Search & Info Bar -->
         <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div class="relative w-full sm:w-96">
             <input
               type="text"
-              [(ngModel)]="searchQuery"
-              [placeholder]="mandalData.t('छायाचित्र शोधा... (उदा. चित्रकला, वक्तृत्व, स्वच्छता, भजन, विसर्जन, गरबा)', 'Search photos (e.g. drawing, speech, cleanliness, bhajan)...')"
-              class="w-full pl-9 pr-4 py-2 rounded-xl text-xs border border-slate-200 focus:outline-hidden focus:border-amber-500 font-devanagari transition bg-slate-50 focus:bg-white"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
+              [placeholder]="mandalData.t('छायाचित्र शोधा... (उदा. चित्रकला, नेत्र तपासणी, विसर्जन, कोजागिरी, दिवाळी)', 'Search photos (e.g. drawing, eye camp, visarjan, kojagiri)...')"
+              class="w-full pl-9 pr-8 py-2 rounded-xl text-xs border border-slate-200 focus:outline-hidden focus:border-amber-500 font-devanagari transition bg-slate-50 focus:bg-white"
             />
             <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            @if (searchQuery) {
-              <button (click)="searchQuery = ''" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer">✕</button>
+            @if (searchQuery()) {
+              <button (click)="searchQuery.set('')" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer">✕</button>
             }
           </div>
 
           <div class="text-xs text-slate-500 font-devanagari flex items-center gap-1.5 self-end sm:self-center">
-            <span>दिसणारे फोटो:</span>
+            <span>{{ mandalData.t('दिसणारे फोटो:', 'Showing:') }}</span>
             <span class="font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md font-sans">
-              {{ mandalData.formatNum(filteredPhotos().length.toString()) }} / {{ mandalData.formatNum(photos.length.toString()) }}
+              {{ mandalData.formatNum(filteredPhotos().length.toString()) }} / {{ mandalData.formatNum(yearScopedPhotos().length.toString()) }}
             </span>
           </div>
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="flex flex-wrap gap-1.5 sm:gap-2 pt-1 border-t border-slate-100">
-          @for (cat of categories; track cat.key) {
+        <!-- Main Category Filter Tabs -->
+        <div class="flex flex-wrap gap-1.5 sm:gap-2 pt-2 border-t border-slate-100">
+          @for (cat of visibleCategories(); track cat.key) {
             <button
-              (click)="selectedCategory.set(cat.key)"
+              (click)="selectCategory(cat.key)"
               [class.bg-amber-500]="selectedCategory() === cat.key"
               [class.text-slate-950]="selectedCategory() === cat.key"
               [class.font-black]="selectedCategory() === cat.key"
@@ -117,81 +179,206 @@ export interface GalleryPhoto {
               <span>{{ cat.icon }}</span>
               <span>{{ mandalData.isEnglish() ? cat.nameEn : cat.nameMr }}</span>
               <span class="text-[10px] opacity-80 font-sans px-1.5 py-0.2 rounded-full bg-black/10">
-                {{ getCategoryCount(cat.key) }}
+                {{ mandalData.formatNum(getCategoryCount(cat.key).toString()) }}
               </span>
             </button>
           }
         </div>
 
+        <!-- Event Folder Wise Filter Strip (Shows folders inside 2026 neatly) -->
+        @if (visibleEventFolders().length > 0) {
+          <div class="pt-2 border-t border-dashed border-amber-200/80">
+            <div class="text-[11px] font-bold text-amber-900 font-devanagari mb-1.5 flex items-center gap-1.5">
+              <span>📁</span>
+              <span>{{ mandalData.t('२०२६ इव्हेंट / फोल्डरनुसार निवडा:', 'Filter by 2026 Event Folder:') }}</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                (click)="selectedEventKey.set('all')"
+                [ngClass]="
+                  selectedEventKey() === 'all'
+                    ? 'bg-slate-900 text-white border-slate-900 font-bold shadow-2xs'
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-amber-400'
+                "
+                class="px-2.5 py-1 rounded-lg text-[11px] font-devanagari border transition cursor-pointer flex items-center gap-1"
+              >
+                <span>✨</span>
+                <span>{{ mandalData.t('सर्व इव्हेंट्स', 'All Events') }}</span>
+                <span class="text-[10px] opacity-75 font-sans">({{ mandalData.formatNum(categoryScoped2026Count().toString()) }})</span>
+              </button>
+
+              @for (ev of visibleEventFolders(); track ev.key) {
+                <button
+                  type="button"
+                  (click)="selectEventFolder(ev.key)"
+                  [ngClass]="
+                    selectedEventKey() === ev.key
+                      ? 'bg-[#991b1b] text-white border-[#991b1b] font-bold shadow-2xs'
+                      : 'bg-amber-50/50 text-slate-700 border-amber-200/80 hover:bg-amber-100/70 hover:border-amber-400'
+                  "
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-devanagari border transition cursor-pointer flex items-center gap-1"
+                >
+                  <span>{{ ev.icon }}</span>
+                  <span>{{ mandalData.isEnglish() ? ev.titleEn : ev.titleMr }}</span>
+                  <span class="text-[10px] opacity-80 font-sans px-1 rounded-full bg-black/10">
+                    {{ mandalData.formatNum(getEventFolderCount(ev.key).toString()) }}
+                  </span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+
       </div>
 
-      <!-- Photo Grid -->
+      <!-- Photo Display: Grouped by 2026 Event Folders OR Flat Grid -->
       @if (filteredPhotos().length > 0) {
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-          @for (photo of filteredPhotos(); track photo.id; let idx = $index) {
-            <div
-              class="group bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
-              (click)="openLightbox(photo)"
-            >
-              <!-- Image Container -->
-              <div class="relative aspect-4/3 overflow-hidden bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200">
-                <img
-                  [src]="photo.url"
-                  [alt]="photo.titleMr"
-                  (error)="onImgError($event)"
-                  loading="lazy"
-                  class="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-                />
-                
-                <!-- Fallback Container if Image Fails -->
-                <div class="hidden absolute inset-0 bg-gradient-to-br from-amber-700 via-orange-800 to-red-900 flex flex-col items-center justify-center text-white p-4 text-center">
-                  <span class="text-4xl mb-1">{{ photo.icon }}</span>
-                  <span class="font-bold text-xs font-devanagari">{{ photo.titleMr }}</span>
-                </div>
-
-                <!-- Category Tag Top Left -->
-                <div class="absolute top-2.5 left-2.5">
-                  <span class="px-2 py-0.5 bg-black/75 backdrop-blur-md text-white rounded-md text-[10px] font-bold font-devanagari shadow-xs flex items-center gap-1">
-                    <span>{{ photo.icon }}</span>
-                    <span>{{ mandalData.isEnglish() ? photo.categoryEn : photo.categoryMr }}</span>
+        @if (shouldShowGroupedSections()) {
+          <div class="space-y-6">
+            @for (section of groupedEventSections(); track section.key) {
+              <section class="bg-white/90 rounded-2xl border border-amber-200/80 shadow-xs p-3.5 sm:p-5 space-y-3.5">
+                <!-- Event Folder Section Header -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-amber-100">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center text-lg shadow-xs shrink-0">
+                      {{ section.icon }}
+                    </div>
+                    <div class="min-w-0">
+                      <h2 class="font-black text-slate-900 text-sm sm:text-base font-devanagari truncate">
+                        {{ mandalData.isEnglish() ? section.titleEn : section.titleMr }}
+                      </h2>
+                      <div class="text-[11px] text-slate-500 font-devanagari flex flex-wrap items-center gap-2">
+                        <span>📅 {{ mandalData.formatNum(section.dateMr) }}</span>
+                        @if (section.folder) {
+                          <span class="text-amber-700 font-semibold">• 📁 {{ section.folder }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black font-devanagari shrink-0">
+                    {{ mandalData.formatNum(section.photos.length.toString()) }} {{ mandalData.t('छायाचित्रे', 'Photos') }}
                   </span>
                 </div>
 
-                <!-- Year Tag Top Right -->
-                <div class="absolute top-2.5 right-2.5">
-                  <span class="px-2 py-0.5 bg-amber-400 text-slate-950 font-black rounded-md text-[10px] font-devanagari shadow-xs">
-                    {{ mandalData.formatNum(photo.year) }}
-                  </span>
+                <!-- Event Section Photo Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
+                  @for (photo of section.photos; track photo.id) {
+                    <div
+                      class="group bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-xs hover:shadow-lg hover:border-amber-300 transition-all duration-300 flex flex-col cursor-pointer"
+                      (click)="openLightbox(photo)"
+                    >
+                      <div class="relative aspect-4/3 overflow-hidden bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200">
+                        <img
+                          [src]="photo.url"
+                          [alt]="photo.titleMr"
+                          (error)="onImgError($event)"
+                          loading="lazy"
+                          class="w-full h-full object-cover object-[50%_25%] group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div class="hidden absolute inset-0 bg-gradient-to-br from-amber-700 via-orange-800 to-red-900 flex flex-col items-center justify-center text-white p-4 text-center">
+                          <span class="text-4xl mb-1">{{ photo.icon }}</span>
+                          <span class="font-bold text-xs font-devanagari">{{ photo.titleMr }}</span>
+                        </div>
+                        <div class="absolute top-2 right-2">
+                          <span class="px-2 py-0.5 bg-amber-400 text-slate-950 font-black rounded-md text-[10px] font-devanagari shadow-xs">
+                            {{ mandalData.formatNum(photo.year) }}
+                          </span>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                          <span class="text-white text-xs font-bold font-devanagari flex items-center gap-1.5">
+                            <span>🔍</span>
+                            <span>{{ mandalData.t('मोठे पहा (Full View)', 'View Full Photo') }}</span>
+                          </span>
+                        </div>
+                      </div>
+                      <div class="p-3 flex-1 flex flex-col justify-between space-y-1.5">
+                        <div>
+                          <h3 class="font-bold text-slate-900 text-xs font-devanagari group-hover:text-amber-700 transition line-clamp-1">
+                            {{ mandalData.isEnglish() ? photo.titleEn : photo.titleMr }}
+                          </h3>
+                          <p class="text-[11px] text-slate-500 font-devanagari mt-0.5 line-clamp-2 leading-snug">
+                            {{ mandalData.isEnglish() ? photo.descEn : photo.descMr }}
+                          </p>
+                        </div>
+                        <div class="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400 font-devanagari">
+                          <span>📅 {{ mandalData.formatNum(photo.date) }}</span>
+                          <span class="text-amber-600 font-bold group-hover:translate-x-0.5 transition">{{ mandalData.t('पहा →', 'View →') }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </section>
+            }
+          </div>
+        } @else {
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+            @for (photo of filteredPhotos(); track photo.id) {
+              <div
+                class="group bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
+                (click)="openLightbox(photo)"
+              >
+                <!-- Image Container -->
+                <div class="relative aspect-4/3 overflow-hidden bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200">
+                  <img
+                    [src]="photo.url"
+                    [alt]="photo.titleMr"
+                    (error)="onImgError($event)"
+                    loading="lazy"
+                    class="w-full h-full object-cover object-[50%_25%] group-hover:scale-105 transition-transform duration-500"
+                  />
+                  
+                  <!-- Fallback Container if Image Fails -->
+                  <div class="hidden absolute inset-0 bg-gradient-to-br from-amber-700 via-orange-800 to-red-900 flex flex-col items-center justify-center text-white p-4 text-center">
+                    <span class="text-4xl mb-1">{{ photo.icon }}</span>
+                    <span class="font-bold text-xs font-devanagari">{{ photo.titleMr }}</span>
+                  </div>
+
+                  <!-- Category Tag Top Left -->
+                  <div class="absolute top-2.5 left-2.5">
+                    <span class="px-2 py-0.5 bg-black/75 backdrop-blur-md text-white rounded-md text-[10px] font-bold font-devanagari shadow-xs flex items-center gap-1">
+                      <span>{{ photo.icon }}</span>
+                      <span>{{ mandalData.isEnglish() ? photo.categoryEn : photo.categoryMr }}</span>
+                    </span>
+                  </div>
+
+                  <!-- Year Tag Top Right -->
+                  <div class="absolute top-2.5 right-2.5">
+                    <span class="px-2 py-0.5 bg-amber-400 text-slate-950 font-black rounded-md text-[10px] font-devanagari shadow-xs">
+                      {{ mandalData.formatNum(photo.year) }}
+                    </span>
+                  </div>
+
+                  <!-- Hover Overlay -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                    <span class="text-white text-xs font-bold font-devanagari flex items-center gap-1.5">
+                      <span>🔍</span>
+                      <span>{{ mandalData.t('मोठे पहा (Full View)', 'View Full Photo') }}</span>
+                    </span>
+                  </div>
                 </div>
 
-                <!-- Hover Overlay -->
-                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-                  <span class="text-white text-xs font-bold font-devanagari flex items-center gap-1.5">
-                    <span>🔍</span>
-                    <span>{{ mandalData.t('मोठे पहा (Full View)', 'View Full Photo') }}</span>
-                  </span>
+                <!-- Content Below Image -->
+                <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
+                  <div>
+                    <h3 class="font-bold text-slate-900 text-xs sm:text-sm font-devanagari group-hover:text-amber-700 transition line-clamp-1">
+                      {{ mandalData.isEnglish() ? photo.titleEn : photo.titleMr }}
+                    </h3>
+                    <p class="text-[11px] text-slate-500 font-devanagari mt-1 line-clamp-2 leading-relaxed">
+                      {{ mandalData.isEnglish() ? photo.descEn : photo.descMr }}
+                    </p>
+                  </div>
+                  <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400 font-devanagari">
+                    <span>📅 {{ mandalData.formatNum(photo.date) }}</span>
+                    <span class="text-amber-600 font-bold group-hover:translate-x-0.5 transition">{{ mandalData.t('पहा →', 'View →') }}</span>
+                  </div>
                 </div>
+
               </div>
-
-              <!-- Content Below Image -->
-              <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
-                <div>
-                  <h3 class="font-bold text-slate-900 text-xs sm:text-sm font-devanagari group-hover:text-amber-700 transition line-clamp-1">
-                    {{ mandalData.isEnglish() ? photo.titleEn : photo.titleMr }}
-                  </h3>
-                  <p class="text-[11px] text-slate-500 font-devanagari mt-1 line-clamp-2 leading-relaxed">
-                    {{ mandalData.isEnglish() ? photo.descEn : photo.descMr }}
-                  </p>
-                </div>
-                <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400 font-devanagari">
-                  <span>📅 {{ mandalData.formatNum(photo.date) }}</span>
-                  <span class="text-amber-600 font-bold group-hover:translate-x-0.5 transition">पहा →</span>
-                </div>
-              </div>
-
-            </div>
-          }
-        </div>
+            }
+          </div>
+        }
       } @else {
         <!-- Empty State -->
         <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-3">
@@ -203,10 +390,10 @@ export interface GalleryPhoto {
             {{ mandalData.t('कृपया वेगळा शोध शब्द वापरा किंवा सर्व छायाचित्रे निवडा.', 'Please try a different search or select All Photos.') }}
           </p>
           <button
-            (click)="selectedCategory.set('all'); searchQuery = ''"
+            (click)="resetFilters()"
             class="px-4 py-2 bg-amber-500 text-slate-950 rounded-xl text-xs font-bold font-devanagari shadow-xs hover:bg-amber-400 transition cursor-pointer"
           >
-            {{ mandalData.t('सर्व छायाचित्रे पहा', 'View All Photos') }}
+            {{ mandalData.t('सर्व २०२६ छायाचित्रे पहा', 'View All 2026 Photos') }}
           </button>
         </div>
       }
@@ -341,9 +528,18 @@ export class GalleryComponent implements OnInit {
   readonly mandalData = inject(MandalDataService);
   private readonly route = inject(ActivatedRoute);
 
+  readonly selectedYear = signal<'२०२६' | '२०२५' | 'all'>('२०२६');
   readonly selectedCategory = signal<string>('all');
-  searchQuery = '';
+  readonly selectedEventKey = signal<string>('all');
+  readonly groupByEvent = signal<boolean>(true);
+  readonly searchQuery = signal<string>('');
   readonly activePhoto = signal<GalleryPhoto | null>(null);
+
+  readonly yearTabs: Array<{ key: '२०२६' | '२०२५' | 'all'; nameMr: string; nameEn: string; icon: string }> = [
+    { key: '२०२६', nameMr: '२०२६ (उत्सव फोटो)', nameEn: '2026 (Festival Photos)', icon: '🎉' },
+    { key: '२०२५', nameMr: '२०२५ (संदर्भ झलक)', nameEn: '2025 (Archive)', icon: '🗂️' },
+    { key: 'all', nameMr: 'सर्व वर्षे', nameEn: 'All Years', icon: '🌟' }
+  ];
 
   readonly categories = [
     { key: 'all', nameMr: 'सर्व छायाचित्रे', nameEn: 'All Photos', icon: '🌟' },
@@ -351,12 +547,14 @@ export class GalleryComponent implements OnInit {
     { key: 'ganpati-visarjan', nameMr: 'गणपती विसर्जन मिरवणूक', nameEn: 'Ganpati Visarjan', icon: '🌊' },
     { key: 'swachhata', nameMr: 'स्वच्छता मोहीम', nameEn: 'Swachhata Mohim', icon: '🧹' },
     { key: 'navratri', nameMr: 'नवरात्र उत्सव', nameEn: 'Navratri Utsav', icon: '🔱' },
+    { key: 'kojagiri', nameMr: 'कोजागिरी सत्कार समारंभ', nameEn: 'Kojagiri Felicitation', icon: '🌕' },
+    { key: 'diwali-kandil', nameMr: 'दिवाळी कंदील', nameEn: 'Diwali Kandil', icon: '🏮' },
     { key: 'bathukamma', nameMr: 'बथुकम्मा उत्सव', nameEn: 'Bathukamma Festival', icon: '🌺' },
     { key: 'ambedkar-jayanti', nameMr: 'डॉ. आंबेडकर जयंती', nameEn: 'Dr. Ambedkar Jayanti', icon: '📘' },
     { key: 'shiv-jayanti', nameMr: 'शिवजयंती सोहळा', nameEn: 'Shiv Jayanti', icon: '🚩' }
   ];
 
-  readonly photos: GalleryPhoto[] = [
+  private readonly archiveReferencePhotos: GalleryPhoto[] = [
     // =========================================================================
     // 1. गणेशोत्सव स्पर्धा व उपक्रम (Ganeshotsav Events & Competitions)
     // =========================================================================
@@ -894,13 +1092,49 @@ export class GalleryComponent implements OnInit {
     }
   ];
 
-  readonly filteredPhotos = computed(() => {
-    const cat = this.selectedCategory();
-    const query = this.searchQuery.trim().toLowerCase();
+  readonly photos: GalleryPhoto[] = [
+    ...GALLERY_2026_PHOTOS,
+    ...this.archiveReferencePhotos.map(p => ({ ...p, year: '२०२५' }))
+  ];
 
-    return this.photos.filter(p => {
+  readonly yearScopedPhotos = computed(() => {
+    const yr = this.selectedYear();
+    if (yr === 'all') return this.photos;
+    return this.photos.filter(p => p.year === yr);
+  });
+
+  readonly visibleCategories = computed(() => {
+    const list = this.yearScopedPhotos();
+    return this.categories.filter(cat => cat.key === 'all' || list.some(p => p.category === cat.key));
+  });
+
+  readonly visibleEventFolders = computed<GalleryEventFolderMeta[]>(() => {
+    if (this.selectedYear() === '२०२५') return [];
+    const cat = this.selectedCategory();
+    if (cat === 'all') return GALLERY_2026_EVENT_FOLDERS;
+    return GALLERY_2026_EVENT_FOLDERS.filter(f => f.category === cat);
+  });
+
+  readonly categoryScoped2026Count = computed(() => {
+    const cat = this.selectedCategory();
+    const list = this.photos.filter(p => p.year === '२०२६');
+    if (cat === 'all') return list.length;
+    return list.filter(p => p.category === cat).length;
+  });
+
+  readonly filteredPhotos = computed(() => {
+    const base = this.yearScopedPhotos();
+    const cat = this.selectedCategory();
+    const evKey = this.selectedEventKey();
+    const query = this.searchQuery().trim().toLowerCase();
+
+    return base.filter(p => {
       const matchCat = cat === 'all' || p.category === cat;
       if (!matchCat) return false;
+
+      if (evKey !== 'all' && p.eventKey !== evKey) {
+        return false;
+      }
 
       if (!query) return true;
       return (
@@ -909,10 +1143,60 @@ export class GalleryComponent implements OnInit {
         p.descMr.toLowerCase().includes(query) ||
         p.descEn.toLowerCase().includes(query) ||
         p.categoryMr.toLowerCase().includes(query) ||
+        (p.eventTitleMr || '').toLowerCase().includes(query) ||
+        (p.eventTitleEn || '').toLowerCase().includes(query) ||
+        (p.folderName || '').toLowerCase().includes(query) ||
         p.date.toLowerCase().includes(query)
       );
     });
   });
+
+  readonly groupedEventSections = computed(() => {
+    const list = this.filteredPhotos();
+    const sections: Array<{
+      key: string;
+      folder: string;
+      titleMr: string;
+      titleEn: string;
+      icon: string;
+      dateMr: string;
+      photos: GalleryPhoto[];
+    }> = [];
+
+    for (const meta of GALLERY_2026_EVENT_FOLDERS) {
+      const matched = list.filter(p => p.eventKey === meta.key);
+      if (matched.length > 0) {
+        sections.push({
+          key: meta.key,
+          folder: meta.folder,
+          titleMr: meta.titleMr,
+          titleEn: meta.titleEn,
+          icon: meta.icon,
+          dateMr: meta.dateMr,
+          photos: matched
+        });
+      }
+    }
+
+    const archiveItems = list.filter(p => !p.eventKey);
+    if (archiveItems.length > 0) {
+      sections.push({
+        key: 'archive-2025',
+        folder: '',
+        titleMr: 'मागील संदर्भ संग्रह (२०२५)',
+        titleEn: 'Previous Reference Archive (2025)',
+        icon: '🗂️',
+        dateMr: '२०२५',
+        photos: archiveItems
+      });
+    }
+
+    return sections;
+  });
+
+  shouldShowGroupedSections(): boolean {
+    return this.groupByEvent() && this.selectedYear() !== '२०२५' && this.groupedEventSections().length > 0;
+  }
 
   readonly currentPhotoIndex = computed(() => {
     const active = this.activePhoto();
@@ -922,16 +1206,71 @@ export class GalleryComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
+      const year = params['year'];
+      if (year === '2025' || year === '२०२५') {
+        this.selectedYear.set('२०२५');
+      } else if (year === 'all') {
+        this.selectedYear.set('all');
+      }
+
       const cat = params['cat'];
       if (cat && this.categories.some(c => c.key === cat)) {
+        // Switch to 'all' if requested category only lives in archive (e.g. ambedkar-jayanti)
+        if (!this.yearScopedPhotos().some(p => p.category === cat)) {
+          this.selectedYear.set('all');
+        }
         this.selectedCategory.set(cat);
+      }
+
+      const ev = params['event'];
+      if (ev && GALLERY_2026_EVENT_FOLDERS.some(f => f.key === ev)) {
+        this.selectedYear.set('२०२६');
+        this.selectedEventKey.set(ev);
       }
     });
   }
 
-  getCategoryCount(key: string): number {
+  selectYear(year: '२०२६' | '२०२५' | 'all'): void {
+    this.selectedYear.set(year);
+    this.selectedCategory.set('all');
+    this.selectedEventKey.set('all');
+  }
+
+  selectCategory(catKey: string): void {
+    this.selectedCategory.set(catKey);
+    const currentEv = this.selectedEventKey();
+    if (currentEv !== 'all' && catKey !== 'all') {
+      const folderMeta = GALLERY_2026_EVENT_FOLDERS.find(f => f.key === currentEv);
+      if (folderMeta && folderMeta.category !== catKey) {
+        this.selectedEventKey.set('all');
+      }
+    }
+  }
+
+  selectEventFolder(evKey: string): void {
+    this.selectedEventKey.set(this.selectedEventKey() === evKey ? 'all' : evKey);
+  }
+
+  resetFilters(): void {
+    this.selectedYear.set('२०२६');
+    this.selectedCategory.set('all');
+    this.selectedEventKey.set('all');
+    this.searchQuery.set('');
+  }
+
+  getYearCount(key: '२०२६' | '२०२५' | 'all'): number {
     if (key === 'all') return this.photos.length;
-    return this.photos.filter(p => p.category === key).length;
+    return this.photos.filter(p => p.year === key).length;
+  }
+
+  getCategoryCount(key: string): number {
+    const list = this.yearScopedPhotos();
+    if (key === 'all') return list.length;
+    return list.filter(p => p.category === key).length;
+  }
+
+  getEventFolderCount(eventKey: string): number {
+    return this.yearScopedPhotos().filter(p => p.eventKey === eventKey).length;
   }
 
   openLightbox(photo: GalleryPhoto): void {
