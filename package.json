@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "node scripts/gen_initial_data.js && ng serve",
+    "prebuild": "node scripts/gen_initial_data.js",
     "build": "ng build",
+    "excel:sync": "node scripts/gen_initial_data.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "excel:gen": "node scripts/create_excel_template.js"

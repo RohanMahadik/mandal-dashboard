@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import * as XLSX from 'xlsx';
+import { INITIAL_VARGANI_RECORDS, INITIAL_KHARCH_RECORDS, INITIAL_DETAILED_BALANCE_SHEET } from '../data/initial-mandal-data';
 import {
   VarganiRecord,
   KharchRecord,
@@ -58,9 +59,9 @@ export class MandalDataService {
     'छत्रपती शिवाजी महाराज जयंती'
   ];
 
-  // Dynamic Sources / Buildings List computed directly from current Vargani records
+  // Dynamic Sources / Buildings List computed directly from current festival Vargani records
   readonly availableSources = computed<string[]>(() => {
-    const list = this._varganiRecords();
+    const list = this.currentVargani();
     const set = new Set<string>();
     list.forEach(item => {
       const val = (item.source || item.building || '').trim();
@@ -366,10 +367,10 @@ export class MandalDataService {
   }
 
 
-  // Master Data Stores (Signals)
-  private readonly _varganiRecords = signal<VarganiRecord[]>(this.generateInitialVargani());
-  private readonly _kharchRecords = signal<KharchRecord[]>(this.generateInitialKharch());
-  readonly detailedBalanceSheetData = signal<DetailedBalanceSheetData>(this.getInitialDetailedBalanceSheet());
+  // Master Data Stores (Signals) initialized with complete festival dataset
+  private readonly _varganiRecords = signal<VarganiRecord[]>(INITIAL_VARGANI_RECORDS);
+  private readonly _kharchRecords = signal<KharchRecord[]>(INITIAL_KHARCH_RECORDS);
+  readonly detailedBalanceSheetData = signal<DetailedBalanceSheetData>(INITIAL_DETAILED_BALANCE_SHEET || this.getInitialDetailedBalanceSheet());
 
   // Public readonly signals
   readonly allVargani = this._varganiRecords.asReadonly();
@@ -2417,12 +2418,16 @@ export class MandalDataService {
   async loadMasterExcelFromPublic(): Promise<boolean> {
     this.excelLoadStatus.set('loading');
     try {
-      // Prioritize mandal_data_format.xlsx (the root file users edit directly in the project),
-      // then fall back to /data/mandal_data.xlsx
+      const base = (typeof document !== 'undefined' && document.baseURI)
+        ? document.baseURI.replace(/\/+$/, '')
+        : '';
+
       const candidateUrls = [
-        `/data/mandal_data_format.xlsx?t=${Date.now()}`,
-        `/mandal_data_format.xlsx?t=${Date.now()}`,
-        `/data/mandal_data.xlsx?t=${Date.now()}`
+        `${base}/data/mandal_data.xlsx?t=${Date.now()}`,
+        `data/mandal_data.xlsx?t=${Date.now()}`,
+        `/data/mandal_data.xlsx?t=${Date.now()}`,
+        `${base}/mandal_data.xlsx?t=${Date.now()}`,
+        `mandal_data.xlsx?t=${Date.now()}`
       ];
 
       let buffer: ArrayBuffer | null = null;
@@ -2431,13 +2436,19 @@ export class MandalDataService {
       for (const url of candidateUrls) {
         try {
           const resp = await fetch(url);
-          if (resp.ok) {
+          const contentType = resp.headers.get('content-type') || '';
+          // Ignore HTML fallback pages from SPA routers (e.g. Netlify _redirects 200)
+          if (resp.ok && !contentType.includes('text/html')) {
             const buf = await resp.arrayBuffer();
             if (buf && buf.byteLength > 2000) {
-              buffer = buf;
-              matchedFile = url.split('?')[0].split('/').pop() || 'mandal_data.xlsx';
-              console.log(`[MandalDataService] Found candidate Excel file at ${url} (${buf.byteLength} bytes)`);
-              break;
+              const u8 = new Uint8Array(buf);
+              // Verify PK zip magic header (0x50, 0x4B) for valid XLSX
+              if (u8[0] === 0x50 && u8[1] === 0x4B) {
+                buffer = buf;
+                matchedFile = url.split('?')[0].split('/').pop() || 'mandal_data.xlsx';
+                console.log(`[MandalDataService] Found valid Excel file at ${url} (${buf.byteLength} bytes)`);
+                break;
+              }
             }
           }
         } catch {
@@ -2446,7 +2457,7 @@ export class MandalDataService {
       }
 
       if (!buffer) {
-        console.info('[MandalDataService] No Excel candidate found in public/assets, keeping fallback initial data.');
+        console.info('[MandalDataService] Live Excel not fetched, using pre-seeded complete dataset.');
         this.excelLoadStatus.set('idle');
         return false;
       }
@@ -2492,8 +2503,8 @@ export class MandalDataService {
 
   downloadExcelTemplate() {
     const link = document.createElement('a');
-    link.href = '/data/mandal_data_format.xlsx';
-    link.download = 'mandal_data_format.xlsx';
+    link.href = '/data/mandal_data.xlsx';
+    link.download = 'mandal_data.xlsx';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

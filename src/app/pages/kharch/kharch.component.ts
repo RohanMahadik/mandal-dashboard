@@ -213,7 +213,64 @@ import { KharchRecord } from '../../models/mandal.models';
             </div>
           </div>
 
-          <div class="overflow-x-auto w-full">
+          <!-- Mobile Card View (Optimized for Phones < md) -->
+          <div class="md:hidden divide-y divide-slate-100 bg-white">
+            @for (row of filteredList(); track row.id) {
+              <div class="p-3.5 hover:bg-rose-50/30 transition">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex items-start gap-2.5">
+                    <span class="w-6 h-6 rounded-full bg-rose-50 text-rose-800 font-bold text-[11px] flex items-center justify-center shrink-0 border border-rose-200 mt-0.5">
+                      {{ mandalData.toMarathiDigits(row.srNo) }}
+                    </span>
+                    <div>
+                      <div class="font-bold text-slate-900 font-devanagari text-sm leading-snug">
+                        {{ mandalData.isEnglish() ? (row.nameEn || row.nameMr) : (row.nameMr || row.nameEn) }}
+                      </div>
+                      @if (row.nameEn) {
+                        <div class="text-[10px] text-slate-400 font-normal">
+                          {{ mandalData.isEnglish() ? row.nameMr : row.nameEn }}
+                        </div>
+                      }
+                      @if (row.description) {
+                        <div class="text-[11px] text-slate-500 font-normal mt-0.5 line-clamp-1">
+                          {{ row.description }}
+                        </div>
+                      }
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <div class="text-base font-black text-rose-700 font-devanagari leading-none">
+                      {{ mandalData.formatNum(row.amount, true) }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs mt-2.5 pt-2 border-t border-slate-100">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10.5px] font-medium text-slate-700">
+                      {{ mandalData.translateCategory(row.category) }}
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="row.festival.includes('गणेश') ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900'">
+                      {{ row.festival.includes('गणेश') ? '🪔 गणेशोत्सव' : '🔱 नवरात्र' }}
+                    </span>
+                  </div>
+                  <button
+                    (click)="viewVoucher(row)"
+                    class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-200 font-bold rounded text-[11px] cursor-pointer shadow-2xs transition"
+                  >
+                    {{ mandalData.t('तपशील', 'Details') }}
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="py-12 text-center text-slate-400 font-devanagari text-xs px-4">
+                {{ mandalData.t('कोणताही खर्च आढळला नाही.', 'No expenses found.') }}
+              </div>
+            }
+          </div>
+
+          <!-- Desktop Table View (For screens >= md) -->
+          <div class="hidden md:block overflow-x-auto w-full">
             <table class="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[650px]">
               <thead>
                 <tr class="bg-[#f1f5f9] text-slate-700 font-bold font-devanagari border-b border-slate-200">
@@ -459,6 +516,7 @@ export class KharchComponent {
 
   selectFestival(festival: string) {
     this.mandalData.setFestival(festival);
+    this.searchQuery.set('');
   }
 
   viewVoucher(record: KharchRecord) {
