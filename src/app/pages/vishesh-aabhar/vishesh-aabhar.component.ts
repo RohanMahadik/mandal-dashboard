@@ -21,7 +21,6 @@ export interface GratitudeHonoree {
   keyHighlightsEn: { title: string; desc: string; icon: string }[];
   specialContributionMr: string;
   specialContributionEn: string;
-  saluteCount: number;
 }
 
 @Component({
@@ -190,21 +189,6 @@ export interface GratitudeHonoree {
                 <div class="text-[11px] text-slate-500 font-semibold font-devanagari">
                   📍 {{ mandalData.t('श्री अष्टविनायक मित्र मंडळ, शिव स्फूर्ती, जोगेश्वरी (प)', 'Shree Ashtavinayak Mitra Mandal, Shiv Sphurti, Jogeshwari (W)') }}
                 </div>
-
-                <!-- Salute Gratitude Button -->
-                <div class="pt-2 flex justify-center">
-                  <button
-                    (click)="addSalute(h.id)"
-                    class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-white via-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-300 text-amber-950 active:scale-95 transition shadow-xs cursor-pointer text-xs font-bold font-devanagari group/btn"
-                    [title]="mandalData.t('कृतज्ञता व्यक्त करा', 'Express Gratitude')"
-                  >
-                    <span class="text-red-600 text-sm group-hover/btn:scale-125 transition-transform animate-pulse">❤️</span>
-                    <span>{{ mandalData.t('आभार व्यक्त करा', 'Express Gratitude') }}</span>
-                    <span class="font-mono text-[11px] font-bold bg-amber-200/80 px-2 py-0.5 rounded-full border border-amber-300 text-amber-950">
-                      {{ mandalData.formatNum(getSaluteCount(h.id)) }}
-                    </span>
-                  </button>
-                </div>
               </div>
 
             </div>
@@ -315,14 +299,58 @@ export class VisheshAabharComponent {
   // Photo error tracking
   readonly photoErrors = signal<{ [key: string]: boolean }>({});
 
-  // Dynamic salute counter tracking (initialized with respectful base values)
-  readonly salutes = signal<{ [key: string]: number }>({
-    'anil-kamble': 151,
-    'sanjay-kamble': 148,
-    'sameer-gawade': 162
-  });
-
   readonly honorees: GratitudeHonoree[] = [
+    {
+      id: 'sameer-gawade',
+      nameMr: 'श्री. समीर गावडे',
+      nameEn: 'Shri. Sameer Gawade',
+      affectionateTitleMr: 'मंडळाचे व्हिजनरी नेतृत्व व दिशादर्शक',
+      affectionateTitleEn: 'Visionary Strategist & Master Planner',
+      roleMr: 'मुख्य नियोजक, मार्गदर्शक व ध्येय समन्वयक',
+      roleEn: 'Chief Strategist, Mentor & Inclusive Decision Maker',
+      badgeMr: 'व्हिजनरी नेतृत्व',
+      badgeEn: 'Visionary Leader',
+      icon: '🎯',
+      photoUrl: '/Sabhasad/Sameer%20Gawade.jpeg',
+      fallbackInitial: 'स',
+      avatarBg: '#1e3a8a',
+      keyHighlightsMr: [
+        {
+          icon: '🧭',
+          title: 'मंडळाचे परिपूर्ण व शिस्तबद्ध नियोजन',
+          desc: 'उत्सवाची पूर्वतयारी, कामांची चोख विभागणी, वेळ व्यवस्थापन आणि प्रत्येक उपक्रमाची रूपरेषा अत्यंत सूक्ष्मपणे आणि अचूकपणे आखणारे कुशल नियोजक.'
+        },
+        {
+          icon: '💡',
+          title: 'नवीन विचार, अभिनव संकल्पना व आधुनिक ध्येये (Vision)',
+          desc: 'मंडळाला काळाच्या पुढे नेणारे आधुनिक विचार, डिजिटल तंत्रज्ञानाचा वापर, पर्यावरणपूरक उत्सव आणि समाजोपयोगी ध्येये सातत्याने देणारे दूरदृष्टी विचारवंत.'
+        },
+        {
+          icon: '🤝',
+          title: 'सर्वांना सोबत घेऊन शांत व योग्य निर्णय',
+          desc: 'ज्येष्ठ, तरुण व सर्व घटकांना विश्वासात घेऊन कोणत्याही जटिल प्रसंगात निःपक्षपाती, संतुलित आणि परिपक्व निर्णय घेण्याची अद्वितीय क्षमता.'
+        }
+      ],
+      keyHighlightsEn: [
+        {
+          icon: '🧭',
+          title: 'Flawless Strategy & Meticulous Planning',
+          desc: 'Masterfully architecting festival schedules, volunteer responsibilities, logistical timelines, and discipline with exceptional precision.'
+        },
+        {
+          icon: '💡',
+          title: 'Innovative Thinking & Progressive Vision',
+          desc: 'Infusing modern concepts, digital innovations, eco-friendly celebrations, and high community goals to propel the Mandal into the future.'
+        },
+        {
+          icon: '🤝',
+          title: 'Inclusive Leadership & Balanced Decisions',
+          desc: 'Bringing everyone together in harmony and rendering wise, composed, and unbiased decisions in every challenging situation.'
+        }
+      ],
+      specialContributionMr: 'समीर गावडेंचे कल्पक व्हिजन, आधुनिक विचार आणि सर्वांना प्रेमाने सोबत घेऊन अचूक निर्णय देण्याची क्षमता यामुळेच मंडळाने यशाची नवी शिखरे गाठली आहेत!',
+      specialContributionEn: 'Sameer Gawade\'s visionary foresight, progressive concepts, and inclusive wisdom in uniting everyone have guided our Mandal to soaring heights of success!'
+    },
     {
       id: 'anil-kamble',
       nameMr: 'श्री. अनिल कांबळे',
@@ -337,7 +365,6 @@ export class VisheshAabharComponent {
       photoUrl: '/Sabhasad/Anil%20Kamble.jpeg',
       fallbackInitial: 'अ',
       avatarBg: '#b45309',
-      saluteCount: 151,
       keyHighlightsMr: [
         {
           icon: '💰',
@@ -389,7 +416,6 @@ export class VisheshAabharComponent {
       photoUrl: '/Sabhasad/Sanjay%20Kamble.jpeg',
       fallbackInitial: 'सं',
       avatarBg: '#0f766e',
-      saluteCount: 148,
       keyHighlightsMr: [
         {
           icon: '🕉️',
@@ -426,58 +452,6 @@ export class VisheshAabharComponent {
       ],
       specialContributionMr: 'गणेशोत्सवाचा गजर असो वा नवरात्रोत्सवाचा जागर, काकांची भरघोस आर्थिक मदत आणि पितृतुल्य आशीर्वाद हीच अष्टविनायक मंडळाची खरी संपत्ती आहे!',
       specialContributionEn: 'Be it the resonance of Ganeshotsav or the divine glow of Navratri, Kaka\'s generous financial benevolence and fatherly blessings form our greatest wealth!'
-    },
-    {
-      id: 'sameer-gawade',
-      nameMr: 'श्री. समीर गावडे',
-      nameEn: 'Shri. Sameer Gawade',
-      affectionateTitleMr: 'मंडळाचे व्हिजनरी नेतृत्व व दिशादर्शक',
-      affectionateTitleEn: 'Visionary Strategist & Master Planner',
-      roleMr: 'मुख्य नियोजक, मार्गदर्शक व ध्येय समन्वयक',
-      roleEn: 'Chief Strategist, Mentor & Inclusive Decision Maker',
-      badgeMr: 'व्हिजनरी नेतृत्व',
-      badgeEn: 'Visionary Leader',
-      icon: '🎯',
-      photoUrl: '/Sabhasad/Sameer%20Gawade.jpeg',
-      fallbackInitial: 'स',
-      avatarBg: '#1e3a8a',
-      saluteCount: 162,
-      keyHighlightsMr: [
-        {
-          icon: '🧭',
-          title: 'मंडळाचे परिपूर्ण व शिस्तबद्ध नियोजन',
-          desc: 'उत्सवाची पूर्वतयारी, कामांची चोख विभागणी, वेळ व्यवस्थापन आणि प्रत्येक उपक्रमाची रूपरेषा अत्यंत सूक्ष्मपणे आणि अचूकपणे आखणारे कुशल नियोजक.'
-        },
-        {
-          icon: '💡',
-          title: 'नवीन विचार, अभिनव संकल्पना व आधुनिक ध्येये (Vision)',
-          desc: 'मंडळाला काळाच्या पुढे नेणारे आधुनिक विचार, डिजिटल तंत्रज्ञानाचा वापर, पर्यावरणपूरक उत्सव आणि समाजोपयोगी ध्येये सातत्याने देणारे दूरदृष्टी विचारवंत.'
-        },
-        {
-          icon: '🤝',
-          title: 'सर्वांना सोबत घेऊन शांत व योग्य निर्णय',
-          desc: 'ज्येष्ठ, तरुण व सर्व घटकांना विश्वासात घेऊन कोणत्याही जटिल प्रसंगात निःपक्षपाती, संतुलित आणि परिपक्व निर्णय घेण्याची अद्वितीय क्षमता.'
-        }
-      ],
-      keyHighlightsEn: [
-        {
-          icon: '🧭',
-          title: 'Flawless Strategy & Meticulous Planning',
-          desc: 'Masterfully architecting festival schedules, volunteer responsibilities, logistical timelines, and discipline with exceptional precision.'
-        },
-        {
-          icon: '💡',
-          title: 'Innovative Thinking & Progressive Vision',
-          desc: 'Infusing modern concepts, digital innovations, eco-friendly celebrations, and high community goals to propel the Mandal into the future.'
-        },
-        {
-          icon: '🤝',
-          title: 'Inclusive Leadership & Balanced Decisions',
-          desc: 'Bringing everyone together in harmony and rendering wise, composed, and unbiased decisions in every challenging situation.'
-        }
-      ],
-      specialContributionMr: 'समीर गावडेंचे कल्पक व्हिजन, आधुनिक विचार आणि सर्वांना प्रेमाने सोबत घेऊन अचूक निर्णय देण्याची क्षमता यामुळेच मंडळाने यशाची नवी शिखरे गाठली आहेत!',
-      specialContributionEn: 'Sameer Gawade\'s visionary foresight, progressive concepts, and inclusive wisdom in uniting everyone have guided our Mandal to soaring heights of success!'
     }
   ];
 
@@ -501,16 +475,5 @@ export class VisheshAabharComponent {
 
   onPhotoError(id: string) {
     this.photoErrors.update(map => ({ ...map, [id]: true }));
-  }
-
-  addSalute(id: string) {
-    this.salutes.update(map => ({
-      ...map,
-      [id]: (map[id] || 150) + 1
-    }));
-  }
-
-  getSaluteCount(id: string): number {
-    return this.salutes()[id] || 150;
   }
 }

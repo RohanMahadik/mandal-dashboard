@@ -4,17 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MandalDataService } from '../../services/mandal-data.service';
 import { SabhasadMember, CommitteeMember } from '../../models/mandal.models';
-import { BestSabhasadShowcaseComponent } from '../../components/best-sabhasad-showcase/best-sabhasad-showcase.component';
-import { ConfettiBurstComponent } from '../../components/confetti-burst/confetti-burst.component';
 import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BestSabhasadShowcaseComponent, ConfettiBurstComponent],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="space-y-6 pb-10 animate-fade-in">
-      <app-confetti-burst #aboutConfetti [autoFire]="false"></app-confetti-burst>
       
       <!-- Top Banner -->
       <div class="bg-gradient-to-r from-amber-800 via-orange-900 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-md relative overflow-hidden">
@@ -396,14 +393,6 @@ import html2canvas from 'html2canvas';
             <p class="text-xs sm:text-sm font-bold text-slate-700 font-devanagari">
               {{ mandalData.t('श्री अष्टविनायक मित्र मंडळाचे अधिकृत नोंदणीकृत सभासद (एकूण ' + mandalData.toMarathiDigits(mandalData.sabhasadMembers().length) + ' सभासद - ५ स्तंभ रचना)', 'Official Registered Members of Shree Ashtavinayak Mitra Mandal (Total: ' + mandalData.sabhasadMembers().length + ' Members - 5 Columns Layout)') }}
             </p>
-          </div>
-
-          <!-- Best Sabhasad Awards 2026 Spotlight -->
-          <div class="mb-5">
-            <app-best-sabhasad-showcase
-              [showMembersLink]="false"
-              (celebrate)="aboutConfetti.triggerBurst()"
-            ></app-best-sabhasad-showcase>
           </div>
 
           <!-- Controls Bar: Search & View Toggle -->

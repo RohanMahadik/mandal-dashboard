@@ -1,7 +1,18 @@
-import { Component, ViewChild, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  PLATFORM_ID,
+  ViewChild,
+  effect,
+  inject,
+  signal
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MandalDataService } from '../../services/mandal-data.service';
+import { LoadingService } from '../../services/loading.service';
 import { ConfettiBurstComponent } from '../../components/confetti-burst/confetti-burst.component';
 import { BestSabhasadShowcaseComponent } from '../../components/best-sabhasad-showcase/best-sabhasad-showcase.component';
 
@@ -11,8 +22,8 @@ import { BestSabhasadShowcaseComponent } from '../../components/best-sabhasad-sh
   imports: [CommonModule, RouterLink, ConfettiBurstComponent, BestSabhasadShowcaseComponent],
   template: `
     <div class="space-y-6 pb-12 animate-fade-in max-w-7xl mx-auto">
-      <!-- Auto-Fires Confetti Burst When Page Opens -->
-      <app-confetti-burst #confetti [autoFire]="true"></app-confetti-burst>
+      <!-- Desktop auto-fires on open; mobile waits until the page is scrolled -->
+      <app-confetti-burst #confetti [autoFire]="autoFireOnOpen"></app-confetti-burst>
 
       <!-- ================= TOP CELEBRATORY BANNER ================= -->
       <div class="bg-gradient-to-r from-[#7f1d1d] via-[#b91c1c] to-[#d97706] rounded-3xl p-5 sm:p-7 text-white shadow-xl relative overflow-hidden border border-amber-400/40">
@@ -144,16 +155,110 @@ import { BestSabhasadShowcaseComponent } from '../../components/best-sabhasad-sh
     </div>
   `
 })
-export class SarvotkrushtSabhasadComponent {
+export class SarvotkrushtSabhasadComponent implements AfterViewInit, OnDestroy {
   readonly mandalData = inject(MandalDataService);
+  private readonly loadingService = inject(LoadingService);
+  private readonly hostRef = inject(ElementRef<HTMLElement>);
+  private readonly platformId = inject(PLATFORM_ID);
+
   readonly isCelebrating = signal<boolean>(false);
+  private readonly isMobileViewport =
+    isPlatformBrowser(this.platformId) && window.innerWidth < 768;
+  readonly autoFireOnOpen = !this.isMobileViewport;
+
+  private readonly viewReady = signal<boolean>(false);
+  private readonly hasScrolledOnMobile = signal<boolean>(false);
+  private hasFiredScrollBurst = false;
+  private scrollContainer: HTMLElement | null = null;
+  private scrollListener?: () => void;
+  private scrollBurstTimer?: ReturnType<typeof setTimeout>;
+  private baselineScrollTop = 0;
 
   @ViewChild('confetti') confettiComponent?: ConfettiBurstComponent;
+
+  constructor() {
+    // On mobile viewports (< 768px), wait for page scroll and splash dismissal before firing confetti
+    effect(() => {
+      if (
+        this.isMobileViewport &&
+        !this.hasFiredScrollBurst &&
+        this.viewReady() &&
+        this.hasScrolledOnMobile() &&
+        !this.loadingService.isFullscreenLoading()
+      ) {
+        this.hasFiredScrollBurst = true;
+        this.scrollBurstTimer = setTimeout(() => this.replayCelebration(), 80);
+      }
+    });
+  }
+
+  ngAfterViewInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    this.scrollContainer = this.findScrollContainer(this.hostRef.nativeElement);
+    if (this.isMobileViewport) {
+      // Reset container scroll on open so mobile starts cleanly at the top banner before user scrolls
+      if (this.scrollContainer) {
+        this.scrollContainer.scrollTop = 0;
+      }
+      window.scrollTo(0, 0);
+      this.baselineScrollTop = this.getCurrentScrollOffset();
+      this.attachMobileScrollListeners();
+    }
+
+    this.viewReady.set(true);
+  }
+
+  ngOnDestroy(): void {
+    this.detachMobileScrollListeners();
+    if (this.scrollBurstTimer) {
+      clearTimeout(this.scrollBurstTimer);
+    }
+  }
 
   replayCelebration(): void {
     this.isCelebrating.set(true);
     this.confettiComponent?.triggerBurst();
     setTimeout(() => this.isCelebrating.set(false), 1200);
+  }
+
+  private attachMobileScrollListeners(): void {
+    this.scrollListener = () => {
+      if (this.hasScrolledOnMobile()) return;
+      const offset = this.getCurrentScrollOffset();
+      if (Math.abs(offset - this.baselineScrollTop) >= 20) {
+        this.hasScrolledOnMobile.set(true);
+        this.detachMobileScrollListeners();
+      }
+    };
+
+    window.addEventListener('scroll', this.scrollListener, { passive: true });
+    this.scrollContainer?.addEventListener('scroll', this.scrollListener, { passive: true });
+  }
+
+  private detachMobileScrollListeners(): void {
+    if (!isPlatformBrowser(this.platformId) || !this.scrollListener) return;
+    window.removeEventListener('scroll', this.scrollListener);
+    this.scrollContainer?.removeEventListener('scroll', this.scrollListener);
+    this.scrollListener = undefined;
+  }
+
+  private getCurrentScrollOffset(): number {
+    const containerTop = this.scrollContainer?.scrollTop ?? 0;
+    const windowTop = window.scrollY || document.documentElement.scrollTop || 0;
+    return Math.max(containerTop, windowTop);
+  }
+
+  private findScrollContainer(element: HTMLElement): HTMLElement | null {
+    let parent = element.parentElement;
+    while (parent) {
+      const style = window.getComputedStyle(parent);
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+        return parent;
+      }
+      parent = parent.parentElement;
+    }
+    return document.querySelector('main');
   }
 }
 

@@ -1,8 +1,17 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MandalDataService } from '../../services/mandal-data.service';
 import { FestivalEvent } from '../../models/mandal.models';
+import { GALLERY_2026_PHOTOS } from '../gallery/gallery-2026-photos';
+
+export interface UtsavMediaItem {
+  title: string;
+  desc: string;
+  url: string;
+  mediaType?: 'image' | 'video';
+  poster?: string;
+}
 
 @Component({
   selector: 'app-utsav',
@@ -134,10 +143,10 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <!-- Photo Thumbnail -->
                       <div
                         class="relative h-28 rounded-lg overflow-hidden mb-2.5 group/img cursor-pointer border border-rose-200 bg-slate-100"
-                        (click)="openPhoto('चित्रकला स्पर्धा - बाप्पाचे रेखाटन व रंगभरण', '१० वर्षांखालील व ११ ते १५ वर्षे वयोगटातील स्पर्धकांनी काढलेली गणपती बाप्पाची अप्रतिम चित्रे.', 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&q=80')"
+                        (click)="openPhoto('चित्रकला स्पर्धा - बाप्पाचे रेखाटन व रंगभरण', '१० वर्षांखालील व ११ ते १५ वर्षे वयोगटातील स्पर्धकांनी काढलेली गणपती बाप्पाची अप्रतिम चित्रे.', '/Fastival%20Photos/Drawing%20compitition/IMG-20260922-WA0012.jpeg')"
                       >
                         <img
-                          src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&q=80"
+                          src="/Fastival%20Photos/Drawing%20compitition/IMG-20260922-WA0012.jpeg"
                           alt="चित्रकला स्पर्धा"
                           (error)="onPhotoErr($event)"
                           loading="lazy"
@@ -178,10 +187,10 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <!-- Photo Thumbnail -->
                       <div
                         class="relative h-28 rounded-lg overflow-hidden mb-2.5 group/img cursor-pointer border border-indigo-200 bg-slate-100"
-                        (click)="openPhoto('वक्तृत्व स्पर्धा - बालवक्त्यांचे प्रभावी भाषण', 'माझी आई, माझा आवडता सण व माझी शाळा या विषयांवर मंचावरून ओजस्वी भाषण सादरीकरण.', 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1000&q=80')"
+                        (click)="openPhoto('वक्तृत्व स्पर्धा - बालवक्त्यांचे प्रभावी भाषण', 'माझी आई, माझा आवडता सण व माझी शाळा या विषयांवर मंचावरून ओजस्वी भाषण सादरीकरण.', '/Fastival%20Photos/Fancy%20Dreass%20ani%20Satkar%20samarabh/IMG-20261020-WA0008.jpg')"
                       >
                         <img
-                          src="https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1000&q=80"
+                          src="/Fastival%20Photos/Fancy%20Dreass%20ani%20Satkar%20samarabh/IMG-20261020-WA0008.jpg"
                           alt="वक्तृत्व स्पर्धा"
                           (error)="onPhotoErr($event)"
                           loading="lazy"
@@ -222,10 +231,10 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <!-- Photo Thumbnail -->
                       <div
                         class="relative h-28 rounded-lg overflow-hidden mb-2.5 group/img cursor-pointer border border-emerald-200 bg-slate-100"
-                        (click)="openPhoto('स्वच्छता मोहीम - स्वच्छ भारत झाडू श्रमदान', 'आदर्श नगर व शिव स्फूर्ती परिसरात मंडळ कार्यकर्ते व नागरिकांनी मिळून केलेले परिसर स्वच्छता श्रमदान.', 'https://commons.wikimedia.org/wiki/Special:FilePath/PM_Modi_launches_the_Swachh_Bharat_Abhiyaan_(1).jpg?width=1000')"
+                        (click)="openPhoto('स्वच्छता मोहीम - स्वच्छ भारत झाडू श्रमदान', 'आदर्श नगर व शिव स्फूर्ती परिसरात मंडळ कार्यकर्ते व नागरिकांनी मिळून केलेले परिसर स्वच्छता श्रमदान.', '/Fastival%20Photos/Cleandrive/IMG-20261111-WA0006.jpg')"
                       >
                         <img
-                          src="https://commons.wikimedia.org/wiki/Special:FilePath/PM_Modi_launches_the_Swachh_Bharat_Abhiyaan_(1).jpg?width=1000"
+                          src="/Fastival%20Photos/Cleandrive/IMG-20261111-WA0006.jpg"
                           alt="स्वच्छता मोहीम"
                           (error)="onPhotoErr($event)"
                           loading="lazy"
@@ -264,10 +273,10 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <!-- Photo Thumbnail -->
                       <div
                         class="relative h-28 rounded-lg overflow-hidden mb-2.5 group/img cursor-pointer border border-teal-200 bg-slate-100"
-                        (click)="openPhoto('मोफत नेत्र तपासणी शिबिर व चष्मे वाटप', 'तज्ज्ञ नेत्ररोग तज्ज्ञांद्वारे मोफत नेत्र तपासणी व चष्म्यांचे वाटप.', 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1000&q=80')"
+                        (click)="openPhoto('मोफत नेत्र तपासणी शिबिर व चष्मे वाटप', 'तज्ज्ञ नेत्ररोग तज्ज्ञांद्वारे मोफत नेत्र तपासणी व चष्म्यांचे वाटप.', '/Fastival%20Photos/eye%20checkup/eye%20checkup%201.JPG')"
                       >
                         <img
-                          src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1000&q=80"
+                          src="/Fastival%20Photos/eye%20checkup/eye%20checkup%201.JPG"
                           alt="मोफत नेत्र तपासणी शिबिर"
                           (error)="onPhotoErr($event)"
                           loading="lazy"
@@ -285,6 +294,28 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <div class="text-xs text-slate-700 font-devanagari leading-relaxed">
                         <div class="font-bold text-teal-950">सर्वांसाठी मोफत नेत्र तपासणी व चष्मे वाटप</div>
                         <p class="text-[11px] text-slate-600 mt-0.5">तज्ज्ञ डॉक्टरांच्या पथकाद्वारे मोफत तपासणी.</p>
+                      </div>
+
+                      <!-- All Eye Checkup Camp Photos & Videos Strip -->
+                      <div class="mt-2 pt-2 border-t border-teal-100">
+                        <div class="text-[10px] font-bold text-teal-800 font-devanagari mb-1">
+                          📸 {{ mandalData.t('शिबिरातील सर्व फोटो व व्हिडिओ पहा', 'All Camp Photos & Videos') }} ({{ mandalData.formatNum(eyeCheckupPhotos.length) }})
+                        </div>
+                        <div class="grid grid-cols-5 gap-1 max-h-32 overflow-y-auto pr-0.5">
+                          @for (ec of eyeCheckupPhotos; track ec.url) {
+                            <button
+                              type="button"
+                              (click)="selectedPhoto.set(ec)"
+                              class="relative aspect-square rounded overflow-hidden border border-teal-300 hover:border-amber-500 hover:scale-105 transition cursor-pointer bg-slate-100"
+                              [title]="ec.title"
+                            >
+                              <img [src]="ec.mediaType === 'video' ? (ec.poster || ec.url) : ec.url" [alt]="ec.title" class="w-full h-full object-cover object-top" loading="lazy" />
+                              @if (ec.mediaType === 'video') {
+                                <span class="absolute inset-0 flex items-center justify-center bg-black/35 text-white text-[10px]">▶</span>
+                              }
+                            </button>
+                          }
+                        </div>
                       </div>
                     </div>
                     <div class="mt-3 pt-2 border-t border-teal-200 flex items-center justify-between text-[11px] font-bold text-teal-900">
@@ -306,10 +337,10 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <!-- Photo Thumbnail -->
                       <div
                         class="relative h-28 rounded-lg overflow-hidden mb-2.5 group/img cursor-pointer border border-red-200 bg-slate-100"
-                        (click)="openPhoto('श्री सत्यनारायण महापूजा व तीर्थप्रसाद सोहळा', 'गणरायाच्या साक्षीने वैदिक मंत्रोच्चारात संपन्न झालेली सत्यनारायण महापूजा व तीर्थप्रसाद.', 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=1000&q=80')"
+                        (click)="openPhoto('श्री सत्यनारायण महापूजा व तीर्थप्रसाद सोहळा', 'गणरायाच्या साक्षीने वैदिक मंत्रोच्चारात संपन्न झालेली सत्यनारायण महापूजा व तीर्थप्रसाद.', '/Fastival%20Photos/Ganpati%20Satyanarayn%20Puja/IMG-20260924-WA0035.jpg')"
                       >
                         <img
-                          src="https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=1000&q=80"
+                          src="/Fastival%20Photos/Ganpati%20Satyanarayn%20Puja/IMG-20260924-WA0035.jpg"
                           alt="श्री सत्यनारायण महापूजा"
                           (error)="onPhotoErr($event)"
                           loading="lazy"
@@ -348,14 +379,14 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <!-- Photo Thumbnail -->
                       <div
                         class="relative h-28 rounded-lg overflow-hidden mb-2.5 group/img cursor-pointer border border-purple-200 bg-slate-100"
-                        (click)="openPhoto('विशेष पाहुण्यांचा सत्कार समारंभ व सन्मान', 'परिसरातील मान्यवर व अतिथींचा शाल व सन्मानचिन्ह देऊन यथोचित गौरव.', 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1000&q=80')"
+                        (click)="openPhoto('विशेष पाहुण्यांचा सत्कार समारंभ व सन्मान', 'परिसरातील मान्यवर व अतिथींचा शाल व सन्मानचिन्ह देऊन यथोचित गौरव.', '/Fastival%20Photos/Satkar%20Ganpati/IMG-20260921-WA0038.jpg')"
                       >
                         <img
-                          src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1000&q=80"
+                          src="/Fastival%20Photos/Satkar%20Ganpati/IMG-20260921-WA0038.jpg"
                           alt="विशेष पाहुण्यांचा सत्कार"
                           (error)="onPhotoErr($event)"
                           loading="lazy"
-                          class="w-full h-full object-cover group-hover/img:scale-108 transition-transform duration-300"
+                          class="w-full h-full object-cover object-[50%_25%] group-hover/img:scale-108 transition-transform duration-300"
                         />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex items-end justify-between p-1.5">
                           <span class="text-[10px] text-white font-bold font-devanagari flex items-center gap-1">
@@ -390,14 +421,14 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <!-- Photo Thumbnail -->
                       <div
                         class="relative h-28 rounded-lg overflow-hidden mb-2.5 group/img cursor-pointer border border-amber-300 bg-slate-100"
-                        (click)="openPhoto('सांस्कृतिक स्पर्धा पारितोषिक वितरण - चषक व पदके', 'चित्रकला व वक्तृत्व स्पर्धेतील विजेत्या विद्यार्थ्यांना चषक व प्रमाणपत्र प्रदान.', 'https://images.unsplash.com/photo-1578269174936-2709b6aeb913?auto=format&fit=crop&w=1000&q=80')"
+                        (click)="openPhoto('सांस्कृतिक स्पर्धा पारितोषिक वितरण - चषक व पदके', 'चित्रकला व वक्तृत्व स्पर्धेतील विजेत्या विद्यार्थ्यांना चषक व प्रमाणपत्र प्रदान.', '/Fastival%20Photos/Kojagiri%20Satkar%20Samarabh/IMG-20261027-WA0066.jpg')"
                       >
                         <img
-                          src="https://images.unsplash.com/photo-1578269174936-2709b6aeb913?auto=format&fit=crop&w=1000&q=80"
+                          src="/Fastival%20Photos/Kojagiri%20Satkar%20Samarabh/IMG-20261027-WA0066.jpg"
                           alt="पारितोषिक वितरण"
                           (error)="onPhotoErr($event)"
                           loading="lazy"
-                          class="w-full h-full object-cover group-hover/img:scale-108 transition-transform duration-300"
+                          class="w-full h-full object-cover object-[50%_25%] group-hover/img:scale-108 transition-transform duration-300"
                         />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex items-end justify-between p-1.5">
                           <span class="text-[10px] text-white font-bold font-devanagari flex items-center gap-1">
@@ -432,14 +463,14 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <!-- Photo Thumbnail -->
                       <div
                         class="relative h-28 rounded-lg overflow-hidden mb-2.5 group/img cursor-pointer border border-cyan-200 bg-slate-100"
-                        (click)="openPhoto('स्थानिक सांस्कृतिक सुरवर भजन संध्या', 'पेटी, तबला व टाळांच्या गजरात रंगलेली भक्तिमय भजन मैफल.', 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80')"
+                        (click)="openPhoto('स्थानिक सांस्कृतिक सुरवर भजन संध्या व ढोल-ताशा वादन', 'पारंपरिक वाद्य, पेटी, तबला व टाळांच्या गजरात रंगलेला भक्तिमय सोहळा.', '/Fastival%20Photos/Ganpati%20Agman/Ganpati%20agman%201.JPG')"
                       >
                         <img
-                          src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80"
+                          src="/Fastival%20Photos/Ganpati%20Agman/Ganpati%20agman%201.JPG"
                           alt="स्थानिक सुरवर भजन"
                           (error)="onPhotoErr($event)"
                           loading="lazy"
-                          class="w-full h-full object-cover group-hover/img:scale-108 transition-transform duration-300"
+                          class="w-full h-full object-cover object-[50%_25%] group-hover/img:scale-108 transition-transform duration-300"
                         />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex items-end justify-between p-1.5">
                           <span class="text-[10px] text-white font-bold font-devanagari flex items-center gap-1">
@@ -476,14 +507,14 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <!-- Photo Thumbnail -->
                       <div
                         class="relative h-28 rounded-lg overflow-hidden mb-2.5 group/img cursor-pointer border border-amber-300 bg-slate-100"
-                        (click)="openPhoto('अखंड भंडारा महाप्रसाद व अन्नदान सोहळा', 'सर्व भाविकांसाठी अन्नदान व गरमागरम महाप्रसाद सेवा.', 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&w=1000&q=80')"
+                        (click)="openPhoto('अखंड भंडारा महाप्रसाद व अन्नदान सोहळा', 'सर्व भाविकांसाठी अन्नदान व गरमागरम महाप्रसाद सेवा.', '/Fastival%20Photos/Home%20havan%20bhandara/IMG-20261011-WA0009.jpg')"
                       >
                         <img
-                          src="https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&w=1000&q=80"
+                          src="/Fastival%20Photos/Home%20havan%20bhandara/IMG-20261011-WA0009.jpg"
                           alt="भंडारा महाप्रसाद"
                           (error)="onPhotoErr($event)"
                           loading="lazy"
-                          class="w-full h-full object-cover group-hover/img:scale-108 transition-transform duration-300"
+                          class="w-full h-full object-cover object-[50%_25%] group-hover/img:scale-108 transition-transform duration-300"
                         />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex items-end justify-between p-1.5">
                           <span class="text-[10px] text-white font-bold font-devanagari flex items-center gap-1">
@@ -522,11 +553,11 @@ import { FestivalEvent } from '../../models/mandal.models';
                   <div class="flex items-center gap-3">
                     <div
                       class="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-white/30 cursor-pointer group/v"
-                      (click)="openPhoto('बाप्पाचे विसर्जन मिरवणूक सोहळा', 'ढोल-ताशांच्या गजरात, गुलालाच्या उधळणीत व बाप्पाच्या जयघोषात निघालेली विसर्जन मिरवणूक.', 'https://commons.wikimedia.org/wiki/Special:FilePath/Ganesh_Visarjan_Festival_India.jpg?width=1000')"
+                      (click)="openPhoto('बाप्पाचे विसर्जन मिरवणूक सोहळा', 'ढोल-ताशांच्या गजरात, गुलालाच्या उधळणीत व बाप्पाच्या जयघोषात निघालेली विसर्जन मिरवणूक.', '/Fastival%20Photos/Ganpati%20Visarjan/Ganpati%20Visarjan%201.JPG')"
                       title="विसर्जन मिरवणूक फोटो पहा"
                     >
                       <img
-                        src="https://commons.wikimedia.org/wiki/Special:FilePath/Ganesh_Visarjan_Festival_India.jpg?width=1000"
+                        src="/Fastival%20Photos/Ganpati%20Visarjan/Ganpati%20Visarjan%201.JPG"
                         alt="विसर्जन मिरवणूक"
                         (error)="onPhotoErr($event)"
                         class="w-full h-full object-cover group-hover/v:scale-110 transition-transform"
@@ -553,7 +584,7 @@ import { FestivalEvent } from '../../models/mandal.models';
                       <div class="text-sm font-black text-white">⏰ सायं. ६.०० वा.</div>
                     </div>
                     <button
-                      (click)="openPhoto('बाप्पाचे विसर्जन मिरवणूक सोहळा', 'चौपाटीवर लाखो भाविकांच्या उपस्थितीत बाप्पाचा भावपूर्ण विसर्जन सोहळा.', 'https://commons.wikimedia.org/wiki/Special:FilePath/Ganpati_Visarjan.jpg?width=1000')"
+                      (click)="openPhoto('बाप्पाचे विसर्जन मिरवणूक सोहळा', 'ढोल-ताशांच्या गजरात बाप्पाचा भावपूर्ण व भव्य विसर्जन सोहळा.', '/Fastival%20Photos/Ganpati%20Visarjan/Ganpati%20Visarjan%202.JPG')"
                       class="px-3 py-1.5 bg-white/20 hover:bg-white/30 border border-white/30 rounded-lg text-xs font-bold font-devanagari text-center transition cursor-pointer flex items-center gap-1.5"
                     >
                       <span>📸 विसर्जन फोटो पहा</span>
@@ -704,25 +735,39 @@ import { FestivalEvent } from '../../models/mandal.models';
               </div>
 
               <div class="grid grid-cols-2 gap-2">
-                @for (img of galleryPhotos; track img.title) {
+                @for (img of currentGalleryPhotos(); track img.url + img.title) {
                   <div
                     class="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 aspect-video cursor-pointer shadow-xs hover:shadow-md transition"
                     (click)="selectedPhoto.set(img)"
                   >
-                    <img
-                      [src]="img.url"
-                      [alt]="img.title"
-                      (error)="onPhotoErr($event)"
-                      loading="lazy"
-                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
+                    @if (img.mediaType === 'video') {
+                      <video
+                        [src]="img.url + '#t=0.5'"
+                        [attr.poster]="img.poster || null"
+                        preload="metadata"
+                        muted
+                        playsinline
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 bg-slate-950"
+                      ></video>
+                      <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span class="w-8 h-8 rounded-full bg-black/75 text-white border border-amber-300 flex items-center justify-center text-xs shadow-md">▶</span>
+                      </div>
+                    } @else {
+                      <img
+                        [src]="img.url"
+                        [alt]="img.title"
+                        (error)="onPhotoErr($event)"
+                        loading="lazy"
+                        class="w-full h-full object-cover object-[50%_25%] group-hover:scale-110 transition-transform duration-500"
+                      />
+                    }
                     <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent flex items-end p-2 transition">
                       <span class="text-white text-[10px] sm:text-[11px] font-bold font-devanagari line-clamp-1 group-hover:text-amber-300">
                         {{ img.title }}
                       </span>
                     </div>
                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[11px] font-bold">
-                      {{ mandalData.t('मोठे पहा 🔍', 'View Full 🔍') }}
+                      {{ img.mediaType === 'video' ? mandalData.t('व्हिडिओ पहा ▶', 'Play Video ▶') : mandalData.t('मोठे पहा 🔍', 'View Full 🔍') }}
                     </div>
                   </div>
                 }
@@ -731,11 +776,11 @@ import { FestivalEvent } from '../../models/mandal.models';
               <div class="pt-2 border-t border-slate-100 flex flex-col gap-2">
                 <a
                   routerLink="/gallery"
-                  [queryParams]="{ cat: 'ganesh-events' }"
+                  [queryParams]="currentGalleryQueryParams()"
                   class="w-full py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold text-xs rounded-xl text-center font-devanagari transition shadow-xs flex items-center justify-center gap-1.5"
                 >
-                  <span>🎨</span>
-                  <span>{{ mandalData.t('गणेशोत्सव स्पर्धा दालन उघडा', 'Open Ganeshotsav Contests Gallery') }}</span>
+                  <span>🖼️</span>
+                  <span>{{ mandalData.t('संपूर्ण उत्सव फोटो व व्हिडिओ दालन उघडा', 'Open Complete Festival Gallery') }}</span>
                   <span>→</span>
                 </a>
               </div>
@@ -751,7 +796,11 @@ import { FestivalEvent } from '../../models/mandal.models';
         <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-sm animate-fade-in" (click)="selectedPhoto.set(null)">
           <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-white/20" (click)="$event.stopPropagation()">
             <div class="relative bg-black aspect-video flex items-center justify-center overflow-hidden">
-              <img [src]="photo.url" [alt]="photo.title" class="max-h-full max-w-full object-contain" />
+              @if (photo.mediaType === 'video') {
+                <video [src]="photo.url" controls autoplay playsinline class="max-h-[65vh] w-auto max-w-full"></video>
+              } @else {
+                <img [src]="photo.url" [alt]="photo.title" class="max-h-full max-w-full object-contain" />
+              }
               <button
                 (click)="selectedPhoto.set(null)"
                 class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center text-sm font-bold transition cursor-pointer"
@@ -765,7 +814,7 @@ import { FestivalEvent } from '../../models/mandal.models';
               <div class="pt-2 flex items-center justify-center gap-2">
                 <a
                   routerLink="/gallery"
-                  [queryParams]="{ cat: 'ganesh-events' }"
+                  [queryParams]="currentGalleryQueryParams()"
                   (click)="selectedPhoto.set(null)"
                   class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl font-devanagari transition shadow-xs"
                 >
@@ -790,68 +839,118 @@ export class UtsavComponent {
   readonly mandalData = inject(MandalDataService);
 
   readonly selectedFestivalId = signal<string>('ganeshotsav');
-  readonly selectedPhoto = signal<{ title: string; desc: string; url: string } | null>(null);
+  readonly selectedPhoto = signal<UtsavMediaItem | null>(null);
 
   readonly currentFestival = () => {
     return this.mandalData.festivalEvents.find(f => f.id === this.selectedFestivalId()) || this.mandalData.festivalEvents[0];
   };
 
   openPhoto(title: string, desc: string, url: string): void {
-    this.selectedPhoto.set({ title, desc, url });
+    this.selectedPhoto.set({ title, desc, url, mediaType: 'image' });
   }
 
-  readonly galleryPhotos = [
-    {
-      title: 'चित्रकला स्पर्धा - बाप्पाचे रेखाटन व रंगभरण',
-      desc: '१० वर्षांखालील व ११ ते १५ वर्षे वयोगटातील चिमुकल्यांनी श्री गणेशाची काढलेली अप्रतिम चित्रे.',
-      url: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&q=80'
-    },
-    {
-      title: 'वक्तृत्व स्पर्धा - बालवक्त्यांचे प्रभावी भाषण',
-      desc: "'माझी आई', 'माझा आवडता सण' व 'माझी शाळा' विषयांवर विद्यार्थ्यांचे ओजस्वी सादरीकरण.",
-      url: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1000&q=80'
-    },
-    {
-      title: 'स्वच्छता मोहीम - परिसर झाडू श्रमदान',
-      desc: 'आदर्श नगर व शिव स्फूर्ती परिसराची सर्व कार्यकर्त्यांनी केलेली सामूहिक स्वच्छता व प्लास्टिक मुक्ती.',
-      url: 'https://commons.wikimedia.org/wiki/Special:FilePath/PM_Modi_launches_the_Swachh_Bharat_Abhiyaan_(1).jpg?width=1000'
-    },
-    {
-      title: 'मोफत नेत्र तपासणी शिबिर व चष्मे वाटप',
-      desc: 'तज्ज्ञ डॉक्टरांच्या उपस्थितीत परिसरातील नागरिकांची मोफत डोळ्यांची तपासणी व चष्मे वाटप.',
-      url: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1000&q=80'
-    },
-    {
-      title: 'श्री सत्यनारायण महापूजा व तीर्थप्रसाद सोहळा',
-      desc: 'वैदिक मंत्रोच्चारात गणपती बाप्पाच्या चरणी सत्यनारायण महापूजा व भाविकांना तीर्थप्रसाद.',
-      url: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=1000&q=80'
-    },
-    {
-      title: 'सांस्कृतिक स्पर्धा पारितोषिक वितरण',
-      desc: 'विजेत्या लहान मुलांना सुवर्ण चषक, पदके व गौरव प्रमाणपत्र प्रदान सोहळा.',
-      url: 'https://images.unsplash.com/photo-1578269174936-2709b6aeb913?auto=format&fit=crop&w=1000&q=80'
-    },
-    {
-      title: 'स्थानिक सांस्कृतिक सुरवर भजन संध्या',
-      desc: 'पेटी, तबला व टाळांच्या गजरात रंगलेली स्थानिक कलाकारांची भक्तिमय भजन मैफल.',
-      url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80'
-    },
-    {
-      title: 'अखंड भंडारा महाप्रसाद व अन्नदान',
-      desc: 'सर्व भाविकांसाठी महाप्रसाद आणि अन्नदान सेवा कार्य.',
-      url: 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&w=1000&q=80'
-    },
-    {
-      title: 'गणपती बाप्पा विसर्जन मिरवणूक सोहळा',
-      desc: 'चौपाटीवर लाखो भाविकांच्या उपस्थितीत बाप्पाचा भावपूर्ण व भव्य विसर्जन सोहळा.',
-      url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Ganpati_Visarjan.jpg?width=1000'
-    },
-    {
-      title: 'श्री अष्टविनायक मित्र मंडळ - मंडप दर्शन',
-      desc: 'जोगेश्वरी आदर्श नगर व शिव स्फूर्ती परिसरातील बाप्पाचे मनमोहक रूप व सुंदर देखावा.',
-      url: '/reference_dashboard.jpg'
+  readonly eyeCheckupPhotos: UtsavMediaItem[] = GALLERY_2026_PHOTOS
+    .filter(p => p.eventKey === 'eye-checkup')
+    .map(m => ({
+      title: m.titleMr,
+      desc: m.descMr,
+      url: m.url,
+      mediaType: m.mediaType,
+      poster: m.poster
+    }));
+
+  private pickFromEvents(eventKeys: string[], maxItems = 10, perEvent = 2): UtsavMediaItem[] {
+    const picked: UtsavMediaItem[] = [];
+    for (const key of eventKeys) {
+      const matches = GALLERY_2026_PHOTOS.filter(p => p.eventKey === key);
+      for (const m of matches.slice(0, perEvent)) {
+        picked.push({
+          title: this.mandalData.isEnglish() ? m.titleEn : m.titleMr,
+          desc: this.mandalData.isEnglish() ? m.descEn : m.descMr,
+          url: m.url,
+          mediaType: m.mediaType,
+          poster: m.poster
+        });
+      }
     }
-  ];
+    return picked.slice(0, maxItems);
+  }
+
+  readonly currentGalleryQueryParams = computed(() => {
+    const id = this.selectedFestivalId();
+    if (id === 'ganeshotsav') return { cat: 'ganesh-events', year: '2026' };
+    if (id === 'navratri') return { cat: 'navratri', year: '2026' };
+    if (id === 'bathukamma') return { cat: 'bathukamma', year: '2026' };
+    if (id === 'ambedkar-jayanti') return { cat: 'ambedkar-jayanti', year: 'all' };
+    if (id === 'shiv-jayanti') return { cat: 'shiv-jayanti', year: 'all' };
+    return { year: '2026' };
+  });
+
+  readonly currentGalleryPhotos = computed<UtsavMediaItem[]>(() => {
+    const id = this.selectedFestivalId();
+    if (id === 'navratri') {
+      return this.pickFromEvents(['navratri-agman', 'home-havan-bhandara', 'devi-visarjan', 'fancy-dress-satkar', 'kojagiri-satkar', 'diwali-kandil'], 10);
+    }
+    if (id === 'bathukamma') {
+      return GALLERY_2026_PHOTOS
+        .filter(p => p.eventKey === 'bathukamma-2026')
+        .slice(0, 10)
+        .map(m => ({
+          title: this.mandalData.isEnglish() ? m.titleEn : m.titleMr,
+          desc: this.mandalData.isEnglish() ? m.descEn : m.descMr,
+          url: m.url,
+          mediaType: m.mediaType,
+          poster: m.poster
+        }));
+    }
+    if (id === 'ambedkar-jayanti') {
+      return [
+        {
+          title: 'डॉ. बाबासाहेब आंबेडकर जयंती सोहळा व रॅली',
+          desc: 'परिसरातील अभिवादन रॅली व प्रतिमा पूजन.',
+          url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Ambedkar_Jayanti_BY_Vijayendra.jpg?width=1000'
+        },
+        {
+          title: 'महामानव डॉ. बाबासाहेब आंबेडकर स्मारक प्रतिमा',
+          desc: 'संविधान उद्देशिका वाचन व अभिवादन उपक्रम.',
+          url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Dr_BR_Ambedkar_Statue.jpg?width=1000'
+        },
+        ...this.pickFromEvents(['clean-drive', 'eye-checkup'], 4)
+      ];
+    }
+    if (id === 'shiv-jayanti') {
+      return [
+        {
+          title: 'छत्रपती शिवाजी महाराज शिवजयंती सोहळा',
+          desc: 'शिवज्योत व शिवरायांना भव्य अभिवादन.',
+          url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Statue_of_Chatrapati_Shivaji_Maharaj_at_Pratapgad.jpg?width=1000'
+        },
+        {
+          title: 'छत्रपती शिवाजी महाराज ऐतिहासिक स्मारक',
+          desc: 'भगवे ध्वज व मानवंदना सोहळा.',
+          url: 'https://commons.wikimedia.org/wiki/Special:FilePath/Chhatrapati_Shivaji_Statue.jpg?width=1000'
+        },
+        ...this.pickFromEvents(['ganpati-agman', 'satkar-ganpati'], 4)
+      ];
+    }
+    // Default ('ganeshotsav'): include all eye checkup photos/videos + Ganeshotsav 2026 event photos
+    return [
+      ...this.pickFromEvents(['eye-checkup'], 12, 12),
+      ...this.pickFromEvents([
+        'ganpati-agman',
+        'drawing-competition',
+        'clean-drive',
+        'ganpati-satyanarayan-puja',
+        'satkar-ganpati',
+        'ganpati-visarjan'
+      ], 6, 1),
+      {
+        title: 'श्री अष्टविनायक मित्र मंडळ - मंडप दर्शन',
+        desc: 'जोगेश्वरी आदर्श नगर व शिव स्फूर्ती परिसरातील बाप्पाचे मनमोहक रूप व सुंदर देखावा.',
+        url: '/reference_dashboard.jpg'
+      }
+    ];
+  });
 
   onPhotoErr(event: Event): void {
     const img = event.target as HTMLElement;

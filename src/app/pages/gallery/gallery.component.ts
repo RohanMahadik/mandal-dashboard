@@ -31,6 +31,8 @@ export interface GalleryPhoto {
   date: string;
   year: string;
   url: string;
+  mediaType?: 'image' | 'video';
+  poster?: string;
   descMr: string;
   descEn: string;
 }
@@ -78,11 +80,17 @@ export interface GalleryPhoto {
           <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span class="px-3 py-1 bg-white/20 backdrop-blur-xs rounded-lg font-bold border border-white/20 flex items-center gap-1.5">
               <span>🖼️</span>
-              <span>{{ mandalData.t('एकूण छायाचित्रे:', 'Total Photos:') }} {{ mandalData.formatNum(yearScopedPhotos().length.toString()) }}</span>
+              <span>{{ mandalData.t('एकूण फोटो व व्हिडिओ:', 'Total Photos & Videos:') }} {{ mandalData.formatNum(yearScopedPhotos().length.toString()) }}</span>
             </span>
+            @if (videoCountInYear() > 0) {
+              <span class="px-3 py-1 bg-rose-500/90 text-white rounded-lg font-bold border border-rose-300/50 flex items-center gap-1.5 shadow-xs">
+                <span>🎬</span>
+                <span>{{ mandalData.formatNum(videoCountInYear().toString()) }} {{ mandalData.t('व्हिडिओ', 'Videos') }}</span>
+              </span>
+            }
             <span class="px-3 py-1 bg-amber-400 text-slate-950 rounded-lg font-bold flex items-center gap-1.5 shadow-xs">
               <span>✨</span>
-              <span>{{ mandalData.t('२०२६ चे अस्सल व स्पष्ट उत्सव फोटो', 'Crisp Non-Repeated 2026 Event Photos') }}</span>
+              <span>{{ mandalData.t('२०२६ चे अस्सल व स्पष्ट उत्सव फोटो व व्हिडिओ', 'Crisp 2026 Festival Photos & Videos') }}</span>
             </span>
           </div>
         </div>
@@ -117,23 +125,54 @@ export interface GalleryPhoto {
             }
           </div>
 
-          <!-- Group by Event Folder Toggle (available in 2026 / All view) -->
-          @if (selectedYear() !== '२०२५') {
-            <button
-              type="button"
-              (click)="groupByEvent.set(!groupByEvent())"
-              [ngClass]="
-                groupByEvent()
-                  ? 'bg-amber-100 text-amber-900 border-amber-400 font-bold'
-                  : 'bg-slate-50 text-slate-600 border-slate-200 font-semibold'
-              "
-              class="px-3 py-1.5 rounded-xl text-xs font-devanagari border transition cursor-pointer flex items-center gap-1.5"
-              title="इव्हेंट फोल्डरनुसार विभागून पहा / Group by Event Folder"
-            >
-              <span>📂</span>
-              <span>{{ mandalData.t(groupByEvent() ? 'फोल्डरनुसार विभाग: चालू' : 'फोल्डरनुसार विभाग: बंद', groupByEvent() ? 'Folder Grouping: On' : 'Folder Grouping: Off') }}</span>
-            </button>
-          }
+          <div class="flex flex-wrap items-center gap-2">
+            @if (videoCountInYear() > 0) {
+              <div class="inline-flex items-center rounded-xl border border-amber-200 bg-amber-50/70 p-0.5 text-[11px] font-devanagari">
+                <button
+                  type="button"
+                  (click)="selectedMediaType.set('all')"
+                  [ngClass]="selectedMediaType() === 'all' ? 'bg-amber-500 text-slate-950 font-black shadow-2xs' : 'text-slate-700 font-bold hover:text-amber-900'"
+                  class="px-2.5 py-1 rounded-lg transition cursor-pointer"
+                >
+                  {{ mandalData.t('सर्व', 'All') }}
+                </button>
+                <button
+                  type="button"
+                  (click)="selectedMediaType.set('image')"
+                  [ngClass]="selectedMediaType() === 'image' ? 'bg-amber-500 text-slate-950 font-black shadow-2xs' : 'text-slate-700 font-bold hover:text-amber-900'"
+                  class="px-2.5 py-1 rounded-lg transition cursor-pointer"
+                >
+                  📷 {{ mandalData.t('फोटो', 'Photos') }}
+                </button>
+                <button
+                  type="button"
+                  (click)="selectedMediaType.set('video')"
+                  [ngClass]="selectedMediaType() === 'video' ? 'bg-rose-600 text-white font-black shadow-2xs' : 'text-slate-700 font-bold hover:text-rose-700'"
+                  class="px-2.5 py-1 rounded-lg transition cursor-pointer"
+                >
+                  🎬 {{ mandalData.t('व्हिडिओ', 'Videos') }} ({{ mandalData.formatNum(videoCountInYear().toString()) }})
+                </button>
+              </div>
+            }
+
+            <!-- Group by Event Folder Toggle (available in 2026 / All view) -->
+            @if (selectedYear() !== '२०२५') {
+              <button
+                type="button"
+                (click)="groupByEvent.set(!groupByEvent())"
+                [ngClass]="
+                  groupByEvent()
+                    ? 'bg-amber-100 text-amber-900 border-amber-400 font-bold'
+                    : 'bg-slate-50 text-slate-600 border-slate-200 font-semibold'
+                "
+                class="px-3 py-1.5 rounded-xl text-xs font-devanagari border transition cursor-pointer flex items-center gap-1.5"
+                title="इव्हेंट फोल्डरनुसार विभागून पहा / Group by Event Folder"
+              >
+                <span>📂</span>
+                <span>{{ mandalData.t(groupByEvent() ? 'फोल्डरनुसार विभाग: चालू' : 'फोल्डरनुसार विभाग: बंद', groupByEvent() ? 'Folder Grouping: On' : 'Folder Grouping: Off') }}</span>
+              </button>
+            }
+          </div>
         </div>
         
         <!-- Search & Info Bar -->
@@ -269,17 +308,41 @@ export interface GalleryPhoto {
                       (click)="openLightbox(photo)"
                     >
                       <div class="relative aspect-4/3 overflow-hidden bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200">
-                        <img
-                          [src]="photo.url"
-                          [alt]="photo.titleMr"
-                          (error)="onImgError($event)"
-                          loading="lazy"
-                          class="w-full h-full object-cover object-[50%_25%] group-hover:scale-105 transition-transform duration-500"
-                        />
-                        <div class="hidden absolute inset-0 bg-gradient-to-br from-amber-700 via-orange-800 to-red-900 flex flex-col items-center justify-center text-white p-4 text-center">
-                          <span class="text-4xl mb-1">{{ photo.icon }}</span>
-                          <span class="font-bold text-xs font-devanagari">{{ photo.titleMr }}</span>
-                        </div>
+                        @if (photo.mediaType === 'video') {
+                          <video
+                            [src]="photo.url + '#t=0.5'"
+                            [attr.poster]="photo.poster || null"
+                            preload="metadata"
+                            muted
+                            playsinline
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-slate-950"
+                          ></video>
+                          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div class="w-12 h-12 rounded-full bg-black/70 text-white border-2 border-amber-300 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:bg-rose-600 transition">
+                              <svg class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                              </svg>
+                            </div>
+                          </div>
+                          <div class="absolute top-2 left-2">
+                            <span class="px-2 py-0.5 bg-rose-600 text-white font-black rounded-md text-[10px] font-devanagari shadow-xs flex items-center gap-1">
+                              <span>🎬</span>
+                              <span>{{ mandalData.t('व्हिडिओ', 'VIDEO') }}</span>
+                            </span>
+                          </div>
+                        } @else {
+                          <img
+                            [src]="photo.url"
+                            [alt]="photo.titleMr"
+                            (error)="onImgError($event)"
+                            loading="lazy"
+                            class="w-full h-full object-cover object-[50%_25%] group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div class="hidden absolute inset-0 bg-gradient-to-br from-amber-700 via-orange-800 to-red-900 flex flex-col items-center justify-center text-white p-4 text-center">
+                            <span class="text-4xl mb-1">{{ photo.icon }}</span>
+                            <span class="font-bold text-xs font-devanagari">{{ photo.titleMr }}</span>
+                          </div>
+                        }
                         <div class="absolute top-2 right-2">
                           <span class="px-2 py-0.5 bg-amber-400 text-slate-950 font-black rounded-md text-[10px] font-devanagari shadow-xs">
                             {{ mandalData.formatNum(photo.year) }}
@@ -287,8 +350,8 @@ export interface GalleryPhoto {
                         </div>
                         <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
                           <span class="text-white text-xs font-bold font-devanagari flex items-center gap-1.5">
-                            <span>🔍</span>
-                            <span>{{ mandalData.t('मोठे पहा (Full View)', 'View Full Photo') }}</span>
+                            <span>{{ photo.mediaType === 'video' ? '▶️' : '🔍' }}</span>
+                            <span>{{ photo.mediaType === 'video' ? mandalData.t('व्हिडिओ प्ले करा (Play)', 'Play Video') : mandalData.t('मोठे पहा (Full View)', 'View Full Photo') }}</span>
                           </span>
                         </div>
                       </div>
@@ -319,28 +382,53 @@ export interface GalleryPhoto {
                 class="group bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
                 (click)="openLightbox(photo)"
               >
-                <!-- Image Container -->
+                <!-- Media Container -->
                 <div class="relative aspect-4/3 overflow-hidden bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200">
-                  <img
-                    [src]="photo.url"
-                    [alt]="photo.titleMr"
-                    (error)="onImgError($event)"
-                    loading="lazy"
-                    class="w-full h-full object-cover object-[50%_25%] group-hover:scale-105 transition-transform duration-500"
-                  />
-                  
-                  <!-- Fallback Container if Image Fails -->
-                  <div class="hidden absolute inset-0 bg-gradient-to-br from-amber-700 via-orange-800 to-red-900 flex flex-col items-center justify-center text-white p-4 text-center">
-                    <span class="text-4xl mb-1">{{ photo.icon }}</span>
-                    <span class="font-bold text-xs font-devanagari">{{ photo.titleMr }}</span>
-                  </div>
+                  @if (photo.mediaType === 'video') {
+                    <video
+                      [src]="photo.url + '#t=0.5'"
+                      [attr.poster]="photo.poster || null"
+                      preload="metadata"
+                      muted
+                      playsinline
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-slate-950"
+                    ></video>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div class="w-12 h-12 rounded-full bg-black/70 text-white border-2 border-amber-300 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:bg-rose-600 transition">
+                        <svg class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                  } @else {
+                    <img
+                      [src]="photo.url"
+                      [alt]="photo.titleMr"
+                      (error)="onImgError($event)"
+                      loading="lazy"
+                      class="w-full h-full object-cover object-[50%_25%] group-hover:scale-105 transition-transform duration-500"
+                    />
+                    
+                    <!-- Fallback Container if Image Fails -->
+                    <div class="hidden absolute inset-0 bg-gradient-to-br from-amber-700 via-orange-800 to-red-900 flex flex-col items-center justify-center text-white p-4 text-center">
+                      <span class="text-4xl mb-1">{{ photo.icon }}</span>
+                      <span class="font-bold text-xs font-devanagari">{{ photo.titleMr }}</span>
+                    </div>
+                  }
 
-                  <!-- Category Tag Top Left -->
-                  <div class="absolute top-2.5 left-2.5">
-                    <span class="px-2 py-0.5 bg-black/75 backdrop-blur-md text-white rounded-md text-[10px] font-bold font-devanagari shadow-xs flex items-center gap-1">
-                      <span>{{ photo.icon }}</span>
-                      <span>{{ mandalData.isEnglish() ? photo.categoryEn : photo.categoryMr }}</span>
-                    </span>
+                  <!-- Category / Video Tag Top Left -->
+                  <div class="absolute top-2.5 left-2.5 flex items-center gap-1">
+                    @if (photo.mediaType === 'video') {
+                      <span class="px-2 py-0.5 bg-rose-600 text-white rounded-md text-[10px] font-black font-devanagari shadow-xs flex items-center gap-1">
+                        <span>🎬</span>
+                        <span>{{ mandalData.t('व्हिडिओ', 'VIDEO') }}</span>
+                      </span>
+                    } @else {
+                      <span class="px-2 py-0.5 bg-black/75 backdrop-blur-md text-white rounded-md text-[10px] font-bold font-devanagari shadow-xs flex items-center gap-1">
+                        <span>{{ photo.icon }}</span>
+                        <span>{{ mandalData.isEnglish() ? photo.categoryEn : photo.categoryMr }}</span>
+                      </span>
+                    }
                   </div>
 
                   <!-- Year Tag Top Right -->
@@ -353,8 +441,8 @@ export interface GalleryPhoto {
                   <!-- Hover Overlay -->
                   <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
                     <span class="text-white text-xs font-bold font-devanagari flex items-center gap-1.5">
-                      <span>🔍</span>
-                      <span>{{ mandalData.t('मोठे पहा (Full View)', 'View Full Photo') }}</span>
+                      <span>{{ photo.mediaType === 'video' ? '▶️' : '🔍' }}</span>
+                      <span>{{ photo.mediaType === 'video' ? mandalData.t('व्हिडिओ प्ले करा (Play)', 'Play Video') : mandalData.t('मोठे पहा (Full View)', 'View Full Photo') }}</span>
                     </span>
                   </div>
                 </div>
@@ -460,19 +548,29 @@ export interface GalleryPhoto {
             </div>
           </div>
 
-          <!-- Main Image Display with Prev/Next Navigation -->
+          <!-- Main Image / Video Display with Prev/Next Navigation -->
           <div class="relative bg-black flex items-center justify-center min-h-[300px] max-h-[60vh] sm:max-h-[65vh] overflow-hidden group">
-            <img
-              [src]="photo.url"
-              [alt]="photo.titleMr"
-              (error)="onImgError($event)"
-              class="max-h-[60vh] sm:max-h-[65vh] w-auto max-w-full object-contain mx-auto transition-transform duration-300"
-            />
-            
-            <div class="hidden absolute inset-0 bg-gradient-to-br from-amber-700 via-orange-800 to-red-900 flex flex-col items-center justify-center text-white p-6 text-center">
-              <span class="text-6xl mb-2">{{ photo.icon }}</span>
-              <h3 class="text-xl font-bold font-devanagari">{{ photo.titleMr }}</h3>
-            </div>
+            @if (photo.mediaType === 'video') {
+              <video
+                [src]="photo.url"
+                controls
+                autoplay
+                playsinline
+                class="max-h-[60vh] sm:max-h-[65vh] w-auto max-w-full mx-auto rounded-lg"
+              ></video>
+            } @else {
+              <img
+                [src]="photo.url"
+                [alt]="photo.titleMr"
+                (error)="onImgError($event)"
+                class="max-h-[60vh] sm:max-h-[65vh] w-auto max-w-full object-contain mx-auto transition-transform duration-300"
+              />
+              
+              <div class="hidden absolute inset-0 bg-gradient-to-br from-amber-700 via-orange-800 to-red-900 flex flex-col items-center justify-center text-white p-6 text-center">
+                <span class="text-6xl mb-2">{{ photo.icon }}</span>
+                <h3 class="text-xl font-bold font-devanagari">{{ photo.titleMr }}</h3>
+              </div>
+            }
 
             <!-- Prev Button -->
             @if (filteredPhotos().length > 1) {
@@ -510,7 +608,7 @@ export interface GalleryPhoto {
                   class="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-devanagari font-semibold transition"
                 >
                   <span>🔗</span>
-                  <span>{{ mandalData.t('मूळ फोटो पहा', 'Open Full Image') }}</span>
+                  <span>{{ photo.mediaType === 'video' ? mandalData.t('मूळ व्हिडिओ पहा', 'Open Full Video') : mandalData.t('मूळ फोटो पहा', 'Open Full Image') }}</span>
                 </a>
               </div>
             </div>
@@ -531,6 +629,7 @@ export class GalleryComponent implements OnInit {
   readonly selectedYear = signal<'२०२६' | '२०२५' | 'all'>('२०२६');
   readonly selectedCategory = signal<string>('all');
   readonly selectedEventKey = signal<string>('all');
+  readonly selectedMediaType = signal<'all' | 'image' | 'video'>('all');
   readonly groupByEvent = signal<boolean>(true);
   readonly searchQuery = signal<string>('');
   readonly activePhoto = signal<GalleryPhoto | null>(null);
@@ -1103,6 +1202,10 @@ export class GalleryComponent implements OnInit {
     return this.photos.filter(p => p.year === yr);
   });
 
+  readonly videoCountInYear = computed(() =>
+    this.yearScopedPhotos().filter(p => p.mediaType === 'video').length
+  );
+
   readonly visibleCategories = computed(() => {
     const list = this.yearScopedPhotos();
     return this.categories.filter(cat => cat.key === 'all' || list.some(p => p.category === cat.key));
@@ -1126,6 +1229,7 @@ export class GalleryComponent implements OnInit {
     const base = this.yearScopedPhotos();
     const cat = this.selectedCategory();
     const evKey = this.selectedEventKey();
+    const mType = this.selectedMediaType();
     const query = this.searchQuery().trim().toLowerCase();
 
     return base.filter(p => {
@@ -1134,6 +1238,12 @@ export class GalleryComponent implements OnInit {
 
       if (evKey !== 'all' && p.eventKey !== evKey) {
         return false;
+      }
+
+      if (mType !== 'all') {
+        const isVid = p.mediaType === 'video';
+        if (mType === 'video' && !isVid) return false;
+        if (mType === 'image' && isVid) return false;
       }
 
       if (!query) return true;
@@ -1234,6 +1344,7 @@ export class GalleryComponent implements OnInit {
     this.selectedYear.set(year);
     this.selectedCategory.set('all');
     this.selectedEventKey.set('all');
+    this.selectedMediaType.set('all');
   }
 
   selectCategory(catKey: string): void {
@@ -1255,6 +1366,7 @@ export class GalleryComponent implements OnInit {
     this.selectedYear.set('२०२६');
     this.selectedCategory.set('all');
     this.selectedEventKey.set('all');
+    this.selectedMediaType.set('all');
     this.searchQuery.set('');
   }
 

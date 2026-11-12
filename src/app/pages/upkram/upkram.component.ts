@@ -3,6 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MandalDataService } from '../../services/mandal-data.service';
+import { GALLERY_2026_PHOTOS } from '../gallery/gallery-2026-photos';
+
+interface UpkramMediaItem {
+  url: string;
+  captionMr: string;
+  captionEn: string;
+  mediaType?: 'image' | 'video';
+  poster?: string;
+}
 
 interface MandalActivity {
   id: number;
@@ -21,6 +30,7 @@ interface MandalActivity {
   accentColor: string;
   highlightsMr: string[];
   highlightsEn: string[];
+  photos?: UpkramMediaItem[];
 }
 
 @Component({
@@ -141,6 +151,33 @@ interface MandalActivity {
                     </div>
                   }
                 </div>
+
+                @if (act.photos && act.photos.length > 0) {
+                  <div class="mt-3 pt-2.5 border-t border-slate-100">
+                    <div class="flex items-center justify-between text-[10px] font-bold text-amber-800 font-devanagari mb-1.5">
+                      <span>📸 {{ mandalData.t('उपक्रम फोटो व व्हिडिओ', 'Event Photos & Videos') }} ({{ mandalData.formatNum(act.photos.length) }})</span>
+                      @if (act.photos.length > 5) {
+                        <button type="button" (click)="openActivityModal(act)" class="text-amber-700 hover:underline cursor-pointer">
+                          {{ mandalData.t('सर्व पहा →', 'View all →') }}
+                        </button>
+                      }
+                    </div>
+                    <div class="grid grid-cols-5 gap-1">
+                      @for (p of act.photos.slice(0, 5); track p.url) {
+                        <button
+                          type="button"
+                          (click)="openPhotoLightbox(p)"
+                          class="relative aspect-square rounded-lg overflow-hidden border border-amber-200 hover:border-amber-500 hover:scale-105 transition cursor-pointer bg-slate-100"
+                        >
+                          <img [src]="p.mediaType === 'video' ? (p.poster || p.url) : p.url" [alt]="p.captionMr" class="w-full h-full object-cover object-top" loading="lazy" />
+                          @if (p.mediaType === 'video') {
+                            <span class="absolute inset-0 flex items-center justify-center bg-black/35 text-white text-xs">▶</span>
+                          }
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
 
               <!-- Card Footer: "अधिक माहिती" / View Button -->
@@ -232,6 +269,33 @@ interface MandalActivity {
               </ul>
             </div>
 
+            @if (act.photos && act.photos.length > 0) {
+              <div class="space-y-2">
+                <h4 class="text-xs font-bold text-amber-800 uppercase tracking-wider">
+                  📸 {{ mandalData.t('उपक्रमाची अस्सल छायाचित्रे व व्हिडिओ', 'Authentic Event Photos & Videos') }} ({{ mandalData.formatNum(act.photos.length) }})
+                </h4>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  @for (p of act.photos; track p.url) {
+                    <button
+                      type="button"
+                      (click)="openPhotoLightbox(p)"
+                      class="group relative aspect-4/3 rounded-xl overflow-hidden border border-amber-200 hover:border-amber-500 cursor-pointer bg-slate-100 shadow-2xs"
+                    >
+                      <img [src]="p.mediaType === 'video' ? (p.poster || p.url) : p.url" [alt]="p.captionMr" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-300" loading="lazy" />
+                      @if (p.mediaType === 'video') {
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <span class="w-9 h-9 rounded-full bg-rose-600 text-white flex items-center justify-center text-sm shadow">▶</span>
+                        </div>
+                      }
+                      <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-1.5 text-left">
+                        <span class="text-[10px] text-white font-bold line-clamp-1">{{ mandalData.isEnglish() ? p.captionEn : p.captionMr }}</span>
+                      </div>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
             <!-- Community Impact Note -->
             <div class="text-[11px] text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200 leading-relaxed">
               {{ mandalData.t('मंडळ हे केवळ उत्सवापुरते मर्यादित नसून संपूर्ण वर्षभर सामाजिक एकात्मता आणि समाजहितासाठी अविरत कार्यरत आहे.', 'Our Mandal remains active throughout the year, committed to community solidarity, welfare, and social harmony.') }}
@@ -252,11 +316,42 @@ interface MandalActivity {
         </div>
       </div>
     }
+
+    @if (lightboxPhoto(); as lb) {
+      <div
+        class="fixed inset-0 z-[10000] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+        (click)="lightboxPhoto.set(null)"
+      >
+        <div class="max-w-3xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl" (click)="$event.stopPropagation()">
+          <div class="bg-black flex items-center justify-center max-h-[75vh] relative">
+            @if (lb.mediaType === 'video') {
+              <video [src]="lb.url" controls autoplay playsinline class="max-h-[75vh] w-auto max-w-full"></video>
+            } @else {
+              <img [src]="lb.url" [alt]="lb.caption" class="max-h-[75vh] w-auto max-w-full object-contain" />
+            }
+            <button
+              (click)="lightboxPhoto.set(null)"
+              class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/70 text-white font-bold flex items-center justify-center cursor-pointer"
+            >✕</button>
+          </div>
+          <div class="p-3 text-center text-xs sm:text-sm font-bold text-slate-900 font-devanagari">{{ lb.caption }}</div>
+        </div>
+      </div>
+    }
   `
 })
 export class UpkramComponent {
   readonly mandalData = inject(MandalDataService);
   readonly selectedActivity = signal<MandalActivity | null>(null);
+  readonly lightboxPhoto = signal<{ url: string; caption: string; mediaType?: 'image' | 'video' } | null>(null);
+
+  openPhotoLightbox(item: UpkramMediaItem) {
+    this.lightboxPhoto.set({
+      url: item.url,
+      caption: this.mandalData.isEnglish() ? item.captionEn : item.captionMr,
+      mediaType: item.mediaType
+    });
+  }
 
   openActivityModal(act: MandalActivity) {
     this.selectedActivity.set(act);
@@ -321,7 +416,16 @@ export class UpkramComponent {
         'Complimentary blood sugar and blood pressure testing',
         'Free reading glasses distributed to senior citizens',
         'Subsidized guidance for cataract operations'
-      ]
+      ],
+      photos: GALLERY_2026_PHOTOS
+        .filter(p => p.eventKey === 'eye-checkup')
+        .map(p => ({
+          url: p.url,
+          captionMr: p.titleMr,
+          captionEn: p.titleEn,
+          mediaType: p.mediaType,
+          poster: p.poster
+        }))
     },
     {
       id: 3,
