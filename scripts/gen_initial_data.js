@@ -224,7 +224,7 @@ if (detailedSheet) {
     if (!currentSection) return;
     const active = result[currentSection];
 
-    if (text0 && !text0.includes('जमा बाजू') && !text0.includes('Income') && !text0.includes('Receipts')) {
+    if (text0 && !text0.includes('जमा बाजू') && !text0.includes('Receipts / Income')) {
       const amt0 = cleanNum(row[1]);
       if (text0.includes('एकूण जमा') || text0.includes('Total Income')) {
         active.totalIncome = amt0;
@@ -233,17 +233,19 @@ if (detailedSheet) {
       }
     }
 
-    if (text3 && !text3.includes('खर्च बाजू') && !text3.includes('Expenditure') && !text3.includes('Payments')) {
+    if (text3 && !text3.includes('खर्च बाजू') && !text3.includes('खर्च आणि शिल्लक')) {
       const amt4 = cleanNum(row[4]);
       if (text3.includes('एकूण उत्सव खर्च') || text3.includes('एकूण खर्च') || text3.includes('Total Expenditure')) {
         active.totalExpenses = amt4;
-      } else if (text3.includes('पुढील वर्षासाठी शिल्लक') || text3.includes('नवरात्रीसाठी शिल्लक') || text3.includes('शिल्लक') || text3.includes('Surplus')) {
-        active.surplus = amt4;
-        active.surplusLabelMr = text3;
       } else if (text3.includes('रोख शिल्लक') || text3.includes('Cash Balance')) {
         if (currentSection === 'navratri') active.cashBalance = amt4;
       } else if (text3.includes('बँक शिल्लक') || text3.includes('Bank Balance')) {
         if (currentSection === 'navratri') active.bankBalance = amt4;
+      } else if (text3.includes('पुढील वर्षासाठी शिल्लक') || text3.includes('नवरात्रीसाठी शिल्लक') || text3.includes('शिल्लक') || text3.includes('Surplus')) {
+        if (amt4 > 0) {
+          active.surplus = amt4;
+          active.surplusLabelMr = text3;
+        }
       } else if (text3.includes('एकूण ताळेबंद') || text3.includes('Total Balance')) {
         active.totalBalance = amt4;
       } else if (amt4 > 0) {

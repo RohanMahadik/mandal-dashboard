@@ -606,9 +606,9 @@ export class VarganiComponent {
     return this.filteredList().slice(start, start + size);
   });
 
-  readonly isGaneshActive = computed(() => this.mandalData.selectedFestival().includes('गणेश'));
-  readonly isNavratriActive = computed(() => this.mandalData.selectedFestival().includes('नवरात्र'));
   readonly isJointActive = computed(() => this.mandalData.selectedFestival().includes('संयुक्त') || this.mandalData.selectedFestival().includes('Joint'));
+  readonly isGaneshActive = computed(() => !this.isJointActive() && this.mandalData.selectedFestival().includes('गणेश'));
+  readonly isNavratriActive = computed(() => !this.isJointActive() && this.mandalData.selectedFestival().includes('नवरात्र'));
 
   readonly ganeshVarganiTotal = computed(() => this.mandalData.detailedBalanceSheetData()?.ganesh.totalIncome || 490328);
   readonly navratriVarganiTotal = computed(() => this.mandalData.detailedBalanceSheetData()?.navratri.totalIncome || 273134);

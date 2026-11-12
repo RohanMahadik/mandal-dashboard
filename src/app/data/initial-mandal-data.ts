@@ -8899,6 +8899,10 @@ export const INITIAL_DETAILED_BALANCE_SHEET: DetailedBalanceSheetData | null = {
       {
         "name": "ब्लाउज पीस (Blouse Piece)",
         "amount": 390
+      },
+      {
+        "name": "इतर जमा (Other Income)",
+        "amount": 3650
       }
     ],
     "expenses": [
@@ -8967,7 +8971,7 @@ export const INITIAL_DETAILED_BALANCE_SHEET: DetailedBalanceSheetData | null = {
         "amount": 4000
       }
     ],
-    "totalIncome": 843012,
+    "totalIncome": 846662,
     "totalExpenses": 803646,
     "surplus": 43016,
     "surplusLabelMr": "पुढील वर्षासाठी शिल्लक रक्कम (Total Surplus)",
@@ -9073,6 +9077,10 @@ export const INITIAL_DETAILED_BALANCE_SHEET: DetailedBalanceSheetData | null = {
         "amount": 11660
       },
       {
+        "name": "इतर जमा (Other Income)",
+        "amount": 3650
+      },
+      {
         "name": "ब्लाउज पीस (Blouse Piece)",
         "amount": 390
       }
@@ -9139,13 +9147,13 @@ export const INITIAL_DETAILED_BALANCE_SHEET: DetailedBalanceSheetData | null = {
         "amount": 1000
       }
     ],
-    "totalIncome": 393823,
+    "totalIncome": 397473,
     "totalExpenses": 354457,
     "surplus": 44016,
     "surplusLabelMr": "एकूण शिल्लक रक्कम (Total Surplus)",
     "surplusLabelEn": "Surplus Carried Forward",
     "totalBalance": 398473,
-    "cashBalance": 0,
-    "bankBalance": 0
+    "cashBalance": 374,
+    "bankBalance": 43642
   }
 };

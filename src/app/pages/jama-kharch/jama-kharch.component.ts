@@ -193,7 +193,7 @@ import { MandalDataService } from '../../services/mandal-data.service';
                       <td class="py-3 px-3 sm:px-4 font-devanagari">{{ mandalData.t('एकूण जमा (Total Income)', 'Total Income') }}</td>
                       <td class="py-3 px-3 sm:px-4 text-right whitespace-nowrap font-black">{{ mandalData.formatNum(sheetTotalIncome(), true) }}</td>
                     </tr>
-                    @if (sheetTotalBalance() > sheetTotalIncome()) {
+                    @if (sheetTotalBalance() > 0) {
                       <tr class="bg-emerald-50 font-black text-emerald-950 border-t border-emerald-400 text-xs sm:text-sm">
                         <td class="py-2.5 px-3 sm:px-4 font-devanagari">{{ mandalData.t('एकूण ताळेबंद (Total Balance)', 'Total Balance') }}</td>
                         <td class="py-2.5 px-3 sm:px-4 text-right whitespace-nowrap font-black">{{ mandalData.formatNum(sheetTotalBalance(), true) }}</td>
@@ -207,7 +207,7 @@ import { MandalDataService } from '../../services/mandal-data.service';
             <!-- RIGHT: खर्च बाजू (Payments / Expenses) -->
             <div class="border-2 border-rose-600/60 rounded-xl overflow-hidden shadow-xs bg-white">
               <div class="bg-rose-700 text-white font-bold py-2.5 px-3 sm:px-4 flex justify-between items-center text-xs sm:text-sm font-devanagari">
-                <span>{{ mandalData.t('खर्च बाजू (Expenditure)', 'Payments / Expenses (Credit)') }}</span>
+                <span>{{ isJointActive() ? mandalData.t('खर्च आणि शिल्लक बाजू (Expenditure & Surplus)', 'Expenditure & Surplus (Credit)') : mandalData.t('खर्च बाजू (Expenditure)', 'Payments / Expenses (Credit)') }}</span>
                 <span class="shrink-0">{{ mandalData.t('रक्कम (₹)', 'Amount (₹)') }}</span>
               </div>
 
@@ -393,9 +393,9 @@ export class JamaKharchComponent {
 
   readonly activeSheet = computed(() => this.mandalData.currentDetailedSheet());
 
-  readonly isGaneshActive = computed(() => this.mandalData.selectedFestival().includes('गणेश'));
-  readonly isNavratriActive = computed(() => this.mandalData.selectedFestival().includes('नवरात्र'));
   readonly isJointActive = computed(() => this.mandalData.selectedFestival().includes('संयुक्त') || this.mandalData.selectedFestival().includes('Joint'));
+  readonly isGaneshActive = computed(() => !this.isJointActive() && this.mandalData.selectedFestival().includes('गणेश'));
+  readonly isNavratriActive = computed(() => !this.isJointActive() && this.mandalData.selectedFestival().includes('नवरात्र'));
 
   readonly ganeshTotalExp = computed(() => this.mandalData.detailedBalanceSheetData()?.ganesh.totalExpenses || 449189);
   readonly navratriTotalExp = computed(() => this.mandalData.detailedBalanceSheetData()?.navratri.totalExpenses || 354457);

@@ -409,9 +409,9 @@ export class KharchComponent {
   readonly selectedVoucher = signal<KharchRecord | null>(null);
   readonly viewTab = signal<'vouchers' | 'categories'>('vouchers');
 
-  readonly isGaneshActive = computed(() => this.mandalData.selectedFestival().includes('गणेश'));
-  readonly isNavratriActive = computed(() => this.mandalData.selectedFestival().includes('नवरात्र'));
   readonly isJointActive = computed(() => this.mandalData.selectedFestival().includes('संयुक्त') || this.mandalData.selectedFestival().includes('Joint'));
+  readonly isGaneshActive = computed(() => !this.isJointActive() && this.mandalData.selectedFestival().includes('गणेश'));
+  readonly isNavratriActive = computed(() => !this.isJointActive() && this.mandalData.selectedFestival().includes('नवरात्र'));
 
   readonly ganeshTotalExp = computed(() => this.mandalData.detailedBalanceSheetData()?.ganesh.totalExpenses || 449189);
   readonly navratriTotalExp = computed(() => this.mandalData.detailedBalanceSheetData()?.navratri.totalExpenses || 354457);

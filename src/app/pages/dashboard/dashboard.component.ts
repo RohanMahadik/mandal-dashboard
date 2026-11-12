@@ -256,13 +256,13 @@ import { VarganiRecord } from '../../models/mandal.models';
             </div>
             <div class="min-w-0 flex-1">
               <div class="text-xs font-bold text-slate-600 font-devanagari">
-                {{ mandalData.selectedFestival().includes('गणेश') ? mandalData.t('नवरात्रीसाठी शिल्लक बाकी', 'Surplus for Navratri') : (mandalData.selectedFestival().includes('नवरात्र') ? mandalData.t('पुढील वर्षासाठी शिल्लक', 'Surplus Carried Forward') : mandalData.t('शिल्लक रक्कम', 'Balance Amount')) }}
+                {{ (mandalData.selectedFestival().includes('संयुक्त') || mandalData.selectedFestival().includes('Joint')) ? mandalData.t('पुढील वर्षासाठी शिल्लक रक्कम', 'Total Surplus') : (mandalData.selectedFestival().includes('गणेश') ? mandalData.t('नवरात्रीसाठी शिल्लक बाकी', 'Surplus for Navratri') : (mandalData.selectedFestival().includes('नवरात्र') ? mandalData.t('पुढील वर्षासाठी शिल्लक', 'Surplus Carried Forward') : mandalData.t('शिल्लक रक्कम', 'Balance Amount'))) }}
               </div>
               <div class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-0.5 truncate">
                 {{ mandalData.formatNum(mandalData.kpi().balanceAmount, true) }}
               </div>
               <div class="text-[11px] text-slate-500 font-devanagari mt-0.5 truncate">
-                {{ mandalData.selectedFestival().includes('गणेश') ? mandalData.t('गणेशोत्सवातून उरलेली रक्कम', 'Balance from Ganeshotsav') : mandalData.t('नक्त शिल्लक गंगाजळी', 'Net Cash Reserve') }}
+                {{ (mandalData.selectedFestival().includes('संयुक्त') || mandalData.selectedFestival().includes('Joint')) ? mandalData.t('संयुक्त नक्त शिल्लक गंगाजळी', 'Net Combined Reserve') : (mandalData.selectedFestival().includes('गणेश') ? mandalData.t('गणेशोत्सवातून उरलेली रक्कम', 'Balance from Ganeshotsav') : mandalData.t('नक्त शिल्लक गंगाजळी', 'Net Cash Reserve')) }}
               </div>
             </div>
           </div>

@@ -381,10 +381,11 @@ export class MandalDataService {
     const data = this.detailedBalanceSheetData();
     if (!data) return null;
     const fest = this.selectedFestival();
-    if (fest.includes('नवरात्र')) {
-      return data.navratri;
-    } else if (fest.includes('संयुक्त') || fest.includes('Joint')) {
+    // Check joint first because joint label ('संयुक्त (गणेशोत्सव व नवरात्र)') contains both festival names
+    if (fest.includes('संयुक्त') || fest.includes('Joint')) {
       return data.joint;
+    } else if (fest.includes('नवरात्र')) {
+      return data.navratri;
     } else {
       return data.ganesh;
     }
@@ -3366,8 +3367,9 @@ export class MandalDataService {
               sec.cashBalance = expAmount;
             } else if (expLabel.includes('बँक शिल्लक') || expLabel.includes('Bank Balance')) {
               sec.bankBalance = expAmount;
-            } else {
+            } else if (expAmount > 0) {
               sec.surplus = expAmount;
+              sec.surplusLabelMr = expLabel;
             }
           } else if (expLabel.includes('एकूण ताळेबंद') || expLabel.includes('Total Balance')) {
             if (!sec.totalBalance) sec.totalBalance = expAmount;
