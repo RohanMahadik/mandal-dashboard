@@ -141,6 +141,22 @@ export interface SareeDonor {
   colorTextColor?: string;
 }
 
+export interface DeviMurtiDonor {
+  id: number;
+  srNo: number;
+  donorNameMr: string;
+  donorNameEn: string;
+  itemMr: string;
+  itemEn: string;
+  festival: string;
+  year: number;
+  badgeMr?: string;
+  badgeEn?: string;
+  avatarBg?: string;
+  remarksMr?: string;
+  remarksEn?: string;
+}
+
 export interface SabhasadMember {
   id: number;
   srNo: number;

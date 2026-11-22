@@ -1097,6 +1097,9 @@ export class AboutComponent {
    */
   getMemberPhoto(mem: SabhasadMember | null): string | undefined {
     if (!mem) return '/Sabhasad/Balasaheb%20Yadav.jpg';
+    if (mem.id === 45 || mem.nameEn?.toLowerCase().includes('sameer gaw') || mem.nameEn?.toLowerCase().includes('samir gaw') || mem.nameMr?.includes('गावडे')) {
+      return mem.photoUrl || '/Sabhasad/Sameer%20Gawde.png';
+    }
     return mem.photoUrl || (mem.id === 1 || mem.nameEn?.includes('Balasaheb') ? '/Sabhasad/Balasaheb%20Yadav.jpg' : undefined);
   }
 
@@ -1146,6 +1149,18 @@ export class AboutComponent {
 
     if (!img.dataset['retried']) {
       img.dataset['retried'] = '1';
+      if (img.src.includes('Sameer%20Gawde') || img.src.includes('Sameer Gawde')) {
+        img.src = img.src.replace(/Sameer(%20|\s)Gawde/g, 'Sameer$1Gawade');
+        return;
+      }
+      if (img.src.includes('Sameer%20Gawade') || img.src.includes('Sameer Gawade')) {
+        img.src = img.src.replace(/Sameer(%20|\s)Gawade/g, 'Sameer$1Gawde');
+        return;
+      }
+      if (img.src.endsWith('.png')) {
+        img.src = img.src.replace(/\.png$/, '.jpeg');
+        return;
+      }
       if (img.src.includes('/Sabhasad/')) {
         img.src = img.src.replace('/Sabhasad/', '/sabhasad/');
         return;

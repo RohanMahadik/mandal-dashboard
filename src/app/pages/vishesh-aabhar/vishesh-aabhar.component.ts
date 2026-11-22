@@ -141,7 +141,7 @@ export interface GratitudeHonoree {
                       [src]="h.photoUrl" 
                       [alt]="h.nameMr"
                       class="w-full h-full object-cover object-top rounded-2xl transition duration-500 group-hover/pic:scale-105"
-                      (error)="onPhotoError(h.id)"
+                      (error)="onPhotoError(h.id, $event)"
                     />
                   } @else {
                     <div 
@@ -311,7 +311,7 @@ export class VisheshAabharComponent {
       badgeMr: 'व्हिजनरी नेतृत्व',
       badgeEn: 'Visionary Leader',
       icon: '🎯',
-      photoUrl: '/Sabhasad/Sameer%20Gawade.jpeg',
+      photoUrl: '/Sabhasad/Sameer%20Gawde.png',
       fallbackInitial: 'स',
       avatarBg: '#1e3a8a',
       keyHighlightsMr: [
@@ -473,7 +473,25 @@ export class VisheshAabharComponent {
     return gradients[idx % gradients.length];
   }
 
-  onPhotoError(id: string) {
+  onPhotoError(id: string, event?: Event) {
+    if (event) {
+      const img = event.target as HTMLImageElement;
+      if (img && !img.dataset['retried']) {
+        img.dataset['retried'] = '1';
+        if (img.src.includes('Sameer%20Gawde') || img.src.includes('Sameer Gawde')) {
+          img.src = img.src.replace(/Sameer(%20|\s)Gawde/g, 'Sameer$1Gawade');
+          return;
+        }
+        if (img.src.includes('Sameer%20Gawade') || img.src.includes('Sameer Gawade')) {
+          img.src = img.src.replace(/Sameer(%20|\s)Gawade/g, 'Sameer$1Gawde');
+          return;
+        }
+        if (img.src.endsWith('.png')) {
+          img.src = img.src.replace(/\.png$/, '.jpeg');
+          return;
+        }
+      }
+    }
     this.photoErrors.update(map => ({ ...map, [id]: true }));
   }
 }

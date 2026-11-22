@@ -198,6 +198,158 @@ import { VarganiRecord } from '../../models/mandal.models';
         </div>
       </div>
 
+      <!-- ================= 6.1 DEVI CHI MURTI DENGIDAR (NAVRATRI GODDESS IDOL DONORS) ================= -->
+      @if (isNavratriActive() || isJointActive() || showDeviMurtiExpanded()) {
+        <div class="relative overflow-hidden rounded-3xl shadow-2xl border-2 border-amber-400/60 bg-gradient-to-br from-[#7f1d1d] via-[#991b1c] to-[#b45309] text-white p-4.5 sm:p-6 transition-all animate-fade-in select-none">
+
+          <!-- Background Decorative Glows & Sacred Gold Highlights -->
+          <div class="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-yellow-400/25 blur-3xl"></div>
+          <div class="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-rose-500/25 blur-3xl"></div>
+          <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(#fde047_1px,transparent_1px)] [background-size:24px_24px] opacity-10"></div>
+
+          <div class="relative z-10 space-y-4 sm:space-y-5">
+
+            <!-- Header Row: Sacred Shloka, Badges & Title -->
+            <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3 text-center sm:text-left">
+              
+              <!-- Titles & Devotional Inscription -->
+              <div class="flex-1 min-w-0 space-y-1.5">
+                <div class="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-black bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 shadow-sm border border-yellow-200 uppercase tracking-wider">
+                    <span>🔱</span>
+                    <span>{{ mandalData.t('श्री नवरात्रोत्सव २०२६ • महासन्मान', 'Shree Navratri Utsav 2026 • Grand Honor') }}</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-white/15 backdrop-blur-md text-amber-200 border border-amber-300/30">
+                    <span>🌸</span>
+                    <span>{{ mandalData.t('॥ सर्वमंगल मांगल्ये शिवे सर्वार्थ साधिके ॥', '॥ Sarva Mangala Mangalye Shive Sarvartha Sadhike ॥') }}</span>
+                  </span>
+                </div>
+
+                <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black font-devanagari tracking-tight text-yellow-300 drop-shadow-md leading-tight mt-1">
+                  🌺 {{ mandalData.t('देवीची मूर्ती देणगीदार', 'Goddess Durga Idol Donors') }}
+                </h2>
+
+                <p class="text-xs sm:text-sm text-amber-100 font-devanagari leading-snug max-w-3xl">
+                  {{ mandalData.t(
+                    'श्री अष्टविनायक मित्र मंडळ, शिव स्फूर्ती व आदर्श नगर, जोगेश्वरी (प) • वर्ष २०२६ मधील आदिशक्ती श्री दुर्गा देवीच्या नयनरम्य व मंगलमयी मूर्तीचे सह-अर्पण करणाऱ्या सर्व सन्माननीय देणगीदारांचे मनःपूर्वक आभार व सार्थ सन्मान!',
+                    'Shree Ashtavinayak Mitra Mandal • Wholehearted gratitude and honor to the dedicated donors who offered the sacred and divine idol of Goddess Durga for Navratri Utsav 2026!'
+                  ) }}
+                </p>
+
+                <div class="flex items-center justify-center sm:justify-start gap-2.5 text-[11px] sm:text-xs text-amber-200 font-devanagari pt-1 flex-wrap">
+                  <span class="inline-flex items-center gap-1 bg-black/25 px-2.5 py-0.5 rounded-lg border border-white/15">
+                    <span>📍</span>
+                    <span>{{ mandalData.t('शिव स्फूर्ती • आदर्श नगर', 'Shiv Sphurti • Adarsh Nagar') }}</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1 bg-black/25 px-2.5 py-0.5 rounded-lg border border-white/15">
+                    <span>✨</span>
+                    <span>{{ mandalData.t('एकूण ४ सन्माननीय देणगीदार', 'Total 4 Honored Donors') }}</span>
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 4 Donors Cards Grid (Clean & Elegant) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 pt-1">
+              @for (donor of mandalData.deviMurtiDonors(); track donor.id; let idx = $index) {
+                <div
+                  class="bg-gradient-to-b from-white/15 via-white/10 to-white/5 hover:from-white/25 hover:to-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-amber-300/40 shadow-lg hover:shadow-2xl hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between group relative overflow-hidden"
+                >
+                  <!-- Decorative Top Right Glow -->
+                  <div class="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-yellow-400/20 blur-xl pointer-events-none"></div>
+
+                  <div class="space-y-3 relative z-10">
+                    
+                    <!-- Card Top Row: Medallion Avatar & Badge -->
+                    <div class="flex items-center justify-between gap-2">
+                      <div
+                        class="w-12 h-12 rounded-2xl p-0.5 bg-gradient-to-tr from-yellow-300 via-amber-400 to-orange-500 shadow-md ring-2 ring-yellow-300/60 flex items-center justify-center shrink-0"
+                      >
+                        <div
+                          class="w-full h-full rounded-[14px] flex items-center justify-center text-xl font-black text-amber-200"
+                          [style.backgroundColor]="donor.avatarBg || '#7f1d1d'"
+                        >
+                          🔱
+                        </div>
+                      </div>
+
+                      <div class="flex flex-col items-end">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-black bg-yellow-400 text-slate-950 shadow-xs border border-yellow-200 uppercase tracking-wide">
+                          ⭐ {{ mandalData.t('देणगीदार #' + mandalData.toMarathiDigits(idx + 1), 'Donor #' + (idx + 1)) }}
+                        </span>
+                        <span class="text-[10px] text-amber-200 font-bold mt-0.5">
+                          {{ mandalData.t('नवरात्र २०२६', 'Navratri 2026') }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Donor Name & English Transliteration -->
+                    <div class="pt-1">
+                      <div class="text-[10.5px] font-bold text-amber-300 uppercase tracking-wider font-devanagari">
+                        {{ mandalData.t('सन्माननीय मूर्ती देणगीदार', 'Honored Idol Donor') }}
+                      </div>
+                      <h3 class="text-base sm:text-lg font-black font-devanagari text-white group-hover:text-yellow-200 transition-colors leading-snug mt-1">
+                        {{ mandalData.isEnglish() ? donor.donorNameEn : donor.donorNameMr }}
+                      </h3>
+                      <div class="text-[11.5px] text-amber-100/80 font-medium truncate mt-0.5 font-sans">
+                        {{ donor.donorNameEn }}
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              }
+            </div>
+
+            <!-- Bottom Devotional Ribbon -->
+            <div class="pt-1 flex flex-wrap items-center justify-between gap-2 text-xs font-devanagari text-amber-200/90 border-t border-white/15">
+              <div class="flex items-center gap-1.5 font-bold">
+                <span>🙏</span>
+                <span>{{ mandalData.t('॥ आदिशक्ती माँ दुर्गेच्या चरणी अखंड सेवा व निस्वार्थ समर्पण ॥', '॥ Selfless service & devotion at the lotus feet of Goddess Durga ॥') }}</span>
+              </div>
+              <div class="text-[11px] text-amber-300 font-extrabold">
+                {{ mandalData.t('श्री अष्टविनायक मित्र मंडळ • शिव स्फूर्ती, जोगेश्वरी (प)', 'Shree Ashtavinayak Mitra Mandal') }}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      } @else {
+        <!-- Compact Banner when other festival is active, allowing 1-click view -->
+        <div class="bg-gradient-to-r from-red-800 via-rose-800 to-amber-700 rounded-2xl p-3 sm:p-3.5 text-white flex flex-col sm:flex-row items-center justify-between gap-2.5 shadow-md border border-amber-300/40 select-none">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="text-2xl sm:text-3xl shrink-0">🔱</span>
+            <div class="min-w-0 text-center sm:text-left">
+              <div class="text-xs sm:text-sm font-black font-devanagari text-yellow-300 flex items-center gap-1.5 justify-center sm:justify-start flex-wrap">
+                <span>{{ mandalData.t('श्री नवरात्रोत्सव २०२६ • देवीची मूर्ती देणगीदार', 'Navratri Utsav 2026 • Devi Murti Donors') }}</span>
+                <span class="px-2 py-0.2 bg-amber-400 text-slate-950 rounded-full text-[10px] font-bold">४ सन्माननीय देणगीदार</span>
+              </div>
+              <div class="text-[11px] sm:text-xs text-amber-100 font-devanagari truncate mt-0.5">
+                श्री. सागर वेमूळा • श्री. सिद्धार्थ रागल्ला • श्री. नरेंद्र एडुनूरी • श्री. शंकर तलारी
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button
+              (click)="showDeviMurtiExpanded.set(true)"
+              class="px-3 py-1.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black text-xs font-devanagari shadow transition active:scale-95 cursor-pointer flex items-center gap-1"
+            >
+              <span>🌺</span>
+              <span>{{ mandalData.t('येथेच पहा', 'View Here') }}</span>
+            </button>
+            <button
+              (click)="onFestivalChange('नवरात्र उत्सव')"
+              class="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs font-devanagari border border-white/30 shadow-xs transition active:scale-95 cursor-pointer flex items-center gap-1"
+            >
+              <span>🔱</span>
+              <span>{{ mandalData.t('नवरात्र डॅशबोर्डवर जा →', 'Switch to Navratri →') }}</span>
+            </button>
+          </div>
+        </div>
+      }
+
       <!-- 4 Summary KPI Metric Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
         
@@ -503,7 +655,7 @@ import { VarganiRecord } from '../../models/mandal.models';
             </h3>
           </div>
 
-          <!-- 3 Tabs Switcher (Ganpati Bhandara, Navratri Bhandara, Navratri Saree Donors) -->
+          <!-- 4 Tabs Switcher (Ganpati Bhandara, Navratri Bhandara, Navratri Saree Donors, Devi Murti Donors) -->
           <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold font-devanagari">
             <button
               (click)="selectedDonationTab.set('ganpatiBhandara')"
@@ -533,6 +685,16 @@ import { VarganiRecord } from '../../models/mandal.models';
               <span>🌸</span>
               <span>{{ mandalData.t('नवरात्र - साडी देणगीदार', 'Navratri Saree Donors') }}</span>
               <span class="px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(filteredNavratriSaree().length) }}</span>
+            </button>
+
+            <button
+              (click)="selectedDonationTab.set('deviMurti')"
+              class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+              [ngClass]="selectedDonationTab() === 'deviMurti' ? 'bg-red-700 text-white shadow-xs font-black' : 'text-slate-700 hover:bg-slate-200'"
+            >
+              <span>🌺</span>
+              <span>{{ mandalData.t('नवरात्र - देवीची मूर्ती देणगीदार', 'Navratri Devi Murti Donors') }}</span>
+              <span class="px-1.5 py-0.2 bg-white/20 rounded-full text-[10px]">{{ mandalData.toMarathiDigits(filteredDeviMurti().length) }}</span>
             </button>
           </div>
         </div>
@@ -773,6 +935,72 @@ import { VarganiRecord } from '../../models/mandal.models';
           </div>
         }
 
+        <!-- 6. TABLE 4: Navratri Utsav - Devi Murti Donors Table -->
+        @if (selectedDonationTab() === 'deviMurti') {
+          <div class="overflow-x-auto w-full">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="bg-red-50 text-red-950 font-bold font-devanagari border-y border-red-200">
+                  <th class="py-2.5 px-3 text-center w-12">{{ mandalData.t('अ. क्र.', 'Sr. No.') }}</th>
+                  <th class="py-2.5 px-3 text-center w-20">{{ mandalData.t('वर्ष', 'Year') }}</th>
+                  <th class="py-2.5 px-3">{{ mandalData.t('सन्माननीय देणगीदाराचे नाव', 'Donor Name') }}</th>
+                  <th class="py-2.5 px-3">{{ mandalData.t('पवित्र अर्पण / वस्तू', 'Item / Murti Offering') }}</th>
+                  <th class="py-2.5 px-3 text-center">{{ mandalData.t('प्रमाण', 'Quantity') }}</th>
+                  <th class="py-2.5 px-3">{{ mandalData.t('तपशील व नोंद', 'Remarks / Note') }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                @for (donor of filteredDeviMurti(); track donor.id; let idx = $index) {
+                  <tr class="hover:bg-red-50/40 transition">
+                    <td class="py-2.5 px-3 text-center font-mono text-slate-500 font-bold">
+                      #{{ mandalData.toMarathiDigits(donor.srNo || (idx + 1)) }}
+                    </td>
+                    <td class="py-2.5 px-3 text-center font-bold text-red-900 font-mono">
+                      {{ mandalData.toMarathiDigits(donor.year) }}
+                    </td>
+                    <td class="py-2.5 px-3">
+                      <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-red-100 text-red-800 flex items-center justify-center font-bold text-xs shrink-0">
+                          🔱
+                        </span>
+                        <div>
+                          <div class="font-extrabold text-slate-900 font-devanagari text-[13px]">
+                            {{ mandalData.isEnglish() ? donor.donorNameEn : donor.donorNameMr }}
+                          </div>
+                          <div class="text-[10.5px] text-slate-500 font-sans">
+                            {{ donor.donorNameEn }}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-2.5 px-3">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-950 border border-amber-200 font-devanagari">
+                        <span>🌺</span>
+                        <span>{{ mandalData.isEnglish() ? donor.itemEn : donor.itemMr }}</span>
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-center">
+                      <span class="px-2 py-0.5 bg-red-100 text-red-900 rounded-md text-[11px] font-black font-devanagari">
+                        १ {{ mandalData.t('नग', 'No') }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-slate-600 font-devanagari text-[11.5px]">
+                      {{ mandalData.isEnglish() ? (donor.remarksEn || '-') : (donor.remarksMr || '-') }}
+                    </td>
+                  </tr>
+                }
+                @if (filteredDeviMurti().length === 0) {
+                  <tr>
+                    <td colspan="6" class="py-6 text-center text-slate-400 font-devanagari">
+                      {{ mandalData.t('कोणतीही नोंद आढळली नाही.', 'No records found.') }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
       </div>
 
     </div>
@@ -802,6 +1030,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly mandalData = inject(MandalDataService);
   private transliteration = inject(TransliterationService);
   readonly loadingService = inject(LoadingService);
+
+  readonly isNavratriActive = computed(() => this.mandalData.selectedFestival().includes('नवरात्र'));
+  readonly isJointActive = computed(() => this.mandalData.selectedFestival().includes('संयुक्त') || this.mandalData.selectedFestival().includes('Joint'));
+  readonly showDeviMurtiExpanded = signal<boolean>(false);
 
   // Advertisement Slider state
   readonly currentAdIndex = signal<number>(0);
@@ -869,7 +1101,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // In-Kind & Bhandara Offerings Section State
-  readonly selectedDonationTab = signal<'ganpatiBhandara' | 'navratriBhandara' | 'navratriSaree'>('ganpatiBhandara');
+  readonly selectedDonationTab = signal<'ganpatiBhandara' | 'navratriBhandara' | 'navratriSaree' | 'deviMurti'>('ganpatiBhandara');
   readonly selectedDonationYear = signal<number | 'all'>(2026);
   readonly donationSearchQuery = signal<string>('');
 
@@ -885,6 +1117,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (y) yearsSet.add(y);
     });
     this.mandalData.navratriSareeDonors().forEach(i => {
+      const y = this.getItemYear(i);
+      if (y) yearsSet.add(y);
+    });
+    this.mandalData.deviMurtiDonors().forEach(i => {
       const y = this.getItemYear(i);
       if (y) yearsSet.add(y);
     });
@@ -910,7 +1146,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const tab = this.selectedDonationTab();
     if (tab === 'ganpatiBhandara') return this.mandalData.ganpatiBhandaraItems().length;
     if (tab === 'navratriBhandara') return this.mandalData.navratriBhandaraItems().length;
-    return this.mandalData.navratriSareeDonors().length;
+    if (tab === 'navratriSaree') return this.mandalData.navratriSareeDonors().length;
+    return this.mandalData.deviMurtiDonors().length;
   }
 
   currentCategoryYearCount(year: number): number {
@@ -921,7 +1158,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (tab === 'navratriBhandara') {
       return this.mandalData.navratriBhandaraItems().filter(i => this.getItemYear(i) === year).length;
     }
-    return this.mandalData.navratriSareeDonors().filter(i => this.getItemYear(i) === year).length;
+    if (tab === 'navratriSaree') {
+      return this.mandalData.navratriSareeDonors().filter(i => this.getItemYear(i) === year).length;
+    }
+    return this.mandalData.deviMurtiDonors().filter(i => (i.year || 2026) === year).length;
   }
 
   // Filtered Ganpati Bhandara items
@@ -968,6 +1208,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const selectedYear = this.selectedDonationYear();
     if (selectedYear !== 'all') {
       list = list.filter(item => this.getItemYear(item) === selectedYear);
+    }
+    const query = this.donationSearchQuery().toLowerCase().trim();
+    if (!query) return list;
+    return list.filter(item =>
+      item.donorNameMr.toLowerCase().includes(query) ||
+      item.donorNameEn.toLowerCase().includes(query) ||
+      item.itemMr.toLowerCase().includes(query) ||
+      item.itemEn.toLowerCase().includes(query) ||
+      (item.remarksMr && item.remarksMr.toLowerCase().includes(query)) ||
+      (item.remarksEn && item.remarksEn.toLowerCase().includes(query))
+    );
+  });
+
+  // Filtered Navratri Devi Murti Donors
+  readonly filteredDeviMurti = computed(() => {
+    let list = this.mandalData.deviMurtiDonors();
+    const selectedYear = this.selectedDonationYear();
+    if (selectedYear !== 'all') {
+      list = list.filter(item => (item.year || 2026) === selectedYear);
     }
     const query = this.donationSearchQuery().toLowerCase().trim();
     if (!query) return list;

@@ -12,6 +12,7 @@ import {
   YearlySummary,
   BhandaraItem,
   SareeDonor,
+  DeviMurtiDonor,
   SabhasadMember,
   AdvertisementBanner,
   YearlyFestivalFinancials,
@@ -1760,7 +1761,7 @@ export class MandalDataService {
     { id: 42, srNo: 42, nameMr: 'अनिकेत शिवगण', nameEn: 'Aniket Shivgan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00116', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Aniket%20Shivgan.jpeg' },
     { id: 43, srNo: 43, nameMr: 'सुहास शिवगण', nameEn: 'Suhas Shivgan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00117', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Suhas%20Shivgan.jpeg' },
     { id: 44, srNo: 44, nameMr: 'सुमित गावडे', nameEn: 'Sumit Gawade', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00118', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
-    { id: 45, srNo: 45, nameMr: 'समिर गावडे', nameEn: 'Samir Gawade', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00119', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
+    { id: 45, srNo: 45, nameMr: 'समिर गावडे', nameEn: 'Samir Gawade', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00119', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Sameer%20Gawde.png' },
     { id: 46, srNo: 46, nameMr: 'कार्तिक गवडा', nameEn: 'Kartik Gawda', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00120', joinYear: 2025, status: 'सक्रिय', columnIndex: 2, photoUrl: '/Sabhasad/Karthik%20Gawda.jpeg' },
     { id: 47, srNo: 47, nameMr: 'राजेंद्र शिवगण', nameEn: 'Rajendra Shivgan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00121', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
     { id: 48, srNo: 48, nameMr: 'शर्बिल शिवगण', nameEn: 'Sharbil Shivgan', building: 'शिव स्फूर्ती / आदर्श नगर', flatNo: '-', membershipTypeMr: 'नोंदणीकृत सभासद', membershipTypeEn: 'Registered Member', phone: '+91 98202 00122', joinYear: 2025, status: 'सक्रिय', columnIndex: 2 },
@@ -1857,6 +1858,70 @@ export class MandalDataService {
 
   // Sabhasad (Registered Members) List - Initialized with all 131 members from the 2025 notice
   readonly sabhasadMembers = signal<SabhasadMember[]>(this._official2025Sabhasad);
+
+  // Navratri Utsav - Devi Murti Donors (देवीची मूर्ती देणगीदार - २०२६)
+  readonly deviMurtiDonors = signal<DeviMurtiDonor[]>([
+    {
+      id: 1,
+      srNo: 1,
+      donorNameMr: 'श्री. सागर राजेंद्र वेमूळा',
+      donorNameEn: 'Shri Sagar Rajendra Vemula',
+      itemMr: 'श्री दुर्गा देवी भव्य मंगलमूर्ती',
+      itemEn: 'Shree Durga Devi Sacred Murti (Idol)',
+      festival: 'नवरात्र उत्सव',
+      year: 2026,
+      badgeMr: 'देवीची मूर्ती देणगीदार',
+      badgeEn: 'Devi Murti Donor',
+      avatarBg: '#991b1b',
+      remarksMr: 'श्री दुर्गा देवी भव्य व मंगलमयी मूर्तीचे सह-अर्पण व विशेष दानधर्म',
+      remarksEn: 'Sacred offering of Shree Durga Devi idol & dedicated support'
+    },
+    {
+      id: 2,
+      srNo: 2,
+      donorNameMr: 'श्री. सिद्धार्थ गंगाराम रागल्ला',
+      donorNameEn: 'Shri Siddharth Gangaram Ragalla',
+      itemMr: 'श्री दुर्गा देवी भव्य मंगलमूर्ती',
+      itemEn: 'Shree Durga Devi Sacred Murti (Idol)',
+      festival: 'नवरात्र उत्सव',
+      year: 2026,
+      badgeMr: 'देवीची मूर्ती देणगीदार',
+      badgeEn: 'Devi Murti Donor',
+      avatarBg: '#b45309',
+      remarksMr: 'श्री दुर्गा देवी भव्य व मंगलमयी मूर्तीचे सह-अर्पण व विशेष दानधर्म',
+      remarksEn: 'Sacred offering of Shree Durga Devi idol & dedicated support'
+    },
+    {
+      id: 3,
+      srNo: 3,
+      donorNameMr: 'श्री. नरेंद्र लक्ष्मण एडुनूरी',
+      donorNameEn: 'Shri Narendra Laxman Edunuri',
+      itemMr: 'श्री दुर्गा देवी भव्य मंगलमूर्ती',
+      itemEn: 'Shree Durga Devi Sacred Murti (Idol)',
+      festival: 'नवरात्र उत्सव',
+      year: 2026,
+      badgeMr: 'देवीची मूर्ती देणगीदार',
+      badgeEn: 'Devi Murti Donor',
+      avatarBg: '#0f766e',
+      remarksMr: 'श्री दुर्गा देवी भव्य व मंगलमयी मूर्तीचे सह-अर्पण व विशेष दानधर्म',
+      remarksEn: 'Sacred offering of Shree Durga Devi idol & dedicated support'
+    },
+    {
+      id: 4,
+      srNo: 4,
+      donorNameMr: 'श्री. शंकर राजय्या तलारी',
+      donorNameEn: 'Shri Shankar Rajayya Talari',
+      itemMr: 'श्री दुर्गा देवी भव्य मंगलमूर्ती',
+      itemEn: 'Shree Durga Devi Sacred Murti (Idol)',
+      festival: 'नवरात्र उत्सव',
+      year: 2026,
+      badgeMr: 'देवीची मूर्ती देणगीदार',
+      badgeEn: 'Devi Murti Donor',
+      avatarBg: '#6b21a8',
+      remarksMr: 'श्री दुर्गा देवी भव्य व मंगलमयी मूर्तीचे सह-अर्पण व विशेष दानधर्म',
+      remarksEn: 'Sacred offering of Shree Durga Devi idol & dedicated support'
+    }
+  ]);
 
   // Advertisement Slider Banners
   readonly advertisementBanners: AdvertisementBanner[] = [
